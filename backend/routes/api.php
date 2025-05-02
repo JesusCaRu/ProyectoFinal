@@ -30,6 +30,7 @@ use App\Http\Controllers\API\MovimientoController;
 
 // Rutas públicas
 Route::post('login', [UsuarioController::class, 'login']);
+Route::post('register', [UsuarioController::class, 'register']);
 
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {

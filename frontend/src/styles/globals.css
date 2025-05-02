@@ -1,0 +1,44 @@
+@import 'tailwindcss';
+
+@font-face {
+    font-family: 'Satoshi';
+    src: url('/src/assets/fonts/Satoshi-Variable.woff2') format('woff2');
+}
+
+
+@theme {
+    --font-satoshi: 'Satoshi';
+
+    --color-bg: #fdfdfe;
+    --color-bg-secondary: #f7f9ff;
+    --color-interactive-component: #edf2fe;
+    --color-interactive-component-secondary: #dfeaff;
+    --color-interactive-component-tertiary: #d0dfff;
+    --color-border: #bdd1ff;
+    --color-border-secondary: #a6bff9;
+    --color-border-tertiary: #87a5ef;
+    --color-solid-color: #3d63dd;
+    --color-solid-color-secondary: #3657c3;
+    --color-accessibility-text: #1d2e5c;
+    --color-accessibility-text-secondary: #1d2e5c;
+}
+
+@theme dark{
+    --font-satoshi: 'Satoshi';
+
+    --color-bg: #0c111c;
+    --color-bg-secondary: #111725;
+    --color-interactive-component: #172448;
+    --color-interactive-component-secondary: #1d2e61;
+    --color-interactive-component-tertiary: #243974;
+    --color-border: #2d4484;
+    --color-border-secondary: #375098;
+    --color-border-tertiary: #405eb2;
+    --color-solid-color: #3D63DD;
+    --color-solid-color-secondary: #3F5CB0;
+    --color-accessibility-text: #93b4ff;
+    --color-accessibility-text-secondary: #d5e2ff;
+}
+
+  
+@custom-variant dark (&:where(.dark, .dark-theme *));

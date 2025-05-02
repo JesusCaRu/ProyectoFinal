@@ -87,6 +87,34 @@ class UsuarioController extends Controller
         return response()->json(null, 204);
     }
 
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|string|max:100',
+            'email' => 'required|email|unique:usuarios',
+            'password' => 'required|string|min:6',
+            'rol_id' => 'required|exists:roles,id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $usuario = Usuario::create([
+            'nombre' => $request->nombre,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'rol_id' => $request->rol_id
+        ]);
+
+        $token = $usuario->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'data' => $usuario,
+            'token' => $token
+        ], 201);
+    }
+
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [

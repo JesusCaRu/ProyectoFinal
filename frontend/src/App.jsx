@@ -1,30 +1,12 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './components/Login';
-import StockManager from './components/StockManager';
-import useAuthStore from './store/authStore';
-import './globals.css';
+import './styles/globals.css'
 
 function App() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   return (
-    <Router>
-      <Routes>
-        <Route 
-          path="/login" 
-          element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} 
-        />
-        <Route 
-          path="/dashboard" 
-          element={isAuthenticated ? <StockManager /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/" 
-          element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} 
-        />
-      </Routes>
-    </Router>
-  );
+    <div className="bg-bg font-satoshi text-accessibility-text">
+      <h1>Hello World</h1>
+    </div>
+  )
 }
 
-export default App;
+export default App
