@@ -1,61 +1,175 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# StockFlow - Sistema de Gestión de Inventario para Tienda de Robots
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Descripción
+StockFlow es un sistema de gestión de inventario desarrollado para una tienda especializada en robots. El backend está construido con Laravel 12 y proporciona una API RESTful para gestionar todos los aspectos del inventario, ventas, compras y transferencias entre sedes.
 
-## About Laravel
+## Características Principales
+- Gestión completa de inventario
+- Sistema de autenticación y autorización por roles
+- Control de múltiples sedes
+- Gestión de proveedores
+- Registro de compras y ventas
+- Sistema de transferencias entre sedes
+- Auditoría de movimientos
+- API RESTful con Laravel Sanctum
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Requisitos del Sistema
+- PHP 8.2 o superior
+- Composer
+- MySQL/MariaDB
+- Node.js y NPM (para desarrollo)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Instalación
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. Clonar el repositorio:
+```bash
+git clone [url-del-repositorio]
+cd backend
+```
 
-## Learning Laravel
+2. Instalar dependencias:
+```bash
+composer install
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+3. Configurar el entorno:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+4. Configurar la base de datos en el archivo `.env`:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=stockflow
+DB_USERNAME=tu_usuario
+DB_PASSWORD=tu_contraseña
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+5. Ejecutar migraciones:
+```bash
+php artisan migrate
+```
 
-## Laravel Sponsors
+6. Iniciar el servidor:
+```bash
+php artisan serve
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Estructura de la API
 
-### Premium Partners
+### Autenticación
+- `POST /api/register` - Registro de nuevos usuarios
+- `POST /api/login` - Inicio de sesión
+- `POST /api/logout` - Cierre de sesión
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+### Endpoints Protegidos
 
-## Contributing
+#### Gestión de Usuarios y Roles
+- `GET /api/usuarios` - Listar usuarios
+- `POST /api/usuarios` - Crear usuario
+- `GET /api/usuarios/{id}` - Ver usuario
+- `PUT /api/usuarios/{id}` - Actualizar usuario
+- `DELETE /api/usuarios/{id}` - Eliminar usuario
+- `GET /api/roles` - Listar roles
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+#### Gestión de Productos
+- `GET /api/productos` - Listar productos
+- `POST /api/productos` - Crear producto
+- `GET /api/productos/{id}` - Ver producto
+- `PUT /api/productos/{id}` - Actualizar producto
+- `DELETE /api/productos/{id}` - Eliminar producto
 
-## Code of Conduct
+#### Gestión de Inventario
+- `GET /api/movimientos` - Listar movimientos
+- `POST /api/movimientos` - Registrar movimiento
+- `GET /api/movimientos/{id}` - Ver movimiento
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### Gestión de Compras
+- `GET /api/compras` - Listar compras
+- `POST /api/compras` - Crear compra
+- `GET /api/compras/{id}` - Ver compra
+- `GET /api/compra-detalles` - Listar detalles de compra
 
-## Security Vulnerabilities
+#### Gestión de Ventas
+- `GET /api/ventas` - Listar ventas
+- `POST /api/ventas` - Crear venta
+- `GET /api/ventas/{id}` - Ver venta
+- `GET /api/venta-detalles` - Listar detalles de venta
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### Gestión de Transferencias
+- `GET /api/transferencias` - Listar transferencias
+- `POST /api/transferencias` - Crear transferencia
+- `GET /api/transferencias/{id}` - Ver transferencia
 
-## License
+#### Gestión de Sedes
+- `GET /api/sedes` - Listar sedes
+- `POST /api/sedes` - Crear sede
+- `GET /api/sedes/{id}` - Ver sede
+- `PUT /api/sedes/{id}` - Actualizar sede
+- `DELETE /api/sedes/{id}` - Eliminar sede
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### Gestión de Proveedores
+- `GET /api/proveedores` - Listar proveedores
+- `POST /api/proveedores` - Crear proveedor
+- `GET /api/proveedores/{id}` - Ver proveedor
+- `PUT /api/proveedores/{id}` - Actualizar proveedor
+- `DELETE /api/proveedores/{id}` - Eliminar proveedor
+
+## Modelos Principales
+
+### Usuario
+- Gestión de usuarios del sistema
+- Autenticación y autorización
+- Relación con roles
+
+### Producto
+- Información de robots y accesorios
+- Control de stock
+- Categorización y marcas
+
+### Movimiento
+- Registro de entradas y salidas
+- Control de inventario
+- Auditoría de cambios
+
+### Compra/Venta
+- Gestión de transacciones
+- Detalles de productos
+- Control de precios
+
+### Transferencia
+- Movimientos entre sedes
+- Control de stock por ubicación
+- Seguimiento de transferencias
+
+## Seguridad
+- Autenticación mediante Laravel Sanctum
+- Tokens de acceso para API
+- Control de acceso basado en roles
+- Validación de datos
+- Protección contra CSRF
+
+## Desarrollo
+Para iniciar el entorno de desarrollo:
+```bash
+composer run dev
+```
+
+## Testing
+Para ejecutar las pruebas:
+```bash
+php artisan test
+```
+
+## Contribución
+1. Fork del proyecto
+2. Crear rama de características (`git checkout -b feature/AmazingFeature`)
+3. Commit de cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir Pull Request
+
+## Licencia
+Este proyecto está bajo la Licencia MIT.

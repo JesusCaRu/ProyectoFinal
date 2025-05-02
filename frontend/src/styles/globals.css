@@ -2,30 +2,31 @@
 
 @font-face {
     font-family: 'Satoshi';
-    src: url('/src/assets/fonts/Satoshi-Variable.woff2') format('woff2');
+    src: url('/assets/Satoshi-Variable.woff2') format('woff2');
+    font-weight: 300 900;
+    font-style: normal;
+    font-display: swap;
 }
 
 
 @theme {
     --font-satoshi: 'Satoshi';
 
-    --color-bg: #fdfdfe;
-    --color-bg-secondary: #f7f9ff;
-    --color-interactive-component: #edf2fe;
-    --color-interactive-component-secondary: #dfeaff;
-    --color-interactive-component-tertiary: #d0dfff;
-    --color-border: #bdd1ff;
-    --color-border-secondary: #a6bff9;
-    --color-border-tertiary: #87a5ef;
-    --color-solid-color: #3d63dd;
-    --color-solid-color-secondary: #3657c3;
-    --color-accessibility-text: #1d2e5c;
-    --color-accessibility-text-secondary: #1d2e5c;
+    --color-bg: #fdfdfe; /* example use: bg-bg*/
+    --color-bg-secondary: #f7f9ff; /* example use: bg-bg-secondary*/
+    --color-interactive-component: #edf2fe; /* example use: bg-interactive-component*/
+    --color-interactive-component-secondary: #dfeaff; /* example use: bg-interactive-component-secondary*/
+    --color-interactive-component-tertiary: #d0dfff; /* example use: bg-interactive-component-tertiary*/
+    --color-border: #bdd1ff; /* example use: border-border*/
+    --color-border-secondary: #a6bff9; /* example use: border-border-secondary*/
+    --color-border-tertiary: #87a5ef; /* example use: border-border-tertiary*/
+    --color-solid-color: #3d63dd; /* example use: bg-solid-color*/
+    --color-solid-color-secondary: #3657c3; /* example use: bg-solid-color-secondary*/
+    --color-accessibility-text: #1d2e5c; /* example use: text-accessibility-text*/
+    --color-accessibility-text-secondary: #1d2e5c; /* example use: text-accessibility-text-secondary*/
 }
 
-@theme dark{
-    --font-satoshi: 'Satoshi';
-
+.dark{
     --color-bg: #0c111c;
     --color-bg-secondary: #111725;
     --color-interactive-component: #172448;
