@@ -147,4 +147,15 @@ class UsuarioController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Sesión cerrada']);
     }
+
+    /**
+     * Obtener los datos del usuario autenticado
+     */
+    public function me(Request $request)
+    {
+        $usuario = $request->user()->load('rol');
+        return response()->json([
+            'data' => $usuario
+        ]);
+    }
 }

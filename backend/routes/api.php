@@ -41,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Usuarios
     Route::apiResource('usuarios', UsuarioController::class);
+    Route::get('me', [UsuarioController::class, 'me']);
 
     // Auditorias
     Route::apiResource('auditorias', AuditoriaController::class);

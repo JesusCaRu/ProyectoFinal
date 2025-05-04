@@ -6,10 +6,12 @@ import AppRoutes from './routes/routes';
 import DarkModeToggle from './components/DarkModeToggle';
 import LoadingScreen from './components/LoadingScreen';
 import './styles/globals.css';
+import { useAuthStore } from './store/authStore';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const loadUser = useAuthStore(state => state.loadUser);
 
   // Handle loading state and network status
   useEffect(() => {
@@ -27,6 +29,10 @@ function App() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
 
   return (
     <BrowserRouter>
