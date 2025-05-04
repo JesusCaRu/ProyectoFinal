@@ -93,7 +93,7 @@ const DashboardLayout = ({ children }) => {
                 className="h-8 w-auto"
               />
               <h1 className="text-xl font-bold text-accessibility-text">
-                RobotStock
+                StockFlow
               </h1>
             </Link>
           ) : (
