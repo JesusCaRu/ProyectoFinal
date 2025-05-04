@@ -92,3 +92,7 @@ npm run dev
 ## Licencia
 
 Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
+
+## Copyright
+
+Copyright © 2025 Jesús Canicio Ruiz. Todos los derechos reservados.

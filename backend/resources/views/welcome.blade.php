@@ -275,3 +275,17 @@
         @endif
     </body>
 </html>
+
+
+<!--
+Copyright (c) 2025 FlowStock - Stock Management System
+Propiedad de: Jesús Canicio Ruiz
+Todos los derechos reservados.
+
+Este software es propiedad intelectual de Jesús Canicio Ruiz y está protegido por las leyes de propiedad intelectual.
+Cualquier uso, reproducción, distribución o modificación de este software sin el consentimiento previo por escrito de Jesús Canicio Ruiz es ilegal.
+
+Para cualquier consulta o aclaración, contacta al autor a través de:
+
+Email: jesuscanicio33@gmail.com
+-->

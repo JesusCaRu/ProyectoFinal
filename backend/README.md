@@ -173,3 +173,6 @@ php artisan test
 
 ## Licencia
 Este proyecto está bajo la Licencia MIT.
+
+## Copyright
+Copyright © 2025 Jesús Canicio Ruiz. Todos los derechos reservados.
