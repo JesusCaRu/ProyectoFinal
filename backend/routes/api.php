@@ -72,7 +72,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('compra-detalles', CompraDetalleController::class);
 
     // Ventas
-    Route::apiResource('ventas', VentaController::class);
+    Route::prefix('ventas')->group(function () {
+        Route::get('/', [VentaController::class, 'index']);
+        Route::post('/', [VentaController::class, 'store']);
+        Route::get('/por-fechas', [VentaController::class, 'getByDateRange']);
+        Route::get('/resumen', [VentaController::class, 'getResumen']);
+        Route::get('/{venta}', [VentaController::class, 'show']);
+    });
     Route::apiResource('venta-detalles', VentaDetalleController::class);
 
     // Movimientos

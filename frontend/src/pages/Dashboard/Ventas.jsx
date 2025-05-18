@@ -1,213 +1,471 @@
+import React, { useState, useEffect } from 'react';
 import { motion as _motion } from 'framer-motion';
+import { useVentaStore } from '../../store/ventaStore';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { formatCurrency } from '../../lib/utils';
+import NuevaVenta from '../../components/ventas/NuevaVenta';
+import DetalleVenta from '../../components/ventas/DetalleVenta';
 import { 
-  DollarSign, 
-  Plus, 
-  Search, 
-  Filter,
-  MoreVertical,
-  TrendingUp,
-  TrendingDown,
-  Calendar
+    DollarSign, 
+    ShoppingCart, 
+    Package, 
+    TrendingUp,
+    Search,
+    Calendar,
+    Plus,
+    BarChart2,
+    Loader2,
+    AlertCircle,
+    CheckCircle,
+    Clock
 } from 'lucide-react';
 
 const Ventas = () => {
-  const sales = [
-    {
-      id: 1,
-      customer: 'Juan Pérez',
-      date: '2024-05-01',
-      amount: 899.97,
-      status: 'completed',
-      items: 3
-    },
-    {
-      id: 2,
-      customer: 'María García',
-      date: '2024-05-02',
-      amount: 499.99,
-      status: 'completed',
-      items: 1
-    },
-    {
-      id: 3,
-      customer: 'Carlos López',
-      date: '2024-05-03',
-      amount: 1299.95,
-      status: 'pending',
-      items: 4
-    },
-    {
-      id: 4,
-      customer: 'Ana Martínez',
-      date: '2024-05-04',
-      amount: 699.98,
-      status: 'completed',
-      items: 2
-    }
-  ];
+    const { 
+        ventas, 
+        loading, 
+        error, 
+        resumen,
+        productosMasVendidos,
+        fetchVentas, 
+        fetchVentasByDateRange,
+        fetchResumen,
+        fetchVenta 
+    } = useVentaStore();
 
-  const stats = [
-    {
-      title: 'Ventas Totales',
-      value: '$3,399.89',
-      change: '+12%',
-      trend: 'up'
-    },
-    {
-      title: 'Ventas del Mes',
-      value: '$2,399.94',
-      change: '+8%',
-      trend: 'up'
-    },
-    {
-      title: 'Ventas Pendientes',
-      value: '$1,299.95',
-      change: '-5%',
-      trend: 'down'
-    },
-    {
-      title: 'Productos Vendidos',
-      value: '10',
-      change: '+15%',
-      trend: 'up'
-    }
-  ];
+    const [searchTerm, setSearchTerm] = useState('');
+    const [fechaInicio, setFechaInicio] = useState(new Date(new Date().setDate(1)));
+    const [fechaFin, setFechaFin] = useState(new Date());
+    const [showNuevaVenta, setShowNuevaVenta] = useState(false);
+    const [selectedVenta, setSelectedVenta] = useState(null);
+    const [showDetalleVenta, setShowDetalleVenta] = useState(false);
+    const [resumenError, setResumenError] = useState(null);
+    const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
 
-  return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <DollarSign className="h-8 w-8 text-solid-color" />
-          <h1 className="text-2xl font-bold text-accessibility-text">Ventas</h1>
-        </div>
-        <button className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200">
-          <Plus className="h-5 w-5" />
-          <span>Nueva Venta</span>
-        </button>
-      </div>
+    useEffect(() => {
+        const loadInitialData = async () => {
+            setIsLoadingInitial(true);
+            try {
+                await Promise.all([
+                    fetchVentas(),
+                    fetchResumen(fechaInicio, fechaFin)
+                ]);
+                setResumenError(null);
+            } catch (error) {
+                console.error('Error al cargar datos iniciales:', error);
+                setResumenError(error.message);
+            } finally {
+                setIsLoadingInitial(false);
+            }
+        };
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <_motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="bg-bg rounded-xl shadow-md p-6 border border-border"
-          >
-            <div className="flex items-center justify-between">
-              <div className="p-2 bg-interactive-component rounded-lg">
-                {stat.trend === 'up' ? (
-                  <TrendingUp className="h-6 w-6 text-success" />
-                ) : (
-                  <TrendingDown className="h-6 w-6 text-error" />
-                )}
-              </div>
-              <span className={`text-sm font-medium ${
-                stat.trend === 'up' ? 'text-success' : 'text-error'
-              }`}>
-                {stat.change}
-              </span>
+        loadInitialData();
+    }, []);
+
+    useEffect(() => {
+        const updateData = async () => {
+            if (isLoadingInitial) return;
+            
+            setIsUpdating(true);
+            try {
+                await Promise.all([
+                    fetchVentasByDateRange(fechaInicio, fechaFin),
+                    fetchResumen(fechaInicio, fechaFin)
+                ]);
+                setResumenError(null);
+            } catch (error) {
+                console.error('Error al actualizar datos:', error);
+                setResumenError(error.message);
+            } finally {
+                setIsUpdating(false);
+            }
+        };
+
+        updateData();
+    }, [fechaInicio, fechaFin]);
+
+    const handleDateRangeChange = async (start, end) => {
+        try {
+            if (!(start instanceof Date) || !(end instanceof Date)) {
+                throw new Error('Las fechas proporcionadas no son válidas');
+            }
+
+            setFechaInicio(start);
+            setFechaFin(end);
+        } catch (error) {
+            console.error('Error al actualizar rango de fechas:', error);
+            setResumenError(error.message);
+        }
+    };
+
+    const isLoading = loading || isUpdating;
+
+    const filteredVentas = ventas.filter(venta => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            venta.id.toString().includes(searchLower) ||
+            venta.usuario?.nombre?.toLowerCase().includes(searchLower) ||
+            venta.detalles?.some(detalle => 
+                detalle.producto?.nombre?.toLowerCase().includes(searchLower)
+            )
+        );
+    });
+
+    const handleVerDetalles = async (venta) => {
+        try {
+            const ventaDetalle = await fetchVenta(venta.id);
+            setSelectedVenta(ventaDetalle);
+            setShowDetalleVenta(true);
+        } catch (error) {
+            console.error('Error al cargar los detalles de la venta:', error);
+        }
+    };
+
+    if (isLoadingInitial) {
+        return (
+            <div className="flex items-center justify-center min-h-[80vh]">
+                <_motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ 
+                        duration: 0.5,
+                        ease: "easeOut"
+                    }}
+                    className="flex flex-col items-center gap-4"
+                >
+                    <_motion.div
+                        animate={{ 
+                            rotate: 360,
+                            scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                            rotate: {
+                                duration: 1,
+                                repeat: Infinity,
+                                ease: "linear"
+                            },
+                            scale: {
+                                duration: 1.5,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }
+                        }}
+                    >
+                        <Loader2 className="h-12 w-12 text-solid-color" />
+                    </_motion.div>
+                    <_motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-text-tertiary text-lg"
+                    >
+                        Cargando ventas...
+                    </_motion.p>
+                </_motion.div>
             </div>
-            <h3 className="mt-4 text-sm text-text-tertiary">{stat.title}</h3>
-            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-              {stat.value}
-            </p>
-          </_motion.div>
-        ))}
-      </div>
+        );
+    }
 
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
-          <Search className="h-5 w-5 text-text-tertiary absolute left-3 top-1/2 transform -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Buscar ventas..."
-            className="w-full pl-10 pr-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
-          />
-        </div>
-        <button className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200">
-          <Calendar className="h-5 w-5" />
-          <span>Filtrar por fecha</span>
-        </button>
-        <button className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200">
-          <Filter className="h-5 w-5" />
-          <span>Filtrar</span>
-        </button>
-      </div>
+    if (error) {
+        return (
+            <_motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="p-6 bg-error/10 border border-error text-error rounded-lg flex items-center gap-3"
+            >
+                <AlertCircle className="h-5 w-5" />
+                <p>{error}</p>
+            </_motion.div>
+        );
+    }
 
-      <div className="bg-bg rounded-xl shadow-md border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-interactive-component">
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Cliente
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Fecha
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Monto
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Items
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {sales.map((sale) => (
-                <tr key={sale.id} className="hover:bg-interactive-component/50 transition-colors duration-200">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-accessibility-text">
-                      {sale.customer}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-text-tertiary">
-                      {sale.date}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-accessibility-text">
-                      ${sale.amount.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-accessibility-text">
-                      {sale.items}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      sale.status === 'completed' 
-                        ? 'bg-success/10 text-success' 
-                        : 'bg-warning/10 text-warning'
-                    }`}>
-                      {sale.status === 'completed' ? 'Completada' : 'Pendiente'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button className="p-1 text-info hover:text-info-hover rounded-lg transition-colors duration-200">
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+    return (
+        <_motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6 p-6"
+        >
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                    <ShoppingCart className="h-8 w-8 text-solid-color" />
+                    <h1 className="text-2xl font-bold text-accessibility-text">Ventas</h1>
+                </div>
+                <div className="flex items-center space-x-4">
+                    <button 
+                        onClick={() => setShowNuevaVenta(true)}
+                        className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                    >
+                        <Plus className="h-5 w-5" />
+                        <span>Nueva Venta</span>
+                    </button>
+                    <button className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200">
+                        <BarChart2 className="h-5 w-5" />
+                        <span>Reportes</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Resumen de ventas */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {isLoading ? (
+                    Array(4).fill(0).map((_, index) => (
+                        <_motion.div
+                            key={index}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-center h-24">
+                                <Loader2 className="h-8 w-8 animate-spin text-solid-color" />
+                            </div>
+                        </_motion.div>
+                    ))
+                ) : resumenError ? (
+                    <_motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="col-span-4 bg-error/10 border border-error text-error p-4 rounded-lg flex items-center gap-3"
+                    >
+                        <AlertCircle className="h-5 w-5" />
+                        <p>Error al cargar el resumen: {resumenError}</p>
+                    </_motion.div>
+                ) : (
+                    <>
+                        <_motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="p-2 bg-interactive-component rounded-lg">
+                                    <DollarSign className="h-6 w-6 text-success" />
+                                </div>
+                                <span className="text-sm font-medium text-success">+{resumen?.promedio_venta ? ((resumen.promedio_venta / resumen.total_monto) * 100).toFixed(1) : 0}%</span>
+                            </div>
+                            <h3 className="mt-4 text-sm text-text-tertiary">Total Ventas</h3>
+                            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
+                                {formatCurrency(resumen?.total_monto || 0)}
+                            </p>
+                        </_motion.div>
+
+                        <_motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.2 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="p-2 bg-interactive-component rounded-lg">
+                                    <ShoppingCart className="h-6 w-6 text-warning" />
+                                </div>
+                                <span className="text-sm font-medium text-warning">+{resumen?.total_ventas ? ((resumen.total_ventas / 100) * 10).toFixed(1) : 0}%</span>
+                            </div>
+                            <h3 className="mt-4 text-sm text-text-tertiary">Ventas Realizadas</h3>
+                            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
+                                {resumen?.total_ventas || 0}
+                            </p>
+                        </_motion.div>
+
+                        <_motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.3 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="p-2 bg-interactive-component rounded-lg">
+                                    <TrendingUp className="h-6 w-6 text-info" />
+                                </div>
+                                <span className="text-sm font-medium text-info">+{resumen?.promedio_venta ? ((resumen.promedio_venta / 1000) * 100).toFixed(1) : 0}%</span>
+                            </div>
+                            <h3 className="mt-4 text-sm text-text-tertiary">Promedio por Venta</h3>
+                            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
+                                {formatCurrency(resumen?.promedio_venta || 0)}
+                            </p>
+                        </_motion.div>
+
+                        <_motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.4 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="p-2 bg-interactive-component rounded-lg">
+                                    <Package className="h-6 w-6 text-solid-color" />
+                                </div>
+                                <span className="text-sm font-medium text-solid-color">+{productosMasVendidos.length ? ((productosMasVendidos[0].total_vendido / 100) * 15).toFixed(1) : 0}%</span>
+                            </div>
+                            <h3 className="mt-4 text-sm text-text-tertiary">Productos Vendidos</h3>
+                            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
+                                {productosMasVendidos.reduce((acc, curr) => acc + (curr.total_vendido || 0), 0)}
+                            </p>
+                        </_motion.div>
+                    </>
+                )}
+            </div>
+
+            {/* Filtros y búsqueda */}
+            <_motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.5 }}
+                className="flex items-center space-x-4 bg-bg p-4 rounded-lg border border-border"
+            >
+                <div className="flex-1 relative">
+                    <Search className="h-5 w-5 text-text-tertiary absolute left-3 top-1/2 transform -translate-y-1/2" />
+                    <input
+                        type="text"
+                        placeholder="Buscar ventas..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                    />
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Calendar className="h-5 w-5 text-text-tertiary" />
+                    <input
+                        type="date"
+                        value={format(fechaInicio, 'yyyy-MM-dd')}
+                        onChange={(e) => {
+                            const date = new Date(e.target.value);
+                            if (!isNaN(date.getTime())) {
+                                handleDateRangeChange(date, fechaFin);
+                            }
+                        }}
+                        className="px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                    />
+                    <span className="text-text-tertiary">hasta</span>
+                    <input
+                        type="date"
+                        value={format(fechaFin, 'yyyy-MM-dd')}
+                        onChange={(e) => {
+                            const date = new Date(e.target.value);
+                            if (!isNaN(date.getTime())) {
+                                handleDateRangeChange(fechaInicio, date);
+                            }
+                        }}
+                        className="px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                    />
+                </div>
+            </_motion.div>
+
+            {/* Tabla de ventas */}
+            <_motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.6 }}
+                className="bg-bg rounded-xl shadow-md border border-border overflow-hidden"
+            >
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="bg-interactive-component">
+                                <th className="px-6 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">Fecha</th>
+                                <th className="px-6 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">Vendedor</th>
+                                <th className="px-6 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">Productos</th>
+                                <th className="px-6 py-4 text-right text-sm font-medium text-text-tertiary uppercase tracking-wider">Total</th>
+                                <th className="px-6 py-4 text-center text-sm font-medium text-text-tertiary uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-8 text-center">
+                                        <div className="flex flex-col items-center justify-center gap-3">
+                                            <Loader2 className="h-8 w-8 animate-spin text-solid-color" />
+                                            <p className="text-text-tertiary">
+                                                {isUpdating ? 'Actualizando datos...' : 'Cargando ventas...'}
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filteredVentas.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-8 text-center text-text-tertiary">
+                                        No se encontraron ventas
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredVentas.map((venta, index) => (
+                                    <_motion.tr
+                                        key={venta.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                                        className="hover:bg-interactive-component/50 transition-colors duration-200"
+                                    >
+                                        <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
+                                            #{venta.id}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
+                                            {format(new Date(venta.fecha), "dd/MM/yyyy HH:mm", { locale: es })}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
+                                            {venta.usuario?.nombre || 'No especificado'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
+                                            {venta.detalles?.length || 0} productos
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-accessibility-text font-medium">
+                                            {formatCurrency(venta.total)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                                            <button
+                                                onClick={() => handleVerDetalles(venta)}
+                                                className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg transition-colors duration-200"
+                                            >
+                                                Ver detalles
+                                            </button>
+                                        </td>
+                                    </_motion.tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </_motion.div>
+
+            {/* Modales */}
+            {showNuevaVenta && (
+                <NuevaVenta
+                    isOpen={showNuevaVenta}
+                    onClose={async () => {
+                        setShowNuevaVenta(false);
+                        setIsUpdating(true);
+                        try {
+                            await Promise.all([
+                                fetchVentas(),
+                                fetchResumen(fechaInicio, fechaFin)
+                            ]);
+                        } catch (error) {
+                            console.error('Error al actualizar después de nueva venta:', error);
+                        } finally {
+                            setIsUpdating(false);
+                        }
+                    }}
+                />
+            )}
+
+            {showDetalleVenta && selectedVenta && (
+                <DetalleVenta
+                    venta={selectedVenta}
+                    isOpen={showDetalleVenta}
+                    onClose={() => {
+                        setShowDetalleVenta(false);
+                        setSelectedVenta(null);
+                    }}
+                />
+            )}
+        </_motion.div>
+    );
 };
 
 export default Ventas; 

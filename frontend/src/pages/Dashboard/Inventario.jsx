@@ -18,10 +18,17 @@ import {
   Trash2,
   BarChart2,
   ShoppingCart,
-  DollarSign
+  DollarSign,
+  Building,
+  Briefcase
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useProductStore } from '../../store/productStore';
+import { useSedeStore } from '../../store/sedeStore';
+import { useCategoryStore } from '../../store/categoryStore';
+import { useBrandStore } from '../../store/brandStore';
+import Modal from '../../components/Modal';
+import ProductForm from '../../components/ProductForm';
 
 const Inventario = () => {
   const { 
@@ -32,32 +39,105 @@ const Inventario = () => {
     loadMovements,
     deleteProduct
   } = useProductStore();
-
+  const { sedes, fetchSedes } = useSedeStore();
+  const { categories, fetchCategories } = useCategoryStore();
+  const { brands, fetchBrands } = useBrandStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSede, setSelectedSede] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [showMovements, setShowMovements] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
 
   useEffect(() => {
     loadProducts();
     loadMovements();
-  }, []);
+    fetchSedes();
+    fetchCategories();
+    fetchBrands();
+  }, [loadProducts, loadMovements, fetchSedes, fetchCategories, fetchBrands]);
 
   const filteredProducts = products.filter(product => {
+    console.log('Filtering product:', {
+      id: product.id,
+      sede_id: product.sede_id,
+      selectedSede: selectedSede,
+      sede_id_type: typeof product.sede_id,
+      selectedSede_type: typeof selectedSede,
+      matchesSede: !selectedSede || Number(product.sede_id) === Number(selectedSede)
+    });
+
     const matchesSearch = 
       product.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.sku?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || product.categoria_id === parseInt(selectedCategory);
-    return matchesSearch && matchesCategory;
+    const matchesCategory = !selectedCategory || Number(product.categoria_id) === Number(selectedCategory);
+    const matchesSede = !selectedSede || Number(product.sede_id) === Number(selectedSede);
+    const matchesBrand = !selectedBrand || Number(product.marca_id) === Number(selectedBrand);
+    
+    return matchesSearch && matchesCategory && matchesSede && matchesBrand;
   });
 
-  const uniqueCategories = products.reduce((acc, product) => {
-    if (product.categoria_id && !acc.some(cat => cat.id === product.categoria_id)) {
-      acc.push({
-        id: product.categoria_id,
-        nombre: product.categoria || 'Sin categoría'
-      });
+  const getProductStatus = (product) => {
+    // Convertir a números para asegurar comparaciones correctas
+    const stock = Number(product.stock);
+    const stockMinimo = Number(product.stock_minimo);
+
+    console.log('Calculating product status:', {
+      id: product.id,
+      nombre: product.nombre,
+      raw_stock: product.stock,
+      raw_stock_minimo: product.stock_minimo,
+      processed_stock: stock,
+      processed_stock_minimo: stockMinimo,
+      stock_type: typeof stock,
+      stock_minimo_type: typeof stockMinimo,
+      is_zero: stock === 0,
+      is_below_min: stock <= stockMinimo,
+      is_above_min: stock > stockMinimo
+    });
+
+    // Si el stock es 0, está sin stock
+    if (stock === 0) {
+      console.log(`Product ${product.nombre} (${product.id}): Sin stock (stock = 0)`);
+      return 'sin_stock';
     }
-    return acc;
-  }, []);
+
+    // Si el stock es menor o igual al mínimo, está bajo
+    if (stock <= stockMinimo) {
+      console.log(`Product ${product.nombre} (${product.id}): Stock bajo (${stock} <= ${stockMinimo})`);
+      return 'stock_bajo';
+    }
+
+    // Si el stock es mayor que el mínimo, está en stock
+    console.log(`Product ${product.nombre} (${product.id}): En stock (${stock} > ${stockMinimo})`);
+    return 'en_stock';
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  const formatCurrency = (amount) => {
+    if (amount === null || amount === undefined) return '$0.00';
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
 
   const stats = [
     {
@@ -69,17 +149,24 @@ const Inventario = () => {
     },
     {
       title: 'En Stock',
-      value: products.filter(product => product.estado === 'en_stock').length.toString(),
+      value: products.filter(product => getProductStatus(product) === 'en_stock').length.toString(),
       icon: <CheckCircle className="h-6 w-6 text-success" />,
       change: '+8%',
       trend: 'up'
     },
     {
       title: 'Stock Bajo',
-      value: products.filter(product => product.estado === 'stock_bajo').length.toString(),
+      value: products.filter(product => getProductStatus(product) === 'stock_bajo').length.toString(),
       icon: <AlertCircle className="h-6 w-6 text-warning" />,
       change: '-5%',
       trend: 'down'
+    },
+    {
+      title: 'Sin Stock',
+      value: products.filter(product => getProductStatus(product) === 'sin_stock').length.toString(),
+      icon: <Clock className="h-6 w-6 text-error" />,
+      change: '+2%',
+      trend: 'up'
     }
   ];
 
@@ -122,24 +209,67 @@ const Inventario = () => {
     }
   };
 
-  const handleEdit = async (id) => {
-    // Implementar lógica de edición
-    console.log('Editar producto:', id);
+  const handleCreate = () => {
+    setSelectedProduct(null);
+    setModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-      const success = await deleteProduct(id);
+  const handleEdit = (product) => {
+    setSelectedProduct(product);
+    setModalOpen(true);
+  };
+
+  const handleDelete = (product) => {
+    setProductToDelete(product);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (productToDelete) {
+      const success = await deleteProduct(productToDelete.id);
       if (success) {
-        // Mostrar mensaje de éxito
-        console.log('Producto eliminado exitosamente');
+        setDeleteModalOpen(false);
+        setProductToDelete(null);
       }
     }
   };
 
   const handleExport = () => {
     // Implementar lógica de exportación
-    console.log('Exportar datos');
+    const data = filteredProducts.map(product => ({
+      Nombre: product.nombre,
+      Descripción: product.descripcion,
+      Categoría: product.categoria?.nombre || 'Sin categoría',
+      Marca: product.marca?.nombre || 'Sin marca',
+      Sede: product.sede?.nombre || 'Sin sede',
+      Stock: product.stock,
+      'Stock Mínimo': product.stock_minimo,
+      'Precio de Compra': product.precio_compra,
+      'Precio de Venta': product.precio_venta,
+      Estado: getStatusText(getProductStatus(product))
+    }));
+
+    const csvContent = [
+      Object.keys(data[0]).join(','),
+      ...data.map(row => Object.values(row).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `inventario_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  const handleFilter = () => {
+    // Aquí podríamos implementar filtros adicionales si es necesario
+    // Por ahora, los filtros ya se aplican automáticamente con los estados
+    console.log('Filtros aplicados:', {
+      searchTerm,
+      selectedCategory,
+      selectedSede,
+      selectedBrand
+    });
   };
 
   return (
@@ -150,7 +280,10 @@ const Inventario = () => {
           <h1 className="text-2xl font-bold text-accessibility-text">Inventario</h1>
         </div>
         <div className="flex items-center space-x-4">
-          <button className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200">
+          <button 
+            onClick={handleCreate}
+            className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+          >
             <Plus className="h-5 w-5" />
             <span>Nuevo Producto</span>
           </button>
@@ -167,7 +300,7 @@ const Inventario = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <_motion.div
             key={index}
@@ -211,13 +344,40 @@ const Inventario = () => {
           className="px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
         >
           <option value="">Todas las categorías</option>
-          {uniqueCategories.map(category => (
+          {categories.map(category => (
             <option key={category.id} value={category.id}>
               {category.nombre}
             </option>
           ))}
         </select>
-        <button className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200">
+        <select
+          value={selectedBrand}
+          onChange={(e) => setSelectedBrand(e.target.value)}
+          className="px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+        >
+          <option value="">Todas las marcas</option>
+          {brands.map(brand => (
+            <option key={brand.id} value={brand.id}>
+              {brand.nombre}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selectedSede}
+          onChange={(e) => setSelectedSede(e.target.value)}
+          className="px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+        >
+          <option value="">Todas las sedes</option>
+          {sedes.map(sede => (
+            <option key={sede.id} value={sede.id}>
+              {sede.nombre}
+            </option>
+          ))}
+        </select>
+        <button 
+          onClick={handleFilter}
+          className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200"
+        >
           <Filter className="h-5 w-5" />
           <span>Filtrar</span>
         </button>
@@ -235,22 +395,28 @@ const Inventario = () => {
           <table className="w-full">
             <thead>
               <tr className="bg-interactive-component">
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Producto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
+                  SKU
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Categoría
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Stock
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Precio
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
+                  Última Actualización
+                </th>
+                <th className="px-8 py-4 text-right text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
@@ -258,88 +424,170 @@ const Inventario = () => {
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-text-tertiary">
+                  <td colSpan="8" className="px-8 py-4 text-center text-text-tertiary">
                     Cargando productos...
                   </td>
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-text-tertiary">
+                  <td colSpan="8" className="px-8 py-4 text-center text-text-tertiary">
                     No se encontraron productos
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-interactive-component/50 transition-colors duration-200">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-interactive-component rounded-lg">
-                          <Box className="h-5 w-5 text-solid-color" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-accessibility-text">
-                            {product.nombre}
+                filteredProducts.map((product) => {
+                  const status = getProductStatus(product);
+                  return (
+                    <tr key={product.id} className="hover:bg-interactive-component/50 transition-colors duration-200">
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <div className="flex items-center space-x-4">
+                          <div className="p-2 bg-interactive-component rounded-lg">
+                            <Box className="h-5 w-5 text-solid-color" />
                           </div>
-                          <div className="text-xs text-text-tertiary">
-                            SKU: {product.sku}
+                          <div>
+                            <div className="text-base font-medium text-accessibility-text">
+                              {product.nombre}
+                            </div>
+                            <div className="text-sm text-text-tertiary">
+                              {product.descripcion}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <Tag className="h-4 w-4 text-text-tertiary" />
-                        <span className="text-sm text-text-tertiary">{product.categoria}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <Package className="h-4 w-4 text-text-tertiary" />
-                        <span className="text-sm text-text-tertiary">{product.stock} / {product.minStock}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <DollarSign className="h-4 w-4 text-text-tertiary" />
-                        <span className="text-sm text-text-tertiary">
-                          ${product.precio_venta || 0}
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <span className="text-base text-text-tertiary">
+                          {product.sku || 'N/A'}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon(product.estado)}
-                        <span className={`text-sm font-medium ${getStatusColor(product.estado)} px-2 py-1 rounded-full`}>
-                          {getStatusText(product.estado)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button 
-                          onClick={() => handleEdit(product.id)}
-                          className="p-1 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(product.id)}
-                          className="p-1 text-error hover:text-error-hover rounded-lg transition-colors duration-200"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                        <button className="p-1 text-info hover:text-info-hover rounded-lg transition-colors duration-200">
-                          <MoreVertical className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
+                          <Tag className="h-5 w-5 text-text-tertiary" />
+                          <span className="text-base text-text-tertiary">
+                            {product.categoria?.nombre || product.categoria || 'Sin categoría'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
+                          <Package className="h-5 w-5 text-text-tertiary" />
+                          <div className="flex flex-col">
+                            <span className="text-base text-text-tertiary">
+                              {product.stock?.toLocaleString() || '0'}
+                            </span>
+                            <span className="text-sm text-text-tertiary">
+                              Mín: {product.stock_minimo?.toLocaleString() || '0'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
+                          <DollarSign className="h-5 w-5 text-text-tertiary" />
+                          <div className="flex flex-col">
+                            <span className="text-base text-text-tertiary">
+                              {formatCurrency(product.precio_venta)}
+                            </span>
+                            {product.precio_compra && (
+                              <span className="text-sm text-text-tertiary">
+                                Compra: {formatCurrency(product.precio_compra)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
+                          {getStatusIcon(status)}
+                          <span className={`text-base font-medium ${getStatusColor(status)} px-3 py-1.5 rounded-full`}>
+                            {getStatusText(status)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <span className="text-sm text-text-tertiary">
+                            Actualizado: {formatDate(product.updated_at)}
+                          </span>
+                          <span className="text-sm text-text-tertiary">
+                            Creado: {formatDate(product.created_at)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end space-x-3">
+                          <button 
+                            onClick={() => handleEdit(product)}
+                            className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
+                            title="Editar producto"
+                          >
+                            <Edit className="h-5 w-5" />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(product)}
+                            className="p-2 text-error hover:text-error-hover rounded-lg transition-colors duration-200"
+                            title="Eliminar producto"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                          <button 
+                            onClick={() => setShowMovements(!showMovements)}
+                            className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
+                            title="Ver movimientos"
+                          >
+                            <ShoppingCart className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Modal para crear/editar producto */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={selectedProduct ? 'Editar Producto' : 'Nuevo Producto'}
+        size="lg"
+      >
+        <ProductForm
+          product={selectedProduct}
+          onClose={() => setModalOpen(false)}
+        />
+      </Modal>
+
+      {/* Modal de confirmación para eliminar */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Confirmar Eliminación"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-text-secondary">
+            ¿Estás seguro de que deseas eliminar el producto {productToDelete?.nombre}?
+            Esta acción no se puede deshacer.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

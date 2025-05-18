@@ -19,25 +19,74 @@ export const useProductStore = create((set, get) => ({
         }
       });
       
+      console.log('Raw API response for products:', response.data.data?.map(p => ({
+        id: p.id,
+        nombre: p.nombre,
+        stock: p.stock,
+        stock_minimo: p.stock_minimo,
+        stock_type: typeof p.stock,
+        stock_minimo_type: typeof p.stock_minimo
+      })));
+      
       // Procesar los datos para asegurar que sean strings o números
       const productsData = Array.isArray(response.data.data) 
-        ? response.data.data.map(product => ({
-            id: product.id,
-            nombre: product.nombre || '',
-            sku: product.sku || '',
-            descripcion: product.descripcion || '',
-            precio_venta: Number(product.precio_venta) || 0,
-            stock: Number(product.stock) || 0,
-            stock_minimo: Number(product.stock_minimo) || 0,
-            categoria_id: product.categoria_id || null,
-            categoria: typeof product.categoria === 'object' ? product.categoria.nombre : (product.categoria || 'Sin categoría'),
-            estado: product.estado || 'sin_stock',
-            created_at: product.created_at,
-            updated_at: product.updated_at
-          }))
+        ? response.data.data.map(product => {
+            const processedStock = Number(product.stock);
+            const processedStockMinimo = Number(product.stock_minimo);
+            
+            console.log('Processing product stock:', {
+              id: product.id,
+              nombre: product.nombre,
+              raw_stock: product.stock,
+              raw_stock_minimo: product.stock_minimo,
+              processed_stock: processedStock,
+              processed_stock_minimo: processedStockMinimo,
+              stock_type: typeof processedStock,
+              stock_minimo_type: typeof processedStockMinimo
+            });
+            
+            const processedProduct = {
+              id: product.id,
+              nombre: product.nombre || '',
+              sku: product.sku || '',
+              descripcion: product.descripcion || '',
+              precio_venta: Number(product.precio_venta) || 0,
+              precio_compra: Number(product.precio_compra) || 0,
+              stock: processedStock || 0,
+              stock_minimo: processedStockMinimo || 0,
+              categoria_id: Number(product.categoria_id) || null,
+              marca_id: Number(product.marca_id) || null,
+              sede_id: Number(product.sede_id) || null,
+              categoria: typeof product.categoria === 'object' ? product.categoria.nombre : (product.categoria || 'Sin categoría'),
+              marca: typeof product.marca === 'object' ? product.marca.nombre : (product.marca || 'Sin marca'),
+              sede: typeof product.sede === 'object' ? product.sede.nombre : (product.sede || 'Sin sede'),
+              estado: product.estado || 'sin_stock',
+              created_at: product.created_at,
+              updated_at: product.updated_at
+            };
+
+            console.log('Final processed product:', {
+              id: processedProduct.id,
+              nombre: processedProduct.nombre,
+              stock: processedProduct.stock,
+              stock_minimo: processedProduct.stock_minimo,
+              stock_type: typeof processedProduct.stock,
+              stock_minimo_type: typeof processedProduct.stock_minimo
+            });
+
+            return processedProduct;
+          })
         : [];
 
-      console.log('Processed products:', productsData);
+      console.log('All processed products stock info:', productsData.map(p => ({
+        id: p.id,
+        nombre: p.nombre,
+        stock: p.stock,
+        stock_minimo: p.stock_minimo,
+        stock_type: typeof p.stock,
+        stock_minimo_type: typeof p.stock_minimo
+      })));
+      
       set({ products: productsData, isLoading: false });
     } catch (error) {
       console.error('Error loading products:', error);

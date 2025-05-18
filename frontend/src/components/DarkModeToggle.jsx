@@ -24,7 +24,7 @@ const DarkModeToggle = () => {
   return (
     <button
       onClick={toggleDarkMode}
-      className="fixed top-4 right-4 p-2 rounded-full bg-interactive-component text-accessibility-text hover:bg-interactive-component-secondary transition-colors duration-200 border border-border"
+      className="fixed top-3 right-4 p-2 rounded-full bg-interactive-component text-accessibility-text hover:bg-interactive-component-secondary transition-colors duration-200 border border-border"
       aria-label="Cambiar modo oscuro"
     >
       <_motion.div
