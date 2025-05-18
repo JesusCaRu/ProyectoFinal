@@ -42,6 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Usuarios
     Route::apiResource('usuarios', UsuarioController::class);
     Route::get('me', [UsuarioController::class, 'me']);
+    Route::get('usuarios/trashed', [UsuarioController::class, 'trashed']);
+    Route::post('usuarios/{id}/restore', [UsuarioController::class, 'restore']);
+    Route::patch('usuarios/{usuario}/estado', [UsuarioController::class, 'cambiarEstado']);
 
     // Auditorias
     Route::apiResource('auditorias', AuditoriaController::class);

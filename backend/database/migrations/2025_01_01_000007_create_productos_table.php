@@ -15,13 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('nombre', 150);
             $table->text('descripcion')->nullable();
-            $table->foreignId('categoria_id')->constrained('categorias');
-            $table->foreignId('marca_id')->constrained('marcas');
+            $table->unsignedBigInteger('categoria_id');
+            $table->unsignedBigInteger('marca_id');
             $table->integer('stock')->default(0);
             $table->integer('stock_minimo')->default(5);
             $table->decimal('precio_compra', 10, 2);
             $table->decimal('precio_venta', 10, 2);
-            $table->foreignId('sede_id')->constrained('sedes');
+            $table->unsignedBigInteger('sede_id');
             $table->timestamps();
         });
     }

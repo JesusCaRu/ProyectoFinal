@@ -48,11 +48,22 @@ const Register = () => {
     if (!validateForm()) return;
 
     try {
+      console.log('Enviando datos de registro:', {
+        nombre: formData.name,
+        email: formData.email,
+        password: formData.password,
+        rol_id: 2,
+        sede_id: 1,
+        activo: 1
+      });
+
       const success = await register({
         nombre: formData.name,
         email: formData.email,
         password: formData.password,
-        rol_id: 2 // Siempre empleado por defecto
+        rol_id: 2, // Siempre empleado por defecto
+        sede_id: 1, // Sede por defecto (No asignada)
+        activo: 1 // Usuario activo por defecto
       });
       
       if (success) {
@@ -60,6 +71,10 @@ const Register = () => {
       }
     } catch (error) {
       console.error('Error en el registro:', error);
+      setErrors(prev => ({
+        ...prev,
+        general: error.response?.data?.message || 'Error al registrar usuario'
+      }));
     }
   };
 

@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('auditorias', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('usuarios', function (Blueprint $table) {
+            $table->timestamp('ultimo_acceso')->nullable()->after('activo');
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('auditorias');
+        Schema::table('usuarios', function (Blueprint $table) {
+            $table->dropColumn('ultimo_acceso');
+        });
     }
 };

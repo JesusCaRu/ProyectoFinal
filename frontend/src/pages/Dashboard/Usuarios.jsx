@@ -4,135 +4,174 @@ import {
   Plus, 
   Search, 
   Filter,
-  MoreVertical,
   Mail,
-  Phone,
   User,
   Shield,
   Edit,
   Trash2,
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  TrendingUp,
-  TrendingDown
+  Building,
+  Phone,
+  MoreVertical,
+  UserCheck,
+  UserX
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useUserStore } from '../../store/userStore';
+import { useSedeStore } from '../../store/sedeStore';
+import Modal from '../../components/Modal';
+import UserForm from '../../components/UserForm';
+import axios from 'axios';
+import { format, formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
 const Usuarios = () => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: 'Juan Pérez',
-      email: 'juan.perez@email.com',
-      phone: '+1 234 567 8901',
-      role: 'Administrador',
-      status: 'active',
-      lastLogin: '2024-05-01 10:30',
-      joinDate: '2024-01-01'
-    },
-    {
-      id: 2,
-      name: 'María García',
-      email: 'maria.garcia@email.com',
-      phone: '+1 234 567 8902',
-      role: 'Empleado',
-      status: 'active',
-      lastLogin: '2024-05-01 09:15',
-      joinDate: '2024-02-15'
-    },
-    {
-      id: 3,
-      name: 'Carlos López',
-      email: 'carlos.lopez@email.com',
-      phone: '+1 234 567 8903',
-      role: 'Empleado',
-      status: 'inactive',
-      lastLogin: '2024-04-28 16:45',
-      joinDate: '2024-03-01'
-    },
-    {
-      id: 4,
-      name: 'Ana Martínez',
-      email: 'ana.martinez@email.com',
-      phone: '+1 234 567 8904',
-      role: 'Empleado',
-      status: 'pending',
-      lastLogin: 'Nunca',
-      joinDate: '2024-05-01'
-    }
-  ]);
+  const { 
+    users, 
+    loadUsers,
+    deleteUser
+  } = useUserStore();
+  const { sedes, fetchSedes } = useSedeStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
 
-  const stats = [
-    {
-      title: 'Usuarios Totales',
-      value: '156',
-      icon: <Users className="h-6 w-6 text-solid-color" />,
-      change: '+12%',
-      trend: 'up'
-    },
-    {
-      title: 'Activos',
-      value: '142',
-      icon: <CheckCircle className="h-6 w-6 text-success" />,
-      change: '+8%',
-      trend: 'up'
-    },
-    {
-      title: 'Inactivos',
-      value: '14',
-      icon: <AlertCircle className="h-6 w-6 text-error" />,
-      change: '-5%',
-      trend: 'down'
-    }
-  ];
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([loadUsers(), fetchSedes()]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+    loadData();
+  }, [loadUsers, fetchSedes]);
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle className="h-4 w-4 text-success" />;
-      case 'inactive':
-        return <AlertCircle className="h-4 w-4 text-error" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-warning" />;
-      default:
-        return null;
+  const handleStatusChange = async (userId, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API_URL}/users/${userId}/status`, 
+        { activo: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      loadUsers();
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
     }
   };
 
+  const getStatusIcon = (status) => {
+    return status === 1 ? 
+      <UserCheck className="h-4 w-4 text-success" /> : 
+      <UserX className="h-4 w-4 text-error" />;
+  };
+
+  const getStatusColor = (status) => {
+    return status === 1 ? 
+      'bg-success/10 text-success' : 
+      'bg-error/10 text-error';
+  };
+
   const getStatusText = (status) => {
-    switch (status) {
-      case 'active':
-        return 'Activo';
-      case 'inactive':
-        return 'Inactivo';
-      case 'pending':
-        return 'Pendiente';
+    return status === 1 ? 'Activo' : 'Inactivo';
+  };
+
+  const getSedeName = (sedeId) => {
+    const sede = sedes.find(s => s.id === sedeId);
+    return sede ? sede.nombre : 'No asignada';
+  };
+
+  const getRoleName = (roleId) => {
+    switch (roleId) {
+      case 1:
+        return 'Administrador';
+      case 2:
+        return 'Vendedor';
+      case 3:
+        return 'Almacén';
       default:
         return 'Desconocido';
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-success/10 text-success';
-      case 'inactive':
-        return 'bg-error/10 text-error';
-      case 'pending':
-        return 'bg-warning/10 text-warning';
-      default:
-        return 'bg-text-tertiary/10 text-text-tertiary';
+  const getInitials = (name) => {
+    if (!name) return '';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const formatUltimoAcceso = (fecha) => {
+    if (!fecha) return 'Nunca';
+    try {
+      const dateObj = new Date(fecha);
+      return `${format(dateObj, 'dd/MM/yyyy HH:mm', { locale: es })} (${formatDistanceToNow(dateObj, { addSuffix: true, locale: es })})`;
+    } catch {
+      return fecha;
     }
   };
 
-  const handleEdit = (id) => {
-    // Implementar lógica de edición
-    console.log('Editar usuario:', id);
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = !selectedRole || user.rol_id === parseInt(selectedRole);
+    return matchesSearch && matchesRole;
+  });
+
+  const stats = [
+    {
+      title: 'Usuarios Totales',
+      value: users.length.toString(),
+      icon: <Users className="h-6 w-6 text-solid-color" />,
+      change: '+12%',
+      trend: 'up'
+    },
+    {
+      title: 'Usuarios Activos',
+      value: users.filter(u => u.activo === 1).length.toString(),
+      icon: <UserCheck className="h-6 w-6 text-success" />,
+      change: '+5%',
+      trend: 'up'
+    },
+    {
+      title: 'Usuarios Inactivos',
+      value: users.filter(u => u.activo === 0).length.toString(),
+      icon: <UserX className="h-6 w-6 text-error" />,
+      change: '-2%',
+      trend: 'down'
+    }
+  ];
+
+  const handleCreate = () => {
+    setSelectedUser(null);
+    setModalOpen(true);
   };
 
-  const handleDelete = (id) => {
-    setUsers(users.filter(user => user.id !== id));
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    setModalOpen(true);
+  };
+
+  const handleDelete = (user) => {
+    setUserToDelete(user);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (userToDelete) {
+      await deleteUser(userToDelete.id);
+      setDeleteModalOpen(false);
+      setUserToDelete(null);
+    }
   };
 
   return (
@@ -142,7 +181,10 @@ const Usuarios = () => {
           <Users className="h-8 w-8 text-solid-color" />
           <h1 className="text-2xl font-bold text-accessibility-text">Usuarios</h1>
         </div>
-        <button className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200">
+        <button 
+          onClick={handleCreate}
+          className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+        >
           <Plus className="h-5 w-5" />
           <span>Nuevo Usuario</span>
         </button>
@@ -181,9 +223,21 @@ const Usuarios = () => {
           <input
             type="text"
             placeholder="Buscar usuarios..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
           />
         </div>
+        <select
+          value={selectedRole}
+          onChange={(e) => setSelectedRole(e.target.value)}
+          className="px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+        >
+          <option value="">Todos los roles</option>
+          <option value="1">Administrador</option>
+          <option value="2">Vendedor</option>
+          <option value="3">Almacén</option>
+        </select>
         <button className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200">
           <Filter className="h-5 w-5" />
           <span>Filtrar</span>
@@ -195,85 +249,100 @@ const Usuarios = () => {
           <table className="w-full">
             <thead>
               <tr className="bg-interactive-component">
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Usuario
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Rol
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
+                  Sede
+                </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Contacto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Último Acceso
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                <th className="px-8 py-4 text-right text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-interactive-component/50 transition-colors duration-200">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-interactive-component rounded-lg">
-                        <User className="h-5 w-5 text-solid-color" />
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 rounded-full bg-solid-color/20 flex items-center justify-center text-xl font-bold text-solid-color">
+                        {getInitials(user.nombre)}
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-accessibility-text">
-                          {user.name}
+                        <div className="text-base font-medium text-accessibility-text">
+                          {user.nombre}
                         </div>
-                        <div className="text-xs text-text-tertiary">
+                        <div className="text-sm text-text-tertiary">
                           {user.email}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <Shield className="h-4 w-4 text-text-tertiary" />
-                      <span className="text-sm text-text-tertiary">{user.role}</span>
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <div className="flex items-center space-x-3">
+                      <Shield className="h-5 w-5 text-text-tertiary" />
+                      <span className="text-base text-text-tertiary">{getRoleName(user.rol_id)}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 text-text-tertiary" />
-                      <span className="text-sm text-text-tertiary">{user.phone}</span>
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <div className="flex items-center space-x-3">
+                      <Building className="h-5 w-5 text-text-tertiary" />
+                      <span className="text-base text-text-tertiary">{getSedeName(user.sede_id)}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(user.status)}
-                      <span className={`text-sm font-medium ${getStatusColor(user.status)} px-2 py-1 rounded-full`}>
-                        {getStatusText(user.status)}
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <div className="flex items-center space-x-3">
+                      <Mail className="h-5 w-5 text-text-tertiary" />
+                      <span className="text-base text-text-tertiary">{user.email}</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <div className="flex items-center space-x-3">
+                      {getStatusIcon(user.activo)}
+                      <span className={`text-base font-medium ${getStatusColor(user.activo)} px-3 py-1.5 rounded-full`}>
+                        {getStatusText(user.activo)}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-text-tertiary">
-                      {user.lastLogin}
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <div className="text-base text-text-tertiary">
+                      {formatUltimoAcceso(user.ultimo_acceso)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end space-x-2">
+                  <td className="px-8 py-5 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end space-x-3">
                       <button 
-                        onClick={() => handleEdit(user.id)}
-                        className="p-1 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
+                        onClick={() => handleStatusChange(user.id, user.activo === 1 ? 0 : 1)}
+                        className={`p-2 ${user.activo === 1 ? 'text-error hover:text-error-hover' : 'text-success hover:text-success-hover'} rounded-lg transition-colors duration-200`}
                       >
-                        <Edit className="h-4 w-4" />
+                        {user.activo === 1 ? <UserX className="h-5 w-5" /> : <UserCheck className="h-5 w-5" />}
                       </button>
                       <button 
-                        onClick={() => handleDelete(user.id)}
-                        className="p-1 text-error hover:text-error-hover rounded-lg transition-colors duration-200"
+                        onClick={() => handleEdit(user)}
+                        className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Edit className="h-5 w-5" />
                       </button>
-                      <button className="p-1 text-info hover:text-info-hover rounded-lg transition-colors duration-200">
-                        <MoreVertical className="h-4 w-4" />
+                      <button 
+                        onClick={() => handleDelete(user)}
+                        className="p-2 text-error hover:text-error-hover rounded-lg transition-colors duration-200"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                      <button className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200">
+                        <MoreVertical className="h-5 w-5" />
                       </button>
                     </div>
                   </td>
@@ -283,6 +352,48 @@ const Usuarios = () => {
           </table>
         </div>
       </div>
+
+      {/* Modal para crear/editar usuario */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={selectedUser ? 'Editar Usuario' : 'Nuevo Usuario'}
+        size="md"
+      >
+        <UserForm
+          user={selectedUser}
+          onClose={() => setModalOpen(false)}
+        />
+      </Modal>
+
+      {/* Modal de confirmación para eliminar */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Confirmar Eliminación"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-text-secondary">
+            ¿Estás seguro de que deseas eliminar al usuario {userToDelete?.nombre}?
+            Esta acción no se puede deshacer.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

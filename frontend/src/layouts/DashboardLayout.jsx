@@ -152,7 +152,7 @@ const DashboardLayout = ({ children }) => {
               <span className="text-white font-semibold">
                 {user?.data.nombre?.charAt(0).toUpperCase() || 'U'}
               </span>
-            </div>
+            </div>  
             {!isCollapsed && (
               <div className="overflow-hidden">
                 <p className="text-sm font-medium text-accessibility-text truncate">
@@ -189,7 +189,7 @@ const DashboardLayout = ({ children }) => {
         
         {/* Scrollable content area */}
         <main className="flex-1 overflow-y-auto p-6 bg-bg">
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full mx-auto">
             {children}
           </div>
         </main>
