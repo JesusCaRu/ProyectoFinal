@@ -8,52 +8,20 @@ import { motion as _motion } from 'framer-motion';
 const DetalleVenta = ({ venta, isOpen, onClose }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [ventaData, setVentaData] = useState(null);
 
     useEffect(() => {
         if (isOpen && venta) {
             setIsLoading(true);
             setError(null);
-            try {
-                // Asegurarnos de que estamos usando los datos correctos
-                const ventaInfo = venta.data || venta;
-                console.log('Datos de venta recibidos:', ventaInfo);
-                
-                // Validar que los datos necesarios estén presentes
-                if (!ventaInfo || !ventaInfo.id) {
-                    throw new Error('Datos de venta inválidos');
-                }
-
-                // Validar y procesar los detalles
-                const detallesProcesados = Array.isArray(ventaInfo.detalles) 
-                    ? ventaInfo.detalles.map(detalle => ({
-                        ...detalle,
-                        cantidad: Number(detalle.cantidad) || 0,
-                        precio_unitario: Number(detalle.precio_unitario) || 0,
-                        producto: detalle.producto || { nombre: 'Producto no disponible' }
-                    }))
-                    : [];
-
-                setVentaData({
-                    ...ventaInfo,
-                    detalles: detallesProcesados,
-                    total: Number(ventaInfo.total) || 0
-                });
-
-                // Simular carga para mejor UX
-                const timer = setTimeout(() => {
-                    setIsLoading(false);
-                }, 500);
-                return () => clearTimeout(timer);
-            } catch (error) {
-                console.error('Error al procesar datos de venta:', error);
-                setError(error.message);
+            // Simular carga para mejor UX
+            const timer = setTimeout(() => {
                 setIsLoading(false);
-            }
+            }, 300);
+            return () => clearTimeout(timer);
         }
     }, [isOpen, venta]);
 
-    if (!ventaData || !isOpen) return null;
+    if (!venta || !isOpen) return null;
 
     const formatDate = (dateString) => {
         try {
@@ -66,6 +34,16 @@ const DetalleVenta = ({ venta, isOpen, onClose }) => {
             return 'Error al formatear fecha';
         }
     };
+
+    // Procesar los detalles una sola vez
+    const detallesProcesados = Array.isArray(venta.detalles) 
+        ? venta.detalles.map(detalle => ({
+            ...detalle,
+            cantidad: Number(detalle.cantidad) || 0,
+            precio_unitario: Number(detalle.precio_unitario) || 0,
+            producto: detalle.producto || { nombre: 'Producto no disponible' }
+        }))
+        : [];
 
     return (
         <_motion.div
@@ -81,7 +59,7 @@ const DetalleVenta = ({ venta, isOpen, onClose }) => {
                 className="bg-bg rounded-lg p-6 w-full max-w-[600px] max-h-[90vh] overflow-y-auto border border-border"
             >
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-accessibility-text">Detalles de la Venta #{ventaData.id}</h2>
+                    <h2 className="text-xl font-semibold text-accessibility-text">Detalles de la Venta #{venta.id}</h2>
                     <button 
                         onClick={onClose}
                         className="p-2 hover:bg-interactive-component rounded-lg transition-colors"
@@ -105,13 +83,13 @@ const DetalleVenta = ({ venta, isOpen, onClose }) => {
                             <div>
                                 <p className="text-text-tertiary">Fecha</p>
                                 <p className="font-medium text-accessibility-text">
-                                    {formatDate(ventaData.fecha)}
+                                    {formatDate(venta.fecha)}
                                 </p>
                             </div>
                             <div>
                                 <p className="text-text-tertiary">Vendedor</p>
                                 <p className="font-medium text-accessibility-text">
-                                    {ventaData.usuario?.nombre || 'No especificado'}
+                                    {venta.usuario?.nombre || 'No especificado'}
                                 </p>
                             </div>
                         </div>
@@ -127,14 +105,14 @@ const DetalleVenta = ({ venta, isOpen, onClose }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
-                                    {!ventaData.detalles || ventaData.detalles.length === 0 ? (
+                                    {detallesProcesados.length === 0 ? (
                                         <tr>
                                             <td colSpan="4" className="px-4 py-4 text-center text-text-tertiary">
                                                 No hay productos en esta venta
                                             </td>
                                         </tr>
                                     ) : (
-                                        ventaData.detalles.map((detalle, index) => (
+                                        detallesProcesados.map((detalle, index) => (
                                             <_motion.tr
                                                 key={index}
                                                 initial={{ opacity: 0, y: 10 }}
@@ -164,7 +142,7 @@ const DetalleVenta = ({ venta, isOpen, onClose }) => {
                         <div className="flex justify-between items-center pt-4 border-t border-border">
                             <span className="font-medium text-accessibility-text">Total:</span>
                             <span className="text-xl font-bold text-solid-color">
-                                {formatCurrency(ventaData.total)}
+                                {formatCurrency(venta.total)}
                             </span>
                         </div>
                     </div>

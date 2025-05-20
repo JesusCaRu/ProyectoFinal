@@ -60,16 +60,38 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Productos
     Route::apiResource('productos', ProductoController::class);
+    Route::get('productos/por-sede/{sedeId}', [ProductoController::class, 'getBySede']);
+    Route::get('productos/stock-bajo', [ProductoController::class, 'getLowStock']);
+    Route::patch('productos/{producto}/stock', [ProductoController::class, 'updateStock']);
 
     // Transferencias
     Route::apiResource('transferencias', TransferenciaController::class);
 
     // Proveedores
     Route::apiResource('proveedores', ProveedorController::class);
+    Route::get('proveedores/{proveedor}/resumen-compras', [ProveedorController::class, 'getResumenCompras']);
 
     // Compras
-    Route::apiResource('compras', CompraController::class);
-    Route::apiResource('compra-detalles', CompraDetalleController::class);
+    Route::prefix('compras')->group(function () {
+        Route::get('/', [CompraController::class, 'index']);
+        Route::post('/', [CompraController::class, 'store']);
+        Route::get('/por-fechas', [CompraController::class, 'getByDateRange']);
+        Route::get('/resumen', [CompraController::class, 'getResumen']);
+        Route::get('/{compra}', [CompraController::class, 'show']);
+        Route::patch('/{compra}', [CompraController::class, 'update']);
+        Route::delete('/{compra}', [CompraController::class, 'destroy']);
+    });
+
+    // Detalles de Compra
+    Route::prefix('compra-detalles')->group(function () {
+        Route::get('/', [CompraDetalleController::class, 'index']);
+        Route::post('/', [CompraDetalleController::class, 'store']);
+        Route::get('/{detalle}', [CompraDetalleController::class, 'show']);
+        Route::patch('/{detalle}', [CompraDetalleController::class, 'update']);
+        Route::delete('/{detalle}', [CompraDetalleController::class, 'destroy']);
+        Route::get('/por-compra/{compraId}', [CompraDetalleController::class, 'getByCompra']);
+        Route::get('/por-producto/{productoId}', [CompraDetalleController::class, 'getByProducto']);
+    });
 
     // Ventas
     Route::prefix('ventas')->group(function () {
@@ -78,9 +100,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/por-fechas', [VentaController::class, 'getByDateRange']);
         Route::get('/resumen', [VentaController::class, 'getResumen']);
         Route::get('/{venta}', [VentaController::class, 'show']);
+        Route::patch('/{venta}', [VentaController::class, 'update']);
+        Route::delete('/{venta}', [VentaController::class, 'destroy']);
     });
-    Route::apiResource('venta-detalles', VentaDetalleController::class);
+
+    // Detalles de Venta
+    Route::prefix('venta-detalles')->group(function () {
+        Route::get('/', [VentaDetalleController::class, 'index']);
+        Route::post('/', [VentaDetalleController::class, 'store']);
+        Route::get('/{detalle}', [VentaDetalleController::class, 'show']);
+        Route::patch('/{detalle}', [VentaDetalleController::class, 'update']);
+        Route::delete('/{detalle}', [VentaDetalleController::class, 'destroy']);
+        Route::get('/por-venta/{ventaId}', [VentaDetalleController::class, 'getByVenta']);
+        Route::get('/por-producto/{productoId}', [VentaDetalleController::class, 'getByProducto']);
+    });
 
     // Movimientos
-    Route::apiResource('movimientos', MovimientoController::class);
+    Route::prefix('movimientos')->group(function () {
+        Route::get('/', [MovimientoController::class, 'index']);
+        Route::post('/', [MovimientoController::class, 'store']);
+        Route::get('/por-fecha', [MovimientoController::class, 'getByDateRange']);
+        Route::get('/por-producto/{productoId}', [MovimientoController::class, 'getByProducto']);
+        Route::get('/por-sede/{sedeId}', [MovimientoController::class, 'getBySede']);
+        Route::get('/resumen', [MovimientoController::class, 'getResumen']);
+        Route::get('/{movimiento}', [MovimientoController::class, 'show']);
+        Route::delete('/{movimiento}', [MovimientoController::class, 'destroy']);
+    });
 });

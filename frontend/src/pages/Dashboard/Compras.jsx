@@ -1,241 +1,504 @@
+import React, { useState, useEffect } from 'react';
 import { motion as _motion } from 'framer-motion';
+import { useCompraStore } from '../../store/compraStore';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { formatCurrency } from '../../lib/utils';
+import NuevaCompra from '../../components/compras/NuevaCompra';
+import DetalleCompra from '../../components/compras/DetalleCompra';
 import { 
-  ShoppingCart, 
-  Plus, 
-  Search, 
-  Filter,
-  MoreVertical,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  Truck,
-  CheckCircle,
-  Clock
+    DollarSign, 
+    ShoppingCart, 
+    Package, 
+    TrendingUp,
+    Search,
+    Calendar,
+    Plus,
+    BarChart2,
+    Loader2,
+    AlertCircle,
+    CheckCircle,
+    Clock,
+    Truck
 } from 'lucide-react';
 
 const Compras = () => {
-  const purchases = [
-    {
-      id: 1,
-      supplier: 'RobotTech Inc.',
-      date: '2024-05-01',
-      amount: 2999.97,
-      status: 'delivered',
-      items: 10
-    },
-    {
-      id: 2,
-      supplier: 'FutureBots Co.',
-      date: '2024-05-02',
-      amount: 1999.99,
-      status: 'in-transit',
-      items: 5
-    },
-    {
-      id: 3,
-      supplier: 'AI Robotics Ltd.',
-      date: '2024-05-03',
-      amount: 3999.95,
-      status: 'pending',
-      items: 15
-    },
-    {
-      id: 4,
-      supplier: 'TechGadgets SA',
-      date: '2024-05-04',
-      amount: 1499.98,
-      status: 'delivered',
-      items: 8
-    }
-  ];
+    const { 
+        compras, 
+        loading, 
+        error, 
+        resumen,
+        fetchCompras, 
+        fetchComprasByDateRange,
+        fetchResumen,
+        fetchCompra 
+    } = useCompraStore();
 
-  const stats = [
-    {
-      title: 'Compras Totales',
-      value: '$10,499.89',
-      change: '+15%',
-      trend: 'up'
-    },
-    {
-      title: 'Compras del Mes',
-      value: '$8,499.94',
-      change: '+12%',
-      trend: 'up'
-    },
-    {
-      title: 'Compras Pendientes',
-      value: '$3,999.95',
-      change: '-8%',
-      trend: 'down'
-    },
-    {
-      title: 'Productos Comprados',
-      value: '38',
-      change: '+20%',
-      trend: 'up'
-    }
-  ];
+    const [searchTerm, setSearchTerm] = useState('');
+    const [fechaInicio, setFechaInicio] = useState(new Date(new Date().setDate(1)));
+    const [fechaFin, setFechaFin] = useState(new Date());
+    const [showNuevaCompra, setShowNuevaCompra] = useState(false);
+    const [selectedCompra, setSelectedCompra] = useState(null);
+    const [showDetalleCompra, setShowDetalleCompra] = useState(false);
+    const [resumenError, setResumenError] = useState(null);
+    const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'delivered':
-        return <CheckCircle className="h-4 w-4 text-success" />;
-      case 'in-transit':
-        return <Truck className="h-4 w-4 text-info" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-warning" />;
-      default:
-        return null;
-    }
-  };
+    useEffect(() => {
+        const loadInitialData = async () => {
+            setIsLoadingInitial(true);
+            try {
+                await Promise.all([
+                    fetchCompras(),
+                    fetchResumen(fechaInicio, fechaFin)
+                ]);
+                setResumenError(null);
+            } catch (error) {
+                console.error('Error al cargar datos iniciales:', error);
+                setResumenError(error.message);
+            } finally {
+                setIsLoadingInitial(false);
+            }
+        };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'delivered':
-        return 'Entregado';
-      case 'in-transit':
-        return 'En Tránsito';
-      case 'pending':
-        return 'Pendiente';
-      default:
-        return 'Desconocido';
-    }
-  };
+        loadInitialData();
+    }, []);
 
-  return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <ShoppingCart className="h-8 w-8 text-solid-color" />
-          <h1 className="text-2xl font-bold text-accessibility-text">Compras</h1>
-        </div>
-        <button className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200">
-          <Plus className="h-5 w-5" />
-          <span>Nueva Compra</span>
-        </button>
-      </div>
+    useEffect(() => {
+        const updateData = async () => {
+            if (isLoadingInitial) return;
+            
+            setIsUpdating(true);
+            try {
+                await Promise.all([
+                    fetchComprasByDateRange(fechaInicio, fechaFin),
+                    fetchResumen(fechaInicio, fechaFin)
+                ]);
+                setResumenError(null);
+            } catch (error) {
+                console.error('Error al actualizar datos:', error);
+                setResumenError(error.message);
+            } finally {
+                setIsUpdating(false);
+            }
+        };
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <_motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="bg-bg rounded-xl shadow-md p-6 border border-border"
-          >
-            <div className="flex items-center justify-between">
-              <div className="p-2 bg-interactive-component rounded-lg">
-                {stat.trend === 'up' ? (
-                  <TrendingUp className="h-6 w-6 text-success" />
-                ) : (
-                  <TrendingDown className="h-6 w-6 text-error" />
-                )}
-              </div>
-              <span className={`text-sm font-medium ${
-                stat.trend === 'up' ? 'text-success' : 'text-error'
-              }`}>
-                {stat.change}
-              </span>
+        updateData();
+    }, [fechaInicio, fechaFin]);
+
+    const handleDateRangeChange = async (start, end) => {
+        try {
+            if (!(start instanceof Date) || !(end instanceof Date)) {
+                throw new Error('Las fechas proporcionadas no son válidas');
+            }
+
+            setFechaInicio(start);
+            setFechaFin(end);
+        } catch (error) {
+            console.error('Error al actualizar rango de fechas:', error);
+            setResumenError(error.message);
+        }
+    };
+
+    const isLoading = loading || isUpdating;
+
+    const filteredCompras = compras.filter(compra => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            compra.id.toString().includes(searchLower) ||
+            compra.proveedor?.nombre?.toLowerCase().includes(searchLower) ||
+            compra.detalles?.some(detalle => 
+                detalle.producto?.nombre?.toLowerCase().includes(searchLower)
+            )
+        );
+    });
+
+    const handleVerDetalles = async (compra) => {
+        try {
+            if (compra.detalles && compra.detalles.length > 0) {
+                setSelectedCompra(compra);
+                setShowDetalleCompra(true);
+                return;
+            }
+            
+            const compraDetalle = await fetchCompra(compra.id);
+            setSelectedCompra(compraDetalle);
+            setShowDetalleCompra(true);
+        } catch (error) {
+            console.error('Error al cargar los detalles de la compra:', error);
+        }
+    };
+
+    if (isLoadingInitial) {
+        return (
+            <div className="flex items-center justify-center min-h-[80vh]">
+                <_motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ 
+                        duration: 0.5,
+                        ease: "easeOut"
+                    }}
+                    className="flex flex-col items-center gap-4"
+                >
+                    <_motion.div
+                        animate={{ 
+                            rotate: 360,
+                            scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                            rotate: {
+                                duration: 1,
+                                repeat: Infinity,
+                                ease: "linear"
+                            },
+                            scale: {
+                                duration: 1.5,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                            }
+                        }}
+                    >
+                        <Loader2 className="h-12 w-12 text-solid-color" />
+                    </_motion.div>
+                    <_motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-text-tertiary text-lg"
+                    >
+                        Cargando compras...
+                    </_motion.p>
+                </_motion.div>
             </div>
-            <h3 className="mt-4 text-sm text-text-tertiary">{stat.title}</h3>
-            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-              {stat.value}
-            </p>
-          </_motion.div>
-        ))}
-      </div>
+        );
+    }
 
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
-          <Search className="h-5 w-5 text-text-tertiary absolute left-3 top-1/2 transform -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Buscar compras..."
-            className="w-full pl-10 pr-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
-          />
-        </div>
-        <button className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200">
-          <Calendar className="h-5 w-5" />
-          <span>Filtrar por fecha</span>
-        </button>
-        <button className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200">
-          <Filter className="h-5 w-5" />
-          <span>Filtrar</span>
-        </button>
-      </div>
+    if (error) {
+        return (
+            <_motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="p-6 bg-error/10 border border-error text-error rounded-lg flex items-center gap-3"
+            >
+                <AlertCircle className="h-5 w-5" />
+                <p>{error}</p>
+            </_motion.div>
+        );
+    }
 
-      <div className="bg-bg rounded-xl shadow-md border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-interactive-component">
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Proveedor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Fecha
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Monto
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Items
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {purchases.map((purchase) => (
-                <tr key={purchase.id} className="hover:bg-interactive-component/50 transition-colors duration-200">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-accessibility-text">
-                      {purchase.supplier}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-text-tertiary">
-                      {purchase.date}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-accessibility-text">
-                      ${purchase.amount.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-accessibility-text">
-                      {purchase.items}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(purchase.status)}
-                      <span className="text-sm font-medium text-text-tertiary">
-                        {getStatusText(purchase.status)}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button className="p-1 text-info hover:text-info-hover rounded-lg transition-colors duration-200">
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+    return (
+        <_motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6 p-6"
+        >
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                    <Truck className="h-8 w-8 text-solid-color" />
+                    <h1 className="text-2xl font-bold text-accessibility-text">Compras</h1>
+                </div>
+                <div className="flex items-center space-x-4">
+                    <button 
+                        onClick={() => setShowNuevaCompra(true)}
+                        className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                    >
+                        <Plus className="h-5 w-5" />
+                        <span>Nueva Compra</span>
+                    </button>
+                    <button className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200">
+                        <BarChart2 className="h-5 w-5" />
+                        <span>Reportes</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Resumen de compras */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {isLoading ? (
+                    Array(4).fill(0).map((_, index) => (
+                        <_motion.div
+                            key={index}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-center h-24">
+                                <Loader2 className="h-8 w-8 animate-spin text-solid-color" />
+                            </div>
+                        </_motion.div>
+                    ))
+                ) : resumenError ? (
+                    <_motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="col-span-4 bg-error/10 border border-error text-error p-4 rounded-lg flex items-center gap-3"
+                    >
+                        <AlertCircle className="h-5 w-5" />
+                        <p>Error al cargar el resumen: {resumenError}</p>
+                    </_motion.div>
+                ) : (
+                    <>
+                        <_motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="p-2 bg-interactive-component rounded-lg">
+                                    <DollarSign className="h-6 w-6 text-success" />
+                                </div>
+                                <span className="text-sm font-medium text-success">
+                                    {resumen?.resumen?.total_monto > 0 ? 
+                                        `+${((resumen.resumen.promedio_compra / resumen.resumen.total_monto) * 100).toFixed(1)}%` : 
+                                        '0%'}
+                                </span>
+                            </div>
+                            <h3 className="mt-4 text-sm text-text-tertiary">Total Compras</h3>
+                            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
+                                {formatCurrency(resumen?.resumen?.total_monto || 0)}
+                            </p>
+                        </_motion.div>
+
+                        <_motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.2 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="p-2 bg-interactive-component rounded-lg">
+                                    <ShoppingCart className="h-6 w-6 text-warning" />
+                                </div>
+                                <span className="text-sm font-medium text-warning">
+                                    {resumen?.resumen?.total_compras > 0 ? 
+                                        `+${((resumen.resumen.total_compras / 100) * 10).toFixed(1)}%` : 
+                                        '0%'}
+                                </span>
+                            </div>
+                            <h3 className="mt-4 text-sm text-text-tertiary">Compras Realizadas</h3>
+                            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
+                                {resumen?.resumen?.total_compras || 0}
+                            </p>
+                        </_motion.div>
+
+                        <_motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.3 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="p-2 bg-interactive-component rounded-lg">
+                                    <TrendingUp className="h-6 w-6 text-info" />
+                                </div>
+                                <span className="text-sm font-medium text-info">
+                                    {resumen?.resumen?.promedio_compra > 0 ? 
+                                        `+${((resumen.resumen.promedio_compra / 1000) * 100).toFixed(1)}%` : 
+                                        '0%'}
+                                </span>
+                            </div>
+                            <h3 className="mt-4 text-sm text-text-tertiary">Promedio por Compra</h3>
+                            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
+                                {formatCurrency(resumen?.resumen?.promedio_compra || 0)}
+                            </p>
+                        </_motion.div>
+
+                        <_motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.4 }}
+                            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="p-2 bg-interactive-component rounded-lg">
+                                    <Package className="h-6 w-6 text-solid-color" />
+                                </div>
+                                <span className="text-sm font-medium text-solid-color">
+                                    {resumen?.productos_mas_comprados?.length > 0 ? 
+                                        `+${((resumen.productos_mas_comprados[0].total_comprado / 100) * 15).toFixed(1)}%` : 
+                                        '0%'}
+                                </span>
+                            </div>
+                            <h3 className="mt-4 text-sm text-text-tertiary">Productos Comprados</h3>
+                            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
+                                {resumen?.productos_mas_comprados?.reduce((acc, curr) => acc + (curr.total_comprado || 0), 0) || 0}
+                            </p>
+                        </_motion.div>
+                    </>
+                )}
+            </div>
+
+            {/* Filtros y búsqueda */}
+            <_motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.5 }}
+                className="flex items-center space-x-4 bg-bg p-4 rounded-lg border border-border"
+            >
+                <div className="flex-1 relative">
+                    <Search className="h-5 w-5 text-text-tertiary absolute left-3 top-1/2 transform -translate-y-1/2" />
+                    <input
+                        type="text"
+                        placeholder="Buscar compras..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                    />
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Calendar className="h-5 w-5 text-text-tertiary" />
+                    <input
+                        type="date"
+                        value={format(fechaInicio, 'yyyy-MM-dd')}
+                        onChange={(e) => {
+                            const date = new Date(e.target.value);
+                            if (!isNaN(date.getTime())) {
+                                handleDateRangeChange(date, fechaFin);
+                            }
+                        }}
+                        className="px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                    />
+                    <span className="text-text-tertiary">hasta</span>
+                    <input
+                        type="date"
+                        value={format(fechaFin, 'yyyy-MM-dd')}
+                        onChange={(e) => {
+                            const date = new Date(e.target.value);
+                            if (!isNaN(date.getTime())) {
+                                handleDateRangeChange(fechaInicio, date);
+                            }
+                        }}
+                        className="px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                    />
+                </div>
+            </_motion.div>
+
+            {/* Tabla de compras */}
+            <_motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.6 }}
+                className="bg-bg rounded-xl shadow-md border border-border overflow-hidden"
+            >
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="bg-interactive-component">
+                                <th className="px-6 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">Fecha</th>
+                                <th className="px-6 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">Proveedor</th>
+                                <th className="px-6 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">Productos</th>
+                                <th className="px-6 py-4 text-right text-sm font-medium text-text-tertiary uppercase tracking-wider">Total</th>
+                                <th className="px-6 py-4 text-center text-sm font-medium text-text-tertiary uppercase tracking-wider">Estado</th>
+                                <th className="px-6 py-4 text-center text-sm font-medium text-text-tertiary uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan="7" className="px-6 py-8 text-center">
+                                        <div className="flex flex-col items-center justify-center gap-3">
+                                            <Loader2 className="h-8 w-8 animate-spin text-solid-color" />
+                                            <p className="text-text-tertiary">
+                                                {isUpdating ? 'Actualizando datos...' : 'Cargando compras...'}
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filteredCompras.length === 0 ? (
+                                <tr>
+                                    <td colSpan="7" className="px-6 py-8 text-center text-text-tertiary">
+                                        No se encontraron compras
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredCompras.map((compra, index) => (
+                                    <_motion.tr
+                                        key={compra.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                                        className="hover:bg-interactive-component/50 transition-colors duration-200"
+                                    >
+                                        <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
+                                            #{compra.id}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
+                                            {format(new Date(compra.fecha), "dd/MM/yyyy HH:mm", { locale: es })}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
+                                            {compra.proveedor?.nombre || 'No especificado'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
+                                            {compra.detalles?.length || 0} productos
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-accessibility-text font-medium">
+                                            {formatCurrency(compra.total)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                                compra.estado === 'pendiente' ? 'bg-warning/10 text-warning' :
+                                                compra.estado === 'completada' ? 'bg-success/10 text-success' :
+                                                'bg-error/10 text-error'
+                                            }`}>
+                                                {compra.estado === 'pendiente' ? 'Pendiente' :
+                                                 compra.estado === 'completada' ? 'Completada' :
+                                                 'Cancelada'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                                            <button
+                                                onClick={() => handleVerDetalles(compra)}
+                                                className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg transition-colors duration-200"
+                                            >
+                                                Ver detalles
+                                            </button>
+                                        </td>
+                                    </_motion.tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </_motion.div>
+
+            {/* Modales */}
+            {showNuevaCompra && (
+                <NuevaCompra
+                    isOpen={showNuevaCompra}
+                    onClose={async () => {
+                        setShowNuevaCompra(false);
+                        setIsUpdating(true);
+                        try {
+                            await Promise.all([
+                                fetchCompras(),
+                                fetchResumen(fechaInicio, fechaFin)
+                            ]);
+                        } catch (error) {
+                            console.error('Error al actualizar después de nueva compra:', error);
+                        } finally {
+                            setIsUpdating(false);
+                        }
+                    }}
+                />
+            )}
+
+            {showDetalleCompra && selectedCompra && (
+                <DetalleCompra
+                    compra={selectedCompra}
+                    isOpen={showDetalleCompra}
+                    onClose={() => {
+                        setShowDetalleCompra(false);
+                    }}
+                />
+            )}
+        </_motion.div>
+    );
 };
 
 export default Compras; 

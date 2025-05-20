@@ -124,8 +124,8 @@ class VentaController extends Controller
                         'usuario_id' => $request->user()->id,
                         'tipo' => 'salida',
                         'cantidad' => $item['cantidad'],
-                        'motivo' => 'Venta #' . $venta->id,
-                        'fecha' => $request->fecha
+                        'descripcion' => 'Venta #' . $venta->id,
+                        'fecha' => $fecha
                     ]);
 
                     Log::info('Movimiento registrado para producto:', [

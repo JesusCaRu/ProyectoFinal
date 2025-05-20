@@ -32,7 +32,7 @@ class MovimientoController extends Controller
             'producto_id' => 'required|exists:productos,id',
             'tipo' => 'required|in:entrada,salida,ajuste',
             'cantidad' => 'required|integer|min:1',
-            'motivo' => 'required|string|max:255',
+            'descripcion' => 'required|string|max:255',
             'fecha' => 'required|date'
         ]);
 
@@ -59,7 +59,7 @@ class MovimientoController extends Controller
                 'usuario_id' => $usuario->id,
                 'tipo' => $request->tipo,
                 'cantidad' => $request->cantidad,
-                'motivo' => $request->motivo,
+                'descripcion' => $request->descripcion,
                 'fecha' => $request->fecha
             ]);
 
@@ -104,7 +104,7 @@ class MovimientoController extends Controller
     public function update(Request $request, Movimiento $movimiento)
     {
         $validator = Validator::make($request->all(), [
-            'motivo' => 'required|string|max:255',
+            'descripcion' => 'required|string|max:255',
             'fecha' => 'required|date'
         ]);
 
@@ -115,7 +115,7 @@ class MovimientoController extends Controller
         try {
             DB::beginTransaction();
 
-            $movimiento->update($request->only(['motivo', 'fecha']));
+            $movimiento->update($request->only(['descripcion', 'fecha']));
 
             DB::commit();
             return response()->json([
@@ -199,7 +199,7 @@ class MovimientoController extends Controller
      */
     public function getByDateRange(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->query(), [
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio'
         ]);
@@ -210,8 +210,8 @@ class MovimientoController extends Controller
 
         $movimientos = Movimiento::with(['producto', 'usuario', 'producto.sede'])
             ->whereBetween('fecha', [
-                Carbon::parse($request->fecha_inicio)->startOfDay(),
-                Carbon::parse($request->fecha_fin)->endOfDay()
+                Carbon::parse($request->query('fecha_inicio'))->startOfDay(),
+                Carbon::parse($request->query('fecha_fin'))->endOfDay()
             ])
             ->orderBy('fecha', 'desc')
             ->get();
@@ -224,7 +224,7 @@ class MovimientoController extends Controller
      */
     public function getResumen(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->query(), [
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio'
         ]);
@@ -235,8 +235,8 @@ class MovimientoController extends Controller
 
         $resumen = Movimiento::select('tipo', DB::raw('COUNT(*) as total_movimientos'), DB::raw('SUM(cantidad) as total_cantidad'))
             ->whereBetween('fecha', [
-                Carbon::parse($request->fecha_inicio)->startOfDay(),
-                Carbon::parse($request->fecha_fin)->endOfDay()
+                Carbon::parse($request->query('fecha_inicio'))->startOfDay(),
+                Carbon::parse($request->query('fecha_fin'))->endOfDay()
             ])
             ->groupBy('tipo')
             ->get();

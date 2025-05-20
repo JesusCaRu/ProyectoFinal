@@ -27,7 +27,6 @@ const Ventas = () => {
         loading, 
         error, 
         resumen,
-        productosMasVendidos,
         fetchVentas, 
         fetchVentasByDateRange,
         fetchResumen,
@@ -115,6 +114,12 @@ const Ventas = () => {
 
     const handleVerDetalles = async (venta) => {
         try {
+            if (venta.detalles && venta.detalles.length > 0) {
+                setSelectedVenta(venta);
+                setShowDetalleVenta(true);
+                return;
+            }
+            
             const ventaDetalle = await fetchVenta(venta.id);
             setSelectedVenta(ventaDetalle);
             setShowDetalleVenta(true);
@@ -246,11 +251,15 @@ const Ventas = () => {
                                 <div className="p-2 bg-interactive-component rounded-lg">
                                     <DollarSign className="h-6 w-6 text-success" />
                                 </div>
-                                <span className="text-sm font-medium text-success">+{resumen?.promedio_venta ? ((resumen.promedio_venta / resumen.total_monto) * 100).toFixed(1) : 0}%</span>
+                                <span className="text-sm font-medium text-success">
+                                    {resumen?.resumen?.total_monto > 0 ? 
+                                        `+${((resumen.resumen.promedio_venta / resumen.resumen.total_monto) * 100).toFixed(1)}%` : 
+                                        '0%'}
+                                </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Total Ventas</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {formatCurrency(resumen?.total_monto || 0)}
+                                {formatCurrency(resumen?.resumen?.total_monto || 0)}
                             </p>
                         </_motion.div>
 
@@ -264,11 +273,15 @@ const Ventas = () => {
                                 <div className="p-2 bg-interactive-component rounded-lg">
                                     <ShoppingCart className="h-6 w-6 text-warning" />
                                 </div>
-                                <span className="text-sm font-medium text-warning">+{resumen?.total_ventas ? ((resumen.total_ventas / 100) * 10).toFixed(1) : 0}%</span>
+                                <span className="text-sm font-medium text-warning">
+                                    {resumen?.resumen?.total_ventas > 0 ? 
+                                        `+${((resumen.resumen.total_ventas / 100) * 10).toFixed(1)}%` : 
+                                        '0%'}
+                                </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Ventas Realizadas</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {resumen?.total_ventas || 0}
+                                {resumen?.resumen?.total_ventas || 0}
                             </p>
                         </_motion.div>
 
@@ -282,11 +295,15 @@ const Ventas = () => {
                                 <div className="p-2 bg-interactive-component rounded-lg">
                                     <TrendingUp className="h-6 w-6 text-info" />
                                 </div>
-                                <span className="text-sm font-medium text-info">+{resumen?.promedio_venta ? ((resumen.promedio_venta / 1000) * 100).toFixed(1) : 0}%</span>
+                                <span className="text-sm font-medium text-info">
+                                    {resumen?.resumen?.promedio_venta > 0 ? 
+                                        `+${((resumen.resumen.promedio_venta / 1000) * 100).toFixed(1)}%` : 
+                                        '0%'}
+                                </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Promedio por Venta</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {formatCurrency(resumen?.promedio_venta || 0)}
+                                {formatCurrency(resumen?.resumen?.promedio_venta || 0)}
                             </p>
                         </_motion.div>
 
@@ -300,11 +317,15 @@ const Ventas = () => {
                                 <div className="p-2 bg-interactive-component rounded-lg">
                                     <Package className="h-6 w-6 text-solid-color" />
                                 </div>
-                                <span className="text-sm font-medium text-solid-color">+{productosMasVendidos.length ? ((productosMasVendidos[0].total_vendido / 100) * 15).toFixed(1) : 0}%</span>
+                                <span className="text-sm font-medium text-solid-color">
+                                    {resumen?.productos_mas_vendidos?.length > 0 ? 
+                                        `+${((resumen.productos_mas_vendidos[0].total_vendido / 100) * 15).toFixed(1)}%` : 
+                                        '0%'}
+                                </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Productos Vendidos</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {productosMasVendidos.reduce((acc, curr) => acc + (curr.total_vendido || 0), 0)}
+                                {resumen?.productos_mas_vendidos?.reduce((acc, curr) => acc + (curr.total_vendido || 0), 0) || 0}
                             </p>
                         </_motion.div>
                     </>
@@ -460,7 +481,6 @@ const Ventas = () => {
                     isOpen={showDetalleVenta}
                     onClose={() => {
                         setShowDetalleVenta(false);
-                        setSelectedVenta(null);
                     }}
                 />
             )}

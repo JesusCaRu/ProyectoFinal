@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import axiosInstance from '../lib/axios';
+import { userService } from '../services/userService';
 
 export const useUserStore = create((set, get) => ({
   users: [],
+  roles: [],
   isLoading: false,
   error: null,
 
@@ -10,14 +11,11 @@ export const useUserStore = create((set, get) => ({
   loadUsers: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axiosInstance.get('/usuarios');
-      const users = Array.isArray(response.data) ? response.data : 
-                   response.data.data ? response.data.data : 
-                   response.data.users ? response.data.users : [];
+      const users = await userService.fetchUsers();
       set({ users, isLoading: false });
     } catch (error) {
       set({ 
-        error: error.response?.data?.message || 'Error al cargar usuarios', 
+        error: error.message,
         isLoading: false,
         users: []
       });
@@ -28,11 +26,7 @@ export const useUserStore = create((set, get) => ({
   createUser: async (userData) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axiosInstance.post('/usuarios', {
-        ...userData,
-        sede_id: 1 // Por defecto asignamos a la sede principal
-      });
-      const newUser = response.data.data || response.data;
+      const newUser = await userService.createUser(userData);
       set(state => ({ 
         users: [...state.users, newUser],
         isLoading: false 
@@ -40,7 +34,7 @@ export const useUserStore = create((set, get) => ({
       return true;
     } catch (error) {
       set({ 
-        error: error.response?.data?.message || 'Error al crear usuario', 
+        error: error.message,
         isLoading: false 
       });
       return false;
@@ -51,10 +45,9 @@ export const useUserStore = create((set, get) => ({
   updateUser: async (id, userData) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axiosInstance.put(`/usuarios/${id}`, userData);
-      const updatedUser = response.data.data || response.data;
-      set(state => ({
-        users: state.users.map(user => 
+      const updatedUser = await userService.updateUser(id, userData);
+      set((state) => ({
+        users: state.users.map((user) =>
           user.id === id ? updatedUser : user
         ),
         isLoading: false
@@ -62,29 +55,7 @@ export const useUserStore = create((set, get) => ({
       return true;
     } catch (error) {
       set({ 
-        error: error.response?.data?.message || 'Error al actualizar usuario', 
-        isLoading: false 
-      });
-      return false;
-    }
-  },
-
-  // Cambiar estado del usuario
-  cambiarEstado: async (id, activo) => {
-    set({ isLoading: true, error: null });
-    try {
-      const response = await axiosInstance.patch(`/usuarios/${id}/estado`, { activo });
-      const updatedUser = response.data.data || response.data;
-      set(state => ({
-        users: state.users.map(user => 
-          user.id === id ? updatedUser : user
-        ),
-        isLoading: false
-      }));
-      return true;
-    } catch (error) {
-      set({ 
-        error: error.response?.data?.message || 'Error al cambiar estado del usuario', 
+        error: error.message,
         isLoading: false 
       });
       return false;
@@ -95,17 +66,15 @@ export const useUserStore = create((set, get) => ({
   deleteUser: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await axiosInstance.delete(`/usuarios/${id}`);
-      
-      // Actualizamos el estado local eliminando el usuario
-      set(state => ({
-        users: state.users.filter(user => user.id !== id),
+      await userService.deleteUser(id);
+      set((state) => ({
+        users: state.users.filter((user) => user.id !== id),
         isLoading: false
       }));
       return true;
     } catch (error) {
       set({ 
-        error: error.response?.data?.message || 'Error al eliminar usuario', 
+        error: error.message,
         isLoading: false 
       });
       return false;
@@ -136,14 +105,11 @@ export const useUserStore = create((set, get) => ({
   loadRoles: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axiosInstance.get('/roles');
-      const roles = Array.isArray(response.data) ? response.data : 
-                   response.data.data ? response.data.data : 
-                   response.data.roles ? response.data.roles : [];
+      const roles = await userService.loadRoles();
       set({ roles, isLoading: false });
     } catch (error) {
       set({ 
-        error: error.response?.data?.message || 'Error al cargar roles', 
+        error: error.message,
         isLoading: false,
         roles: []
       });
@@ -154,13 +120,12 @@ export const useUserStore = create((set, get) => ({
   getUserById: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axiosInstance.get(`/usuarios/${id}`);
-      const user = response.data.data || response.data;
+      const user = await userService.getUserById(id);
       set({ isLoading: false });
       return user;
     } catch (error) {
       set({ 
-        error: error.response?.data?.message || 'Error al obtener usuario', 
+        error: error.message,
         isLoading: false 
       });
       return null;
@@ -171,16 +136,37 @@ export const useUserStore = create((set, get) => ({
   restoreUser: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await axiosInstance.post(`/usuarios/${id}/restore`);
-      
-      // Actualizamos el estado local
+      await userService.restoreUser(id);
       set(state => ({
+        isLoading: false,
+        users: state.users.map(user => 
+          user.id === id ? { ...user, deleted_at: null } : user
+        )
+      }));
+      return true;
+    } catch (error) {
+      set({ 
+        error: error.message,
+        isLoading: false 
+      });
+      return false;
+    }
+  },
+
+  updateUserStatus: async (userId, newStatus) => {
+    set({ isLoading: true, error: null });
+    try {
+      const updatedUser = await userService.updateUserStatus(userId, newStatus);
+      set((state) => ({
+        users: state.users.map((user) =>
+          user.id === userId ? updatedUser : user
+        ),
         isLoading: false
       }));
       return true;
     } catch (error) {
       set({ 
-        error: error.response?.data?.message || 'Error al restaurar usuario', 
+        error: error.message,
         isLoading: false 
       });
       return false;

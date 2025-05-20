@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('proveedor_id')->constrained('proveedores');
             $table->foreignId('usuario_id')->constrained('usuarios');
             $table->decimal('total', 10, 2);
+            $table->enum('estado', ['pendiente', 'completada', 'cancelada'])->default('pendiente');
             $table->timestamp('fecha')->useCurrent();
         });
     }
