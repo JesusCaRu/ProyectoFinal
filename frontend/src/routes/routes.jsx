@@ -11,8 +11,11 @@ import Reportes from '../pages/dashboard/Reportes';
 import Facturas from '../pages/dashboard/Facturas';
 import Usuarios from '../pages/dashboard/Usuarios';
 import Configuracion from '../pages/dashboard/Configuracion';
+import Gestiones from '../pages/dashboard/Gestiones';
 import ProtectedRoute from '../components/ProtectedRoute';
+import RoleProtectedRoute from '../components/RoleProtectedRoute';
 import Notificaciones from '../pages/dashboard/Notificaciones';
+import Auditoria from '../pages/dashboard/Auditoria';
 
 const AppRoutes = () => {
   return (
@@ -31,15 +34,60 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <DashboardLayout>
             <Routes>
+              {/* Rutas accesibles para todos los roles */}
               <Route index element={<Dashboard />} />
-              <Route path="inventario" element={<Inventario />} />
-              <Route path="ventas" element={<Ventas />} />
-              <Route path="compras" element={<Compras />} />
-              <Route path="reportes" element={<Reportes />} />
-              <Route path="facturas" element={<Facturas />} />
+              
+              {/* Rutas para administradores */}
+              <Route path="inventario" element={
+                <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista']}>
+                  <Inventario />
+                </RoleProtectedRoute>
+              } />
+              <Route path="usuarios" element={
+                <RoleProtectedRoute allowedRoles={['Administrador']}>
+                  <Usuarios />
+                </RoleProtectedRoute>
+              } />
+              <Route path="configuracion" element={
+                <RoleProtectedRoute allowedRoles={['Administrador']}>
+                  <Configuracion />
+                </RoleProtectedRoute>
+              } />
+              <Route path="facturas" element={
+                <RoleProtectedRoute allowedRoles={['Administrador']}>
+                  <Facturas />
+                </RoleProtectedRoute>
+              } />
+              <Route path="gestiones" element={
+                <RoleProtectedRoute allowedRoles={['Administrador']}>
+                  <Gestiones />
+                </RoleProtectedRoute>
+              } />
+              <Route path="auditoria" element={
+                <RoleProtectedRoute allowedRoles={['Administrador']}>
+                  <Auditoria />
+                </RoleProtectedRoute>
+              } />
+
+              {/* Rutas para vendedores y administradores */}
+              <Route path="ventas" element={
+                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                  <Ventas />
+                </RoleProtectedRoute>
+              } />
+              <Route path="compras" element={
+                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                  <Compras />
+                </RoleProtectedRoute>
+              } />
+              <Route path="reportes" element={
+                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                  <Reportes />
+                </RoleProtectedRoute>
+              } />
+
+              {/* Rutas comunes */}
               <Route path="notificaciones" element={<Notificaciones />} />
-              <Route path="usuarios" element={<Usuarios />} />
-              <Route path="configuracion" element={<Configuracion />} />
             </Routes>
           </DashboardLayout>
         </ProtectedRoute>

@@ -1,148 +1,223 @@
-import { motion as _motion } from 'framer-motion';
-import { 
-  Package, 
-  DollarSign, 
-  ShoppingCart, 
-  TrendingUp,
-  Users,
-  Settings,
-  FileText,
-  BarChart2
-} from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDashboardStore } from '../../store/dashboardStore';
+import { Settings, Package, DollarSign, ShoppingCart, Users, TrendingUp, TrendingDown } from 'lucide-react';
+import { formatCurrency } from '../../utils/formatters';
+import { toast } from 'react-hot-toast';
 
 const Dashboard = () => {
-  const stats = [
-    {
-      title: 'Productos en Stock',
-      value: '1,234',
-      icon: <Package className="h-6 w-6 text-solid-color" />,
-      change: '+12%',
-      trend: 'up'
-    },
-    {
-      title: 'Ventas Totales',
-      value: '$45,678',
-      icon: <DollarSign className="h-6 w-6 text-success" />,
-      change: '+8%',
-      trend: 'up'
-    },
-    {
-      title: 'Pedidos Pendientes',
-      value: '23',
-      icon: <ShoppingCart className="h-6 w-6 text-warning" />,
-      change: '-5%',
-      trend: 'down'
-    },
-    {
-      title: 'Usuarios Activos',
-      value: '89',
-      icon: <Users className="h-6 w-6 text-info" />,
-      change: '+15%',
-      trend: 'up'
-    }
-  ];
+    const navigate = useNavigate();
+    const {
+        stats,
+        isLoading,
+        error: dashboardError,
+        fetchDashboardData
+    } = useDashboardStore();
 
-  return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-accessibility-text">Dashboard</h1>
-        <div className="flex items-center space-x-4">
-          <button className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg transition-colors duration-200">
-            <Settings className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                await fetchDashboardData();
+            } catch {
+                toast.error('Error al cargar los datos del dashboard');
+            }
+        };
+        loadData();
+    }, [fetchDashboardData]);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <_motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="bg-bg rounded-xl shadow-md p-6 border border-border"
-          >
-            <div className="flex items-center justify-between">
-              <div className="p-2 bg-interactive-component rounded-lg">
-                {stat.icon}
-              </div>
-              <span className={`text-sm font-medium ${
-                stat.trend === 'up' ? 'text-success' : 'text-error'
-              }`}>
-                {stat.change}
-              </span>
+    if (dashboardError) {
+        return (
+            <div className="p-4">
+                <div className="bg-error/10 border border-error text-error px-4 py-3 rounded-lg">
+                    Error al cargar los datos: {dashboardError}
+                </div>
             </div>
-            <h3 className="mt-4 text-sm text-text-tertiary">{stat.title}</h3>
-            <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-              {stat.value}
-            </p>
-          </_motion.div>
-        ))}
-      </div>
+        );
+    }
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <_motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-bg rounded-xl shadow-md p-6 border border-border"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-accessibility-text">
-              Ventas Recientes
-            </h2>
-            <BarChart2 className="h-5 w-5 text-solid-color" />
-          </div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="flex items-center justify-between p-3 bg-interactive-component rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-solid-color/10 rounded-lg">
-                    <DollarSign className="h-4 w-4 text-solid-color" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-accessibility-text">Venta #{item}</p>
-                    <p className="text-xs text-text-tertiary">Hace {item} hora{item !== 1 ? 's' : ''}</p>
-                  </div>
+    const StatCard = ({ title, value, icon: IconComponent, trend, isLoading }) => (
+        <div className="bg-bg-secondary rounded-lg shadow-md p-6 border border-border">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-sm font-medium text-text-tertiary">{title}</p>
+                    {isLoading ? (
+                        <div className="h-8 w-24 bg-interactive-component animate-pulse rounded mt-2"></div>
+                    ) : (
+                        <p className="text-2xl font-semibold text-accessibility-text mt-2">
+                            {typeof value === 'number' && title.includes('Ventas') ? formatCurrency(value) : value}
+                        </p>
+                    )}
                 </div>
-                <span className="text-sm font-medium text-success">+${item * 100}</span>
-              </div>
-            ))}
-          </div>
-        </_motion.div>
+                <div className="p-3 bg-interactive-component rounded-full">
+                    {IconComponent && <IconComponent className="h-6 w-6 text-solid-color" />}
+                </div>
+            </div>
+            {trend && !isLoading && (
+                <div className="mt-4 flex items-center">
+                    {trend.tendencia === 'up' ? (
+                        <TrendingUp className="h-4 w-4 text-success" />
+                    ) : (
+                        <TrendingDown className="h-4 w-4 text-error" />
+                    )}
+                    <span className={`text-sm font-medium ml-1 ${
+                        trend.tendencia === 'up' ? 'text-success' : 'text-error'
+                    }`}>
+                        {Math.abs(trend.valor).toFixed(1)}%
+                    </span>
+                    <span className="text-sm text-text-tertiary ml-1">vs mes anterior</span>
+                </div>
+            )}
+        </div>
+    );
 
-        <_motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-bg rounded-xl shadow-md p-6 border border-border"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-accessibility-text">
-              Actividad Reciente
-            </h2>
-            <TrendingUp className="h-5 w-5 text-solid-color" />
-          </div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="flex items-center justify-between p-3 bg-interactive-component rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-solid-color/10 rounded-lg">
-                    <FileText className="h-4 w-4 text-solid-color" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-accessibility-text">Nuevo pedido #{item}</p>
-                    <p className="text-xs text-text-tertiary">Usuario {item}</p>
-                  </div>
+    const TableCard = ({ title, headers, data, isLoading }) => (
+        <div className="bg-bg-secondary rounded-lg shadow-md border border-border">
+            <div className="px-6 py-4 border-b border-border">
+                <h3 className="text-lg font-medium text-accessibility-text">{title}</h3>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border">
+                    <thead className="bg-interactive-component">
+                        <tr>
+                            {headers.map((header, index) => (
+                                <th
+                                    key={index}
+                                    className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider"
+                                >
+                                    {header}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody className="bg-bg-secondary divide-y divide-border">
+                        {isLoading ? (
+                            Array(5).fill(0).map((_, index) => (
+                                <tr key={index}>
+                                    {headers.map((_, i) => (
+                                        <td key={i} className="px-6 py-4">
+                                            <div className="h-4 bg-interactive-component animate-pulse rounded"></div>
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        ) : data.length === 0 ? (
+                            <tr>
+                                <td colSpan={headers.length} className="px-6 py-4 text-center text-text-tertiary">
+                                    No hay datos disponibles
+                                </td>
+                            </tr>
+                        ) : (
+                            data.map((item, index) => (
+                                <tr key={index} className="hover:bg-interactive-component/50">
+                                    {Object.values(item).map((value, i) => (
+                                        <td key={i} className="px-6 py-4 whitespace-nowrap text-sm text-accessibility-text">
+                                            {typeof value === 'number' && !Number.isInteger(value)
+                                                ? formatCurrency(value)
+                                                : value}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-semibold text-accessibility-text">Dashboard</h1>
+                <button
+                    onClick={() => navigate('/dashboard/configuracion')}
+                    className="inline-flex items-center px-4 py-2 border border-border rounded-lg shadow-sm text-sm font-medium text-accessibility-text bg-bg-secondary hover:bg-interactive-component transition-colors duration-200"
+                >
+                    <Settings className="h-5 w-5 mr-2 text-text-tertiary" />
+                    Configuración
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <StatCard
+                    title="Productos en Stock"
+                    value={stats?.totalProductos || 0}
+                    icon={Package}
+                    trend={stats?.cambios?.productos}
+                    isLoading={isLoading}
+                />
+                <StatCard
+                    title="Ventas Totales"
+                    value={stats?.totalVentas || 0}
+                    icon={DollarSign}
+                    trend={stats?.cambios?.ventas}
+                    isLoading={isLoading}
+                />
+                <StatCard
+                    title="Compras Totales"
+                    value={stats?.totalCompras || 0}
+                    icon={ShoppingCart}
+                    isLoading={isLoading}
+                />
+                <StatCard
+                    title="Usuarios Activos"
+                    value={stats?.totalUsuarios || 0}
+                    icon={Users}
+                    trend={stats?.cambios?.usuarios}
+                    isLoading={isLoading}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                    <TableCard
+                        title="Productos Más Vendidos"
+                        headers={['Producto', 'Unidades', 'Total']}
+                        data={stats?.productosMasVendidos?.map(p => ({
+                            nombre: p.nombre,
+                            total_vendido: p.total_vendido,
+                            total_ingresos: p.total_ingresos
+                        })) || []}
+                        isLoading={isLoading}
+                    />
+                    <TableCard
+                        title="Productos con Stock Bajo"
+                        headers={['Producto', 'Stock Actual', 'Stock Mínimo']}
+                        data={stats?.productosStockBajo?.map(p => ({
+                            nombre: p.nombre,
+                            stock: p.stock,
+                            stock_minimo: p.stock_minimo
+                        })) || []}
+                        isLoading={isLoading}
+                    />
                 </div>
-                <span className="text-sm font-medium text-info">Ver detalles</span>
-              </div>
-            ))}
-          </div>
-        </_motion.div>
-      </div>
-    </div>
-  );
+                <div className="space-y-6">
+                    <TableCard
+                        title="Últimas Ventas"
+                        headers={['ID', 'Total', 'Usuario', 'Fecha']}
+                        data={stats?.ultimasVentas?.map(v => ({
+                            id: v.id,
+                            total: v.total,
+                            usuario: v.usuario,
+                            fecha: new Date(v.fecha).toLocaleDateString()
+                        })) || []}
+                        isLoading={isLoading}
+                    />
+                    <TableCard
+                        title="Últimos Movimientos"
+                        headers={['Tipo', 'Cantidad', 'Producto', 'Usuario']}
+                        data={stats?.ultimosMovimientos?.map(m => ({
+                            tipo: m.tipo,
+                            cantidad: m.cantidad,
+                            producto: m.producto,
+                            usuario: m.usuario
+                        })) || []}
+                        isLoading={isLoading}
+                    />
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default Dashboard; 

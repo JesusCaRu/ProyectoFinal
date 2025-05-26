@@ -19,15 +19,33 @@ class Usuario extends Authenticatable
         'nombre',
         'email',
         'password',
+        'telefono',
         'rol_id',
         'sede_id',
         'activo',
-        'ultimo_acceso'
+        'ultimo_acceso',
+        'notificaciones_email',
+        'notificaciones_push',
+        'recordatorios_stock',
+        'metodo_pago',
+        'moneda',
+        'idioma',
+        'zona_horaria',
+        'tema',
+        'densidad'
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'notificaciones_email' => 'boolean',
+        'notificaciones_push' => 'boolean',
+        'recordatorios_stock' => 'boolean'
     ];
 
     public function rol()

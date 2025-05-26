@@ -14,13 +14,23 @@ class Auditoria extends Model
     protected $fillable = [
         'usuario_id',
         'accion',
-        'fecha'
+        'tabla',
+        'registro_id',
+        'datos_anteriores',
+        'datos_nuevos',
+        'ip_address',
+        'user_agent',
+        'created_at'
     ];
 
-    public $timestamps = false;
+    protected $casts = [
+        'datos_anteriores' => 'array',
+        'datos_nuevos' => 'array',
+        'created_at' => 'datetime'
+    ];
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'usuario_id');
+        return $this->belongsTo(Usuario::class);
     }
 }

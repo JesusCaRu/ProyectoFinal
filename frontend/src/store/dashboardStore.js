@@ -1,0 +1,25 @@
+import { create } from 'zustand';
+import { dashboardService } from '../services/dashboardService';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
+export const useDashboardStore = create((set) => ({
+  // Estado
+  stats: null,
+  isLoading: false,
+  error: null,
+
+  // Acciones
+  fetchDashboardData: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await dashboardService.getDashboardData();
+      set({ stats: data, isLoading: false });
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+      throw error;
+    }
+  },
+
+  clearError: () => set({ error: null })
+})); 

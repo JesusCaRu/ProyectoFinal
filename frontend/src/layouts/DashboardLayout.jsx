@@ -28,36 +28,88 @@ const DashboardLayout = ({ children }) => {
     loadUser();
   }, [loadUser]);
 
-  const navigation = [
-    {
-      category: 'Principal',
-      items: [
-        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      ],
-    },
-    {
+  // Definir las opciones de navegación según el rol
+  const getNavigationByRole = () => {
+    const baseNavigation = [
+      {
+        category: 'Principal',
+        items: [
+          { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        ],
+      }
+    ];
+
+    // Opciones comunes para todos los roles
+    const commonOptions = {
       category: 'Gestión',
       items: [
-        { name: 'Inventario', path: '/dashboard/inventario', icon: Package },
         { name: 'Ventas', path: '/dashboard/ventas', icon: ShoppingCart },
         { name: 'Compras', path: '/dashboard/compras', icon: ShoppingBag },
       ],
-    },
-    {
-      category: 'Reportes',
-      items: [
-        { name: 'Reportes', path: '/dashboard/reportes', icon: BarChart2 },
-        { name: 'Facturas', path: '/dashboard/facturas', icon: FileText },
+    };
+
+    // Opciones específicas por rol
+    const roleSpecificOptions = {
+      'Administrador': [
+        {
+          category: 'Gestión',
+          items: [
+            { name: 'Inventario', path: '/dashboard/inventario', icon: Package },
+            { name: 'Ventas', path: '/dashboard/ventas', icon: ShoppingCart },
+            { name: 'Compras', path: '/dashboard/compras', icon: ShoppingBag },
+          ],
+        },
+        {
+          category: 'Administración',
+          items: [
+            { name: 'Auditoría', path: '/dashboard/auditoria', icon: Settings },
+            { name: 'Gestiones', path: '/dashboard/gestiones', icon: Settings },
+            { name: 'Usuarios', path: '/dashboard/usuarios', icon: Users },
+            { name: 'Configuración', path: '/dashboard/configuracion', icon: Settings },
+          ],
+        },
+        {
+          category: 'Reportes',
+          items: [
+            { name: 'Reportes', path: '/dashboard/reportes', icon: BarChart2 },
+            { name: 'Facturas', path: '/dashboard/facturas', icon: FileText },
+          ],
+        },
       ],
-    },
-    {
-      category: 'Administración',
-      items: [
-        { name: 'Usuarios', path: '/dashboard/usuarios', icon: Users },
-        { name: 'Configuración', path: '/dashboard/configuracion', icon: Settings },
+      'Vendedor': [
+        commonOptions,
+        {
+          category: 'Reportes',
+          items: [
+            { name: 'Reportes', path: '/dashboard/reportes', icon: BarChart2 },
+          ],
+        },
       ],
-    },
-  ];
+      'Almacenista': [
+        {
+          category: 'Gestión',
+          items: [
+            { name: 'Inventario', path: '/dashboard/inventario', icon: Package },
+          ],
+        },
+      ],
+    };
+
+    // Obtener las opciones según el rol del usuario
+    const userRole = user?.data?.rol?.nombre || 'Vendedor';
+    console.log('Rol del usuario:', userRole);
+    const roleOptions = roleSpecificOptions[userRole] || roleSpecificOptions['Vendedor'];
+
+    // Asegurarse de que siempre devolvemos un array válido
+    if (!Array.isArray(roleOptions)) {
+      console.error(`Rol no válido: ${userRole}, usando opciones por defecto`);
+      return [...baseNavigation, ...roleSpecificOptions['Vendedor']];
+    }
+
+    return [...baseNavigation, ...roleOptions];
+  };
+
+  const navigation = getNavigationByRole();
 
   const handleLogout = () => {
     logout();

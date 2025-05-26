@@ -7,6 +7,7 @@ import DarkModeToggle from './components/DarkModeToggle';
 import LoadingScreen from './components/LoadingScreen';
 import './styles/globals.css';
 import { useAuthStore } from './store/authStore';
+import Auditoria from './pages/dashboard/Auditoria';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);

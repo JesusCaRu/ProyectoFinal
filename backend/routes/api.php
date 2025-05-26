@@ -16,6 +16,8 @@ use App\Http\Controllers\API\CompraDetalleController;
 use App\Http\Controllers\API\VentaController;
 use App\Http\Controllers\API\VentaDetalleController;
 use App\Http\Controllers\API\MovimientoController;
+use App\Http\Controllers\API\ConfigController;
+use App\Http\Controllers\API\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('usuarios/{usuario}/estado', [UsuarioController::class, 'cambiarEstado']);
 
     // Auditorias
-    Route::apiResource('auditorias', AuditoriaController::class);
+    Route::get('/auditoria/acciones', [AuditoriaController::class, 'getAcciones']);
+    Route::get('/auditoria/tablas', [AuditoriaController::class, 'getTablas']);
+    Route::get('/auditoria', [AuditoriaController::class, 'index']);
+    Route::get('/auditoria/{id}', [AuditoriaController::class, 'show']);
 
     // Categorias
     Route::apiResource('categorias', CategoriaController::class);
@@ -126,4 +131,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{movimiento}', [MovimientoController::class, 'show']);
         Route::delete('/{movimiento}', [MovimientoController::class, 'destroy']);
     });
+
+    // Rutas de configuración
+    Route::get('/config', [ConfigController::class, 'index']);
+    Route::put('/config/perfil', [ConfigController::class, 'updatePerfil']);
+    Route::put('/config/seguridad', [ConfigController::class, 'updateSeguridad']);
+    Route::put('/config/pago', [ConfigController::class, 'updatePago']);
+    Route::put('/config/idioma', [ConfigController::class, 'updateIdioma']);
+    Route::put('/config/apariencia', [ConfigController::class, 'updateApariencia']);
+    Route::put('/config/password', [ConfigController::class, 'updatePassword']);
+
+    // Rutas del Dashboard
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+    Route::get('/dashboard/ventas-por-mes', [DashboardController::class, 'getVentasPorMes']);
+    Route::get('/dashboard/productos-mas-vendidos', [DashboardController::class, 'getProductosMasVendidos']);
+    Route::get('/dashboard/productos-stock-bajo', [DashboardController::class, 'getProductosStockBajo']);
+    Route::get('/dashboard/ultimas-ventas', [DashboardController::class, 'getUltimasVentas']);
+    Route::get('/dashboard/ultimas-compras', [DashboardController::class, 'getUltimasCompras']);
+    Route::get('/dashboard/ultimos-movimientos', [DashboardController::class, 'getUltimosMovimientos']);
 });
