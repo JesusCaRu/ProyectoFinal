@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Auditoria;
+use Spatie\Activitylog\Models\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class AuditoriaController extends Controller
 {
@@ -16,31 +17,35 @@ class AuditoriaController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Auditoria::with('usuario')
+            DB::beginTransaction();
+
+            $query = Activity::with('causer')
                 ->orderBy('created_at', 'desc');
 
             // Filtros
-            if ($request->has('usuario_id')) {
-                $query->where('usuario_id', $request->usuario_id);
+            if ($request->filled('usuario_id')) {
+                $query->where('causer_id', $request->usuario_id);
             }
 
-            if ($request->has('accion')) {
-                $query->where('accion', $request->accion);
+            if ($request->filled('accion')) {
+                $query->where('description', 'LIKE', '%' . $request->accion . '%');
             }
 
-            if ($request->has('tabla')) {
-                $query->where('tabla', $request->tabla);
+            if ($request->filled('tabla')) {
+                $query->where('subject_type', 'LIKE', '%' . $request->tabla . '%');
             }
 
-            if ($request->has('fecha_inicio')) {
+            if ($request->filled('fecha_inicio')) {
                 $query->whereDate('created_at', '>=', $request->fecha_inicio);
             }
 
-            if ($request->has('fecha_fin')) {
+            if ($request->filled('fecha_fin')) {
                 $query->whereDate('created_at', '<=', $request->fecha_fin);
             }
 
             $registros = $query->paginate(15);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -53,10 +58,11 @@ class AuditoriaController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Error al obtener registros de auditoría: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener registros de auditoría'
+                'message' => 'Error al obtener registros de auditoría: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -75,7 +81,7 @@ class AuditoriaController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $auditoria = Auditoria::create($request->all());
+        $auditoria = Activity::create($request->all());
         return response()->json(['data' => $auditoria], 201);
     }
 
@@ -85,7 +91,7 @@ class AuditoriaController extends Controller
     public function show($id)
     {
         try {
-            $registro = Auditoria::with('usuario')->findOrFail($id);
+            $registro = Activity::with('causer')->findOrFail($id);
             return response()->json([
                 'success' => true,
                 'data' => $registro
@@ -94,7 +100,7 @@ class AuditoriaController extends Controller
             Log::error('Error al obtener registro de auditoría: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener registro de auditoría'
+                'message' => 'Error al obtener registro de auditoría: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -102,7 +108,7 @@ class AuditoriaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Auditoria $auditoria)
+    public function update(Request $request, Activity $auditoria)
     {
         $validator = Validator::make($request->all(), [
             'usuario_id' => 'required|exists:usuarios,id',
@@ -120,7 +126,7 @@ class AuditoriaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Auditoria $auditoria)
+    public function destroy(Activity $auditoria)
     {
         $auditoria->delete();
         return response()->json(null, 204);
@@ -132,7 +138,13 @@ class AuditoriaController extends Controller
     public function getAcciones()
     {
         try {
-            $acciones = Auditoria::distinct()->pluck('accion');
+            $acciones = Activity::select('description')
+                ->distinct()
+                ->whereNotNull('description')
+                ->pluck('description')
+                ->filter()
+                ->values();
+
             return response()->json([
                 'success' => true,
                 'data' => $acciones
@@ -141,7 +153,7 @@ class AuditoriaController extends Controller
             Log::error('Error al obtener acciones de auditoría: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener acciones de auditoría'
+                'message' => 'Error al obtener acciones de auditoría: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -152,7 +164,16 @@ class AuditoriaController extends Controller
     public function getTablas()
     {
         try {
-            $tablas = Auditoria::distinct()->pluck('tabla');
+            $tablas = Activity::select('subject_type')
+                ->distinct()
+                ->whereNotNull('subject_type')
+                ->pluck('subject_type')
+                ->map(function ($type) {
+                    return class_basename($type);
+                })
+                ->filter()
+                ->values();
+
             return response()->json([
                 'success' => true,
                 'data' => $tablas
@@ -161,7 +182,7 @@ class AuditoriaController extends Controller
             Log::error('Error al obtener tablas de auditoría: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener tablas de auditoría'
+                'message' => 'Error al obtener tablas de auditoría: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -122,17 +122,40 @@ class ProductoController extends Controller
             // Verificar si el producto tiene stock
             if ($producto->stock > 0) {
                 return response()->json([
-                    'message' => 'No se puede eliminar un producto con stock existente'
+                    'message' => 'No se puede eliminar un producto con stock existente',
+                    'details' => "El producto tiene {$producto->stock} unidades en stock"
                 ], 422);
             }
 
             // Verificar si el producto tiene movimientos asociados
-            if ($producto->movimientos()->exists() ||
-                $producto->transferencias()->exists() ||
-                $producto->compraDetalles()->exists() ||
-                $producto->ventaDetalles()->exists()) {
+            if ($producto->movimientos()->exists()) {
                 return response()->json([
-                    'message' => 'No se puede eliminar un producto con movimientos asociados'
+                    'message' => 'No se puede eliminar un producto con movimientos asociados',
+                    'details' => 'El producto tiene movimientos de entrada/salida registrados'
+                ], 422);
+            }
+
+            // Verificar si el producto tiene transferencias asociadas
+            if ($producto->transferencias()->exists()) {
+                return response()->json([
+                    'message' => 'No se puede eliminar un producto con transferencias asociadas',
+                    'details' => 'El producto tiene transferencias entre sedes registradas'
+                ], 422);
+            }
+
+            // Verificar si el producto tiene detalles de compra asociados
+            if ($producto->compraDetalles()->exists()) {
+                return response()->json([
+                    'message' => 'No se puede eliminar un producto con compras asociadas',
+                    'details' => 'El producto tiene compras registradas'
+                ], 422);
+            }
+
+            // Verificar si el producto tiene detalles de venta asociados
+            if ($producto->ventaDetalles()->exists()) {
+                return response()->json([
+                    'message' => 'No se puede eliminar un producto con ventas asociadas',
+                    'details' => 'El producto tiene ventas registradas'
                 ], 422);
             }
 

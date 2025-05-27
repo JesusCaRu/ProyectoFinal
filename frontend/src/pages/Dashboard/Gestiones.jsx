@@ -18,6 +18,7 @@ import { useProveedorStore } from '../../store/proveedorStore';
 import { useBrandStore } from '../../store/brandStore';
 import { useSedeStore } from '../../store/sedeStore';
 import { useCategoryStore } from '../../store/categoryStore';
+import { toast } from 'react-hot-toast';
 
 const Gestiones = () => {
   const [activeTab, setActiveTab] = useState('productos');
@@ -107,76 +108,93 @@ const Gestiones = () => {
 
   const handleConfirmDelete = async () => {
     try {
+      let success = false;
       switch (modalType) {
         case 'productos':
-          await deleteProduct(selectedItem.id);
+          success = await deleteProduct(selectedItem.id);
           break;
         case 'proveedores':
-          await deleteProvider(selectedItem.id);
+          success = await deleteProvider(selectedItem.id);
           break;
         case 'marcas':
-          await deleteBrand(selectedItem.id);
+          success = await deleteBrand(selectedItem.id);
           break;
         case 'sedes':
-          await deleteSede(selectedItem.id);
+          success = await deleteSede(selectedItem.id);
           break;
         case 'categorias':
-          await deleteCategory(selectedItem.id);
+          success = await deleteCategory(selectedItem.id);
           break;
         default:
           break;
       }
-      setDeleteModalOpen(false);
+
+      if (success) {
+        toast.success(`${modalType.slice(0, -1)} eliminado correctamente`);
+        setDeleteModalOpen(false);
+      } else {
+        toast.error(`Error al eliminar ${modalType.slice(0, -1)}`);
+      }
     } catch (error) {
       console.error('Error al eliminar:', error);
+      const errorMessage = error.response?.data?.details || error.response?.data?.message || error.message || `Error al eliminar ${modalType.slice(0, -1)}`;
+      toast.error(errorMessage);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let success = false;
       switch (modalType) {
         case 'productos':
           if (selectedItem) {
-            await updateProduct(selectedItem.id, formData);
+            success = await updateProduct(selectedItem.id, formData);
           } else {
-            await createProduct(formData);
+            success = await createProduct(formData);
           }
           break;
         case 'proveedores':
           if (selectedItem) {
-            await updateProveedor(selectedItem.id, formData);
+            success = await updateProveedor(selectedItem.id, formData);
           } else {
-            await createProveedor(formData);
+            success = await createProveedor(formData);
           }
           break;
         case 'marcas':
           if (selectedItem) {
-            await updateBrand(selectedItem.id, formData);
+            success = await updateBrand(selectedItem.id, formData);
           } else {
-            await createBrand(formData);
+            success = await createBrand(formData);
           }
           break;
         case 'sedes':
           if (selectedItem) {
-            await updateSede(selectedItem.id, formData);
+            success = await updateSede(selectedItem.id, formData);
           } else {
-            await createSede(formData);
+            success = await createSede(formData);
           }
           break;
         case 'categorias':
           if (selectedItem) {
-            await updateCategory(selectedItem.id, formData);
+            success = await updateCategory(selectedItem.id, formData);
           } else {
-            await createCategory(formData);
+            success = await createCategory(formData);
           }
           break;
         default:
           break;
       }
-      setModalOpen(false);
+
+      if (success) {
+        toast.success(`${modalType.slice(0, -1)} ${selectedItem ? 'actualizado' : 'creado'} correctamente`);
+        setModalOpen(false);
+      } else {
+        toast.error(`Error al ${selectedItem ? 'actualizar' : 'crear'} ${modalType.slice(0, -1)}`);
+      }
     } catch (error) {
       console.error('Error al guardar:', error);
+      toast.error(error.message || `Error al ${selectedItem ? 'actualizar' : 'crear'} ${modalType.slice(0, -1)}`);
     }
   };
 

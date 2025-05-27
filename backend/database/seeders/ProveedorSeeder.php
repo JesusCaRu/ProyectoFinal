@@ -12,15 +12,21 @@ class ProveedorSeeder extends Seeder
         $proveedores = [
             [
                 'nombre' => 'RobotSupply S.A.',
-                'contacto' => 'Juan Pérez'
+                'contacto' => 'Juan Pérez',
+                'email' => 'contacto@robotsupply.com',
+                'telefono' => '555-1234'
             ],
             [
                 'nombre' => 'TechParts Inc.',
-                'contacto' => 'María García'
+                'contacto' => 'María García',
+                'email' => 'ventas@techparts.com',
+                'telefono' => '555-5678'
             ],
             [
                 'nombre' => 'AutoBot Distributors',
-                'contacto' => 'Carlos López'
+                'contacto' => 'Carlos López',
+                'email' => 'info@autobot.com',
+                'telefono' => '555-9012'
             ]
         ];
 

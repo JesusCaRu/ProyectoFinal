@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import { auditoriaService } from '../services/auditoriaService';
 
 export const useAuditoriaStore = create((set) => ({
     registros: [],
@@ -17,25 +17,33 @@ export const useAuditoriaStore = create((set) => ({
     fetchRegistros: async (filtros = {}) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.get('/api/auditoria', { params: filtros });
-            if (response.data.success) {
+            const response = await auditoriaService.fetchRegistros(filtros);
+            if (response.success) {
+                const registros = response.data.data.map(registro => ({
+                    ...registro,
+                    usuario: registro.causer,
+                    accion: registro.description,
+                    tabla: registro.subject_type ? registro.subject_type.split('\\').pop() : null,
+                    registro_id: registro.subject_id,
+                    fecha: registro.created_at
+                }));
+                
                 set({ 
-                    registros: response.data.data.data || [],
+                    registros,
                     pagination: {
-                        total: response.data.data.total,
-                        perPage: response.data.data.per_page,
-                        currentPage: response.data.data.current_page,
-                        lastPage: response.data.data.last_page
+                        total: response.data.total,
+                        perPage: response.data.per_page,
+                        currentPage: response.data.current_page,
+                        lastPage: response.data.last_page
                     }
                 });
             } else {
-                throw new Error(response.data.message || 'Error al cargar registros');
+                throw new Error(response.message || 'Error al cargar registros');
             }
         } catch (error) {
             console.error('Error en fetchRegistros:', error);
-            const errorMessage = error.response?.data?.message || error.message || 'Error al cargar registros';
-            set({ error: errorMessage });
-            throw new Error(errorMessage);
+            set({ error: error.message });
+            throw error;
         } finally {
             set({ isLoading: false });
         }
@@ -44,17 +52,16 @@ export const useAuditoriaStore = create((set) => ({
     fetchAcciones: async () => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.get('/api/auditoria/acciones');
-            if (response.data.success) {
-                set({ acciones: response.data.data || [] });
+            const response = await auditoriaService.fetchAcciones();
+            if (response.success) {
+                set({ acciones: response.data || [] });
             } else {
-                throw new Error(response.data.message || 'Error al cargar acciones');
+                throw new Error(response.message || 'Error al cargar acciones');
             }
         } catch (error) {
             console.error('Error en fetchAcciones:', error);
-            const errorMessage = error.response?.data?.message || error.message || 'Error al cargar acciones';
-            set({ error: errorMessage });
-            throw new Error(errorMessage);
+            set({ error: error.message });
+            throw error;
         } finally {
             set({ isLoading: false });
         }
@@ -63,17 +70,16 @@ export const useAuditoriaStore = create((set) => ({
     fetchTablas: async () => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.get('/api/auditoria/tablas');
-            if (response.data.success) {
-                set({ tablas: response.data.data || [] });
+            const response = await auditoriaService.fetchTablas();
+            if (response.success) {
+                set({ tablas: response.data || [] });
             } else {
-                throw new Error(response.data.message || 'Error al cargar tablas');
+                throw new Error(response.message || 'Error al cargar tablas');
             }
         } catch (error) {
             console.error('Error en fetchTablas:', error);
-            const errorMessage = error.response?.data?.message || error.message || 'Error al cargar tablas';
-            set({ error: errorMessage });
-            throw new Error(errorMessage);
+            set({ error: error.message });
+            throw error;
         } finally {
             set({ isLoading: false });
         }

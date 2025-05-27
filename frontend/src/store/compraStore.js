@@ -3,79 +3,50 @@ import { compraService } from '../services/compraService';
 
 export const useCompraStore = create((set, get) => ({
     compras: [],
-    compraActual: null,
     loading: false,
     error: null,
-    resumen: null,
+    selectedCompra: null,
 
-    // Acciones
-    setCompras: (compras) => set({ compras: Array.isArray(compras) ? compras : [] }),
-    setCompraActual: (compra) => set({ compraActual: compra }),
-    setLoading: (loading) => set({ loading }),
-    setError: (error) => set({ error }),
-    setResumen: (resumen) => set({ resumen }),
-
-    // Fetch de compras
+    // Fetch all purchases
     fetchCompras: async () => {
         set({ loading: true, error: null });
         try {
-            const response = await compraService.getCompras();
-            const compras = Array.isArray(response) ? response : 
-                          Array.isArray(response.data) ? response.data : [];
+            const compras = await compraService.getCompras();
             set({ compras, loading: false });
         } catch (error) {
-            set({ error: error.message, loading: false, compras: [] });
-            throw error;
+            set({ error: error.message, loading: false });
         }
     },
 
-    // Fetch de compras por rango de fechas
+    // Fetch purchases by date range
     fetchComprasByDateRange: async (fechaInicio, fechaFin) => {
         set({ loading: true, error: null });
         try {
-            const response = await compraService.getComprasByDateRange(fechaInicio, fechaFin);
-            const compras = Array.isArray(response) ? response : 
-                          Array.isArray(response.data) ? response.data : [];
+            const compras = await compraService.getComprasByDateRange(fechaInicio, fechaFin);
             set({ compras, loading: false });
         } catch (error) {
-            set({ error: error.message, loading: false, compras: [] });
-            throw error;
-        }
-    },
-
-    // Fetch de una compra específica
-    fetchCompra: async (id) => {
-        set({ loading: true, error: null });
-        try {
-            const response = await compraService.getCompra(id);
-            const compra = response.data || response;
-            set({ compraActual: compra, loading: false });
-            return compra;
-        } catch (error) {
             set({ error: error.message, loading: false });
-            throw error;
         }
     },
 
-    // Fetch del resumen de compras
+    // Get purchase summary
     fetchResumen: async (fechaInicio, fechaFin) => {
         set({ loading: true, error: null });
         try {
-            const response = await compraService.getResumen(fechaInicio, fechaFin);
-            const resumen = response.data || response;
-            set({ resumen, loading: false });
+            const resumen = await compraService.getResumen(fechaInicio, fechaFin);
+            set({ loading: false });
+            return resumen;
         } catch (error) {
             set({ error: error.message, loading: false });
             throw error;
         }
     },
 
-    // Crear nueva compra
+    // Create new purchase
     createCompra: async (compraData) => {
         set({ loading: true, error: null });
         try {
-            const response = await compraService.createCompra(compraData);
-            const nuevaCompra = response.data || response;
+            const nuevaCompra = await compraService.createCompra(compraData);
             set(state => ({
                 compras: [nuevaCompra, ...state.compras],
                 loading: false
@@ -87,17 +58,15 @@ export const useCompraStore = create((set, get) => ({
         }
     },
 
-    // Actualizar estado de compra
+    // Update purchase status
     updateCompraEstado: async (id, estado) => {
         set({ loading: true, error: null });
         try {
-            const response = await compraService.updateCompraEstado(id, estado);
-            const compraActualizada = response.data || response;
+            const compraActualizada = await compraService.updateCompraEstado(id, estado);
             set(state => ({
                 compras: state.compras.map(compra => 
                     compra.id === id ? compraActualizada : compra
                 ),
-                compraActual: state.compraActual?.id === id ? compraActualizada : state.compraActual,
                 loading: false
             }));
             return compraActualizada;
@@ -107,13 +76,33 @@ export const useCompraStore = create((set, get) => ({
         }
     },
 
-    // Cancelar compra
-    cancelarCompra: async (id) => {
-        return get().updateCompraEstado(id, 'cancelada');
+    // Delete purchase
+    deleteCompra: async (id) => {
+        set({ loading: true, error: null });
+        try {
+            await compraService.deleteCompra(id);
+            set(state => ({
+                compras: state.compras.filter(compra => compra.id !== id),
+                loading: false
+            }));
+        } catch (error) {
+            set({ error: error.message, loading: false });
+            throw error;
+        }
     },
 
-    // Completar compra
-    completarCompra: async (id) => {
-        return get().updateCompraEstado(id, 'completada');
+    // Set selected purchase
+    setSelectedCompra: (compra) => {
+        set({ selectedCompra: compra });
+    },
+
+    // Clear selected purchase
+    clearSelectedCompra: () => {
+        set({ selectedCompra: null });
+    },
+
+    // Clear error
+    clearError: () => {
+        set({ error: null });
     }
 })); 

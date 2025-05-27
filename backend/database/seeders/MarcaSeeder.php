@@ -10,11 +10,11 @@ class MarcaSeeder extends Seeder
     public function run(): void
     {
         $marcas = [
-            ['nombre' => 'RobotTech'],
-            ['nombre' => 'AutoBot'],
-            ['nombre' => 'SmartBot'],
-            ['nombre' => 'RoboMaster'],
-            ['nombre' => 'TechBot']
+            ['nombre' => 'RobotTech', 'descripcion' => 'Líder en robótica industrial'],
+            ['nombre' => 'AutoBot', 'descripcion' => 'Robots para automóviles y movilidad'],
+            ['nombre' => 'SmartBot', 'descripcion' => 'Robots inteligentes para el hogar'],
+            ['nombre' => 'RoboMaster', 'descripcion' => 'Robots educativos y de competencia'],
+            ['nombre' => 'TechBot', 'descripcion' => 'Accesorios y piezas para robots']
         ];
 
         foreach ($marcas as $marca) {

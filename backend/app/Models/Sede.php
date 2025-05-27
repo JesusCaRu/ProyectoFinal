@@ -13,12 +13,20 @@ class Sede extends Model
 
     protected $fillable = [
         'nombre',
-        'direccion'
+        'direccion',
+        'telefono',
+        'email',
+        'estado'
     ];
 
     public function productos()
     {
-        return $this->hasMany(Producto::class, 'sede_id');
+        return $this->hasMany(Producto::class);
+    }
+
+    public function usuarios()
+    {
+        return $this->hasMany(Usuario::class);
     }
 
     public function transferenciasOrigen()

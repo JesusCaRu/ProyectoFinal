@@ -4,33 +4,41 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Auditoria extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
-    protected $table = 'auditorias';
+    protected $table = 'activity_log';
 
     protected $fillable = [
-        'usuario_id',
-        'accion',
-        'tabla',
-        'registro_id',
-        'datos_anteriores',
-        'datos_nuevos',
-        'ip_address',
-        'user_agent',
+        'log_name',
+        'description',
+        'subject_type',
+        'subject_id',
+        'causer_type',
+        'causer_id',
+        'properties',
         'created_at'
     ];
 
     protected $casts = [
-        'datos_anteriores' => 'array',
-        'datos_nuevos' => 'array',
+        'properties' => 'array',
         'created_at' => 'datetime'
     ];
 
-    public function usuario()
+    public function getActivitylogOptions(): LogOptions
     {
-        return $this->belongsTo(Usuario::class);
+        return LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
+    public function causer()
+    {
+        return $this->belongsTo(Usuario::class, 'causer_id');
     }
 }

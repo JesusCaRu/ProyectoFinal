@@ -12,6 +12,7 @@ class ProductoSeeder extends Seeder
         $productos = [
             [
                 'nombre' => 'Robot Industrial RX-100',
+                'sku' => 'RX100-001',
                 'descripcion' => 'Robot industrial de alta precisión para líneas de producción',
                 'precio_compra' => 12000.00,
                 'precio_venta' => 15000.00,
@@ -23,6 +24,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'nombre' => 'Robot Educativo EduBot',
+                'sku' => 'EDUBOT-002',
                 'descripcion' => 'Robot educativo para enseñanza de programación',
                 'precio_compra' => 249.99,
                 'precio_venta' => 299.99,
@@ -34,6 +36,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'nombre' => 'Robot de Servicio HelperBot',
+                'sku' => 'HELPER-003',
                 'descripcion' => 'Robot de servicio para asistencia en el hogar',
                 'precio_compra' => 1599.99,
                 'precio_venta' => 1999.99,
@@ -45,6 +48,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'nombre' => 'Kit de Repuestos Básico',
+                'sku' => 'KITREP-004',
                 'descripcion' => 'Kit de repuestos básicos para mantenimiento',
                 'precio_compra' => 119.99,
                 'precio_venta' => 149.99,
@@ -56,6 +60,7 @@ class ProductoSeeder extends Seeder
             ],
             [
                 'nombre' => 'Cargador Universal',
+                'sku' => 'CARGA-005',
                 'descripcion' => 'Cargador universal para robots',
                 'precio_compra' => 39.99,
                 'precio_venta' => 49.99,

@@ -46,6 +46,7 @@ export const proveedorService = {
     deleteProveedor: async (id) => {
         try {
             await axiosInstance.delete(`${API_URL}/proveedores/${id}`);
+            return true;
         } catch (error) {
             throw new Error(error.response?.data?.message || 'Error al eliminar el proveedor');
         }

@@ -13,11 +13,15 @@ class Proveedor extends Model
 
     protected $fillable = [
         'nombre',
-        'contacto'
+        'contacto',
+        'email',
+        'telefono',
+        'direccion',
+        'estado'
     ];
 
     public function compras()
     {
-        return $this->hasMany(Compra::class, 'proveedor_id');
+        return $this->hasMany(Compra::class);
     }
 }

@@ -4,15 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Producto extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'productos';
 
     protected $fillable = [
         'nombre',
+        'sku',
         'descripcion',
         'categoria_id',
         'marca_id',
@@ -20,8 +23,17 @@ class Producto extends Model
         'stock_minimo',
         'precio_compra',
         'precio_venta',
-        'sede_id'
+        'sede_id',
+        'estado'
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['nombre', 'descripcion', 'stock', 'stock_minimo', 'precio_compra', 'precio_venta'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     public function categoria()
     {

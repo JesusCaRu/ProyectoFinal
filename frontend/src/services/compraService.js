@@ -1,4 +1,4 @@
-import  axiosInstance  from '../lib/axios';
+import axiosInstance from '../lib/axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
 export const compraService = {
@@ -25,7 +25,7 @@ export const compraService = {
                 fecha_fin: fechaFin.toISOString().split('T')[0]
             };
 
-            const response = await axiosInstance.get(`${API_URL}/compras/por-fechas`, { params });
+            const response = await axiosInstance.get(`${API_URL}/compras/date-range`, { params });
             return Array.isArray(response.data) ? response.data : 
                    Array.isArray(response.data.data) ? response.data.data : [];
         } catch (error) {
@@ -79,6 +79,16 @@ export const compraService = {
             return response.data.data || response.data;
         } catch (error) {
             throw new Error(error.response?.data?.message || 'Error al actualizar el estado de la compra');
+        }
+    },
+
+    // Eliminar compra
+    deleteCompra: async (id) => {
+        try {
+            const response = await axiosInstance.delete(`${API_URL}/compras/${id}`);
+            return response.data.data || response.data;
+        } catch (error) {
+            throw new Error(error.response?.data?.message || 'Error al eliminar la compra');
         }
     },
 
