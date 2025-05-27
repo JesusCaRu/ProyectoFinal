@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 const DetalleCompra = ({ compra, isOpen, onClose }) => {
-    const { updateCompraEstado, loading } = useCompraStore();
+    const { updateCompraEstado, loading, fetchCompras } = useCompraStore();
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [detallesProcesados, setDetallesProcesados] = useState(null);
@@ -67,11 +67,27 @@ const DetalleCompra = ({ compra, isOpen, onClose }) => {
 
     const handleEstadoChange = async (nuevoEstado) => {
         try {
+            setIsLoading(true);
+            setError(null);
+            
+            // Validar que el estado actual sea pendiente
+            if (compra.estado !== 'pendiente') {
+                setError('No se puede cambiar el estado de una compra que no está pendiente');
+                return;
+            }
+
             await updateCompraEstado(compra.id, nuevoEstado);
+            // Actualizar la lista de compras después de cambiar el estado
+            await fetchCompras();
             onClose();
         } catch (error) {
             console.error('Error al actualizar el estado:', error);
-            setError(error.message);
+            const errorMessage = error.response?.data?.message || 
+                               error.response?.data?.error || 
+                               'Error al actualizar el estado de la compra';
+            setError(errorMessage);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -255,10 +271,10 @@ const DetalleCompra = ({ compra, isOpen, onClose }) => {
                                 <div className="flex justify-end space-x-4">
                                     <button
                                         onClick={() => handleEstadoChange('cancelada')}
-                                        disabled={loading}
+                                        disabled={loading || isLoading}
                                         className="px-4 py-2 bg-error/10 hover:bg-error/20 text-error rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {loading ? (
+                                        {loading || isLoading ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : (
                                             <XCircle className="h-4 w-4" />
@@ -267,10 +283,10 @@ const DetalleCompra = ({ compra, isOpen, onClose }) => {
                                     </button>
                                     <button
                                         onClick={() => handleEstadoChange('completada')}
-                                        disabled={loading}
+                                        disabled={loading || isLoading}
                                         className="px-4 py-2 bg-success/10 hover:bg-success/20 text-success rounded-lg transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {loading ? (
+                                        {loading || isLoading ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : (
                                             <CheckCircle className="h-4 w-4" />

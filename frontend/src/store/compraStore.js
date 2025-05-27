@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { compraService } from '../services/compraService';
 
-export const useCompraStore = create((set, get) => ({
+export const useCompraStore = create((set) => ({
     compras: [],
     loading: false,
     error: null,

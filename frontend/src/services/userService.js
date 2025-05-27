@@ -46,7 +46,7 @@ export const userService = {
 
   updateUserStatus: async (userId, newStatus) => {
     try {
-      const response = await axiosInstance.patch(`${API_URL}/users/${userId}/status`, 
+      const response = await axiosInstance.patch(`${API_URL}/usuarios/${userId}/estado`, 
         { activo: newStatus }
       );
       return response.data.data;
@@ -81,6 +81,63 @@ export const userService = {
       return true;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al restaurar usuario');
+    }
+  },
+
+  // Obtener perfil del usuario actual
+  getProfile: async () => {
+    try {
+      const response = await axiosInstance.get(`${API_URL}/usuarios/me`);
+      return response.data.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error al obtener el perfil');
+    }
+  },
+
+  // Actualizar perfil del usuario
+  updateProfile: async (userData) => {
+    try {
+      const response = await axiosInstance.put(`${API_URL}/usuarios/me`, userData);
+      return response.data.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error al actualizar el perfil');
+    }
+  },
+
+  // Actualizar contraseña
+  updatePassword: async (passwordData) => {
+    try {
+      const response = await axiosInstance.put(`${API_URL}/usuarios/me/password`, passwordData);
+      return response.data.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error al actualizar la contraseña');
+    }
+  },
+
+  // Subir avatar
+  uploadAvatar: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await axiosInstance.post(`${API_URL}/usuarios/me/avatar`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error al subir el avatar');
+    }
+  },
+
+  // Cerrar sesión
+  logout: async () => {
+    try {
+      await axiosInstance.post(`${API_URL}/auth/logout`);
+      return true;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error al cerrar sesión');
     }
   }
 }; 

@@ -16,6 +16,8 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import RoleProtectedRoute from '../components/RoleProtectedRoute';
 import Notificaciones from '../pages/dashboard/Notificaciones';
 import Auditoria from '../pages/dashboard/Auditoria';
+import CatalogoProductos from '../pages/dashboard/CatalogoProductos';
+import HistorialVentas from '../pages/dashboard/HistorialVentas';
 
 const AppRoutes = () => {
   return (
@@ -83,6 +85,16 @@ const AppRoutes = () => {
               <Route path="reportes" element={
                 <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
                   <Reportes />
+                </RoleProtectedRoute>
+              } />
+              <Route path="catalogo" element={
+                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                  <CatalogoProductos />
+                </RoleProtectedRoute>
+              } />
+              <Route path="historial-ventas" element={
+                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                  <HistorialVentas />
                 </RoleProtectedRoute>
               } />
 

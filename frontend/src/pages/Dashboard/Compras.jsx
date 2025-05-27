@@ -26,7 +26,7 @@ const Compras = () => {
     const { 
         compras, 
         loading, 
-        error, 
+        error: storeError, 
         resumen,
         fetchCompras, 
         fetchComprasByDateRange,
@@ -43,6 +43,7 @@ const Compras = () => {
     const [resumenError, setResumenError] = useState(null);
     const [isLoadingInitial, setIsLoadingInitial] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -53,9 +54,11 @@ const Compras = () => {
                     fetchResumen(fechaInicio, fechaFin)
                 ]);
                 setResumenError(null);
+                setError(null);
             } catch (error) {
                 console.error('Error al cargar datos iniciales:', error);
-                setResumenError(error.message);
+                setResumenError(error.response?.data?.message || 'Error al cargar datos iniciales');
+                setError(error.response?.data?.message || 'Error al cargar datos iniciales');
             } finally {
                 setIsLoadingInitial(false);
             }
@@ -75,9 +78,11 @@ const Compras = () => {
                     fetchResumen(fechaInicio, fechaFin)
                 ]);
                 setResumenError(null);
+                setError(null);
             } catch (error) {
                 console.error('Error al actualizar datos:', error);
-                setResumenError(error.message);
+                setResumenError(error.response?.data?.message || 'Error al actualizar datos');
+                setError(error.response?.data?.message || 'Error al actualizar datos');
             } finally {
                 setIsUpdating(false);
             }
@@ -97,6 +102,7 @@ const Compras = () => {
         } catch (error) {
             console.error('Error al actualizar rango de fechas:', error);
             setResumenError(error.message);
+            setError(error.message);
         }
     };
 
@@ -115,6 +121,7 @@ const Compras = () => {
 
     const handleVerDetalles = async (compra) => {
         try {
+            setIsUpdating(true);
             if (compra.detalles && compra.detalles.length > 0) {
                 setSelectedCompra(compra);
                 setShowDetalleCompra(true);
@@ -126,6 +133,9 @@ const Compras = () => {
             setShowDetalleCompra(true);
         } catch (error) {
             console.error('Error al cargar los detalles de la compra:', error);
+            setError(error.response?.data?.message || 'Error al cargar los detalles de la compra');
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -174,7 +184,7 @@ const Compras = () => {
         );
     }
 
-    if (error) {
+    if (storeError || error) {
         return (
             <_motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -183,7 +193,7 @@ const Compras = () => {
                 className="p-6 bg-error/10 border border-error text-error rounded-lg flex items-center gap-3"
             >
                 <AlertCircle className="h-5 w-5" />
-                <p>{error}</p>
+                <p>{storeError || error}</p>
             </_motion.div>
         );
     }
@@ -481,6 +491,7 @@ const Compras = () => {
                             ]);
                         } catch (error) {
                             console.error('Error al actualizar después de nueva compra:', error);
+                            setError(error.response?.data?.message || 'Error al actualizar después de nueva compra');
                         } finally {
                             setIsUpdating(false);
                         }
@@ -492,8 +503,20 @@ const Compras = () => {
                 <DetalleCompra
                     compra={selectedCompra}
                     isOpen={showDetalleCompra}
-                    onClose={() => {
+                    onClose={async () => {
                         setShowDetalleCompra(false);
+                        setIsUpdating(true);
+                        try {
+                            await Promise.all([
+                                fetchCompras(),
+                                fetchResumen(fechaInicio, fechaFin)
+                            ]);
+                        } catch (error) {
+                            console.error('Error al actualizar después de cambiar estado:', error);
+                            setError(error.response?.data?.message || 'Error al actualizar después de cambiar estado');
+                        } finally {
+                            setIsUpdating(false);
+                        }
                     }}
                 />
             )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import UserProfileModal from '../components/UserProfileModal';
 import { 
   LayoutDashboard, 
   Package, 
@@ -14,12 +15,17 @@ import {
   Menu,
   X,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Activity,
+  ShieldUser,
+  Store,
+  DollarSign
 } from 'lucide-react';
 
 const DashboardLayout = ({ children }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveringCollapse, setHoveringCollapse] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loadUser, logout } = useAuthStore();
@@ -39,15 +45,6 @@ const DashboardLayout = ({ children }) => {
       }
     ];
 
-    // Opciones comunes para todos los roles
-    const commonOptions = {
-      category: 'Gestión',
-      items: [
-        { name: 'Ventas', path: '/dashboard/ventas', icon: ShoppingCart },
-        { name: 'Compras', path: '/dashboard/compras', icon: ShoppingBag },
-      ],
-    };
-
     // Opciones específicas por rol
     const roleSpecificOptions = {
       'Administrador': [
@@ -55,15 +52,15 @@ const DashboardLayout = ({ children }) => {
           category: 'Gestión',
           items: [
             { name: 'Inventario', path: '/dashboard/inventario', icon: Package },
-            { name: 'Ventas', path: '/dashboard/ventas', icon: ShoppingCart },
-            { name: 'Compras', path: '/dashboard/compras', icon: ShoppingBag },
+            { name: 'Ventas', path: '/dashboard/ventas', icon: DollarSign },
+            { name: 'Compras', path: '/dashboard/compras', icon: Store },
           ],
         },
         {
           category: 'Administración',
           items: [
-            { name: 'Auditoría', path: '/dashboard/auditoria', icon: Settings },
-            { name: 'Gestiones', path: '/dashboard/gestiones', icon: Settings },
+            { name: 'Auditoría', path: '/dashboard/auditoria', icon: Activity },
+            { name: 'Gestiones', path: '/dashboard/gestiones', icon: ShieldUser },
             { name: 'Usuarios', path: '/dashboard/usuarios', icon: Users },
             { name: 'Configuración', path: '/dashboard/configuracion', icon: Settings },
           ],
@@ -77,7 +74,20 @@ const DashboardLayout = ({ children }) => {
         },
       ],
       'Vendedor': [
-        commonOptions,
+        {
+          category: 'Ventas',
+          items: [
+            { name: 'Nueva Venta', path: '/dashboard/ventas', icon: ShoppingCart },
+            { name: 'Catálogo', path: '/dashboard/catalogo', icon: Package },
+            { name: 'Historial', path: '/dashboard/historial-ventas', icon: FileText },
+          ],
+        },
+        {
+          category: 'Compras',
+          items: [
+            { name: 'Nueva Compra', path: '/dashboard/compras', icon: Store },
+          ],
+        },
         {
           category: 'Reportes',
           items: [
@@ -199,7 +209,10 @@ const DashboardLayout = ({ children }) => {
 
         {/* User profile and logout */}
         <div className="border-t border-border p-4">
-          <div className="flex items-center space-x-3 mb-4">
+          <div 
+            onClick={() => setIsProfileModalOpen(true)}
+            className="flex items-center space-x-3 mb-4 cursor-pointer hover:bg-interactive-component p-2 rounded-lg transition-colors"
+          >
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-solid-color to-solid-color-secondary flex items-center justify-center shrink-0">
               <span className="text-white font-semibold">
                 {user?.data.nombre?.charAt(0).toUpperCase() || 'U'}
@@ -246,6 +259,13 @@ const DashboardLayout = ({ children }) => {
           </div>
         </main>
       </div>
+
+      {/* User Profile Modal */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user?.data}
+      />
     </div>
   );
 };

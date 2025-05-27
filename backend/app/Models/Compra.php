@@ -15,10 +15,14 @@ class Compra extends Model
         'proveedor_id',
         'usuario_id',
         'total',
-        'fecha'
+        'fecha',
+        'estado'
     ];
 
-    public $timestamps = false;
+    protected $casts = [
+        'fecha' => 'datetime',
+        'total' => 'decimal:2'
+    ];
 
     public function proveedor()
     {
@@ -33,5 +37,22 @@ class Compra extends Model
     public function detalles()
     {
         return $this->hasMany(CompraDetalle::class, 'compra_id');
+    }
+
+    public function puedeCambiarEstado($nuevoEstado)
+    {
+        if (!in_array($nuevoEstado, ['pendiente', 'completada', 'cancelada'])) {
+            return false;
+        }
+
+        if ($this->estado === 'cancelada') {
+            return false;
+        }
+
+        if ($this->estado === 'completada') {
+            return false;
+        }
+
+        return true;
     }
 }

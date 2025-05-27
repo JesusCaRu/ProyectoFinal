@@ -163,16 +163,27 @@ class CompraController extends Controller
      */
     public function update(Request $request, Compra $compra)
     {
-        $validator = Validator::make($request->all(), [
-            'estado' => 'required|in:pendiente,completada,cancelada'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         try {
+            $validator = Validator::make($request->all(), [
+                'estado' => 'required|in:pendiente,completada,cancelada'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Estado inválido',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             DB::beginTransaction();
+
+            // Validar si se puede cambiar el estado
+            if (!$compra->puedeCambiarEstado($request->estado)) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'No se puede cambiar el estado de la compra. La compra ya está completada o cancelada.'
+                ], 422);
+            }
 
             // Si la compra está pendiente y se va a completar
             if ($compra->estado === 'pendiente' && $request->estado === 'completada') {
@@ -192,18 +203,16 @@ class CompraController extends Controller
                     ]);
                 }
             }
-            // Si la compra está pendiente y se va a cancelar
-            elseif ($compra->estado === 'pendiente' && $request->estado === 'cancelada') {
-                // No se necesita hacer nada adicional
-            }
-            // Si la compra está completada y se intenta cancelar
-            elseif ($compra->estado === 'completada' && $request->estado === 'cancelada') {
-                return response()->json([
-                    'message' => 'No se puede cancelar una compra ya completada'
-                ], 422);
-            }
 
-            $compra->update(['estado' => $request->estado]);
+            $compra->estado = $request->estado;
+            try {
+                $compra->save();
+            } catch (\Exception $e) {
+                // Si falla por los timestamps, intentamos actualizar directamente
+                DB::table('compras')
+                    ->where('id', $compra->id)
+                    ->update(['estado' => $request->estado]);
+            }
 
             DB::commit();
             return response()->json([
@@ -213,8 +222,15 @@ class CompraController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Error al actualizar el estado de la compra:', [
+                'compra_id' => $compra->id,
+                'nuevo_estado' => $request->estado,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
-                'message' => 'Error al actualizar la compra',
+                'message' => 'Error al actualizar el estado de la compra',
                 'error' => $e->getMessage()
             ], 500);
         }
