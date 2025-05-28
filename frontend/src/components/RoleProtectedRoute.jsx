@@ -10,7 +10,7 @@ const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
-  const userRole = user?.data?.rol?.nombre || 'Vendedor';
+  const userRole = user?.data?.rol?.nombre;
 
   // Si el rol del usuario no está en los roles permitidos, redirigir al dashboard
   if (!allowedRoles.includes(userRole)) {

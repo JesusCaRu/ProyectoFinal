@@ -10,7 +10,8 @@ import {
   Settings,
   AlertTriangle,
   Edit,
-  Trash2
+  Trash2,
+  DollarSign
 } from 'lucide-react';
 import Modal from '../../components/Modal';
 import { useProductStore } from '../../store/productStore';
@@ -19,6 +20,7 @@ import { useBrandStore } from '../../store/brandStore';
 import { useSedeStore } from '../../store/sedeStore';
 import { useCategoryStore } from '../../store/categoryStore';
 import { toast } from 'react-hot-toast';
+import { formatCurrency } from '../../lib/utils';
 
 const Gestiones = () => {
   const [activeTab, setActiveTab] = useState('productos');
@@ -255,7 +257,30 @@ const Gestiones = () => {
         { header: 'Nombre', accessor: 'nombre' },
         { header: 'SKU', accessor: 'sku' },
         { header: 'Stock', accessor: 'stock' },
-        { header: 'Precio', accessor: 'precio' },
+        { 
+          header: 'Precio Compra', 
+          accessor: 'precio_compra',
+          render: (value) => (
+            <div className="flex items-center space-x-3">
+              <DollarSign className="h-5 w-5 text-text-tertiary" />
+              <span className="text-base text-text-tertiary">
+                {formatCurrency(value)}
+              </span>
+            </div>
+          )
+        },
+        { 
+          header: 'Precio Venta', 
+          accessor: 'precio_venta',
+          render: (value) => (
+            <div className="flex items-center space-x-3">
+              <DollarSign className="h-5 w-5 text-text-tertiary" />
+              <span className="text-base text-text-tertiary">
+                {formatCurrency(value)}
+              </span>
+            </div>
+          )
+        },
       ]
     },
     {
@@ -401,7 +426,7 @@ const Gestiones = () => {
                         <tr key={item.id} className="hover:bg-interactive-component/50">
                           {tab.columns.map((column, index) => (
                             <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-accessibility-text">
-                              {item[column.accessor]}
+                              {column.render ? column.render(item[column.accessor], item) : item[column.accessor]}
                             </td>
                           ))}
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

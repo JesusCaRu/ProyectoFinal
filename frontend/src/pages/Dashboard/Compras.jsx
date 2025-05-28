@@ -28,6 +28,7 @@ const Compras = () => {
         loading, 
         error: storeError, 
         resumen,
+        productosMasComprados,
         fetchCompras, 
         fetchComprasByDateRange,
         fetchResumen,
@@ -263,14 +264,14 @@ const Compras = () => {
                                     <DollarSign className="h-6 w-6 text-success" />
                                 </div>
                                 <span className="text-sm font-medium text-success">
-                                    {resumen?.resumen?.total_monto > 0 ? 
-                                        `+${((resumen.resumen.promedio_compra / resumen.resumen.total_monto) * 100).toFixed(1)}%` : 
+                                    {resumen?.total_monto > 0 ? 
+                                        `+${((resumen.promedio_compra / resumen.total_monto) * 100).toFixed(1)}%` : 
                                         '0%'}
                                 </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Total Compras</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {formatCurrency(resumen?.resumen?.total_monto || 0)}
+                                {formatCurrency(resumen?.total_monto || 0)}
                             </p>
                         </_motion.div>
 
@@ -282,17 +283,12 @@ const Compras = () => {
                         >
                             <div className="flex items-center justify-between">
                                 <div className="p-2 bg-interactive-component rounded-lg">
-                                    <ShoppingCart className="h-6 w-6 text-warning" />
+                                    <ShoppingCart className="h-6 w-6 text-solid-color" />
                                 </div>
-                                <span className="text-sm font-medium text-warning">
-                                    {resumen?.resumen?.total_compras > 0 ? 
-                                        `+${((resumen.resumen.total_compras / 100) * 10).toFixed(1)}%` : 
-                                        '0%'}
-                                </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Compras Realizadas</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {resumen?.resumen?.total_compras || 0}
+                                {resumen?.total_compras || 0}
                             </p>
                         </_motion.div>
 
@@ -304,17 +300,12 @@ const Compras = () => {
                         >
                             <div className="flex items-center justify-between">
                                 <div className="p-2 bg-interactive-component rounded-lg">
-                                    <TrendingUp className="h-6 w-6 text-info" />
+                                    <TrendingUp className="h-6 w-6 text-solid-color" />
                                 </div>
-                                <span className="text-sm font-medium text-info">
-                                    {resumen?.resumen?.promedio_compra > 0 ? 
-                                        `+${((resumen.resumen.promedio_compra / 1000) * 100).toFixed(1)}%` : 
-                                        '0%'}
-                                </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Promedio por Compra</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {formatCurrency(resumen?.resumen?.promedio_compra || 0)}
+                                {formatCurrency(resumen?.promedio_compra || 0)}
                             </p>
                         </_motion.div>
 
@@ -328,15 +319,10 @@ const Compras = () => {
                                 <div className="p-2 bg-interactive-component rounded-lg">
                                     <Package className="h-6 w-6 text-solid-color" />
                                 </div>
-                                <span className="text-sm font-medium text-solid-color">
-                                    {resumen?.productos_mas_comprados?.length > 0 ? 
-                                        `+${((resumen.productos_mas_comprados[0].total_comprado / 100) * 15).toFixed(1)}%` : 
-                                        '0%'}
-                                </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Productos Comprados</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {resumen?.productos_mas_comprados?.reduce((acc, curr) => acc + (curr.total_comprado || 0), 0) || 0}
+                                {productosMasComprados?.reduce((sum, p) => sum + p.total_comprado, 0) || 0}
                             </p>
                         </_motion.div>
                     </>

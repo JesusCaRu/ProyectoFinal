@@ -4,6 +4,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import Dashboard from '../pages/dashboard/Dashboard';
+import VendedorDashboard from '../pages/dashboard/VendedorDashboard';
 import Inventario from '../pages/dashboard/Inventario';
 import Ventas from '../pages/dashboard/Ventas';
 import Compras from '../pages/dashboard/Compras';
@@ -18,6 +19,18 @@ import Notificaciones from '../pages/dashboard/Notificaciones';
 import Auditoria from '../pages/dashboard/Auditoria';
 import CatalogoProductos from '../pages/dashboard/CatalogoProductos';
 import HistorialVentas from '../pages/dashboard/HistorialVentas';
+import { useAuthStore } from '../store/authStore';
+
+const DashboardRouter = () => {
+  const { user } = useAuthStore();
+  const userRole = user?.data?.rol?.nombre;
+  
+  if (userRole === 'Vendedor') {
+    return <VendedorDashboard />;
+  }
+  
+  return <Dashboard />;
+};
 
 const AppRoutes = () => {
   return (
@@ -37,7 +50,11 @@ const AppRoutes = () => {
           <DashboardLayout>
             <Routes>
               {/* Rutas accesibles para todos los roles */}
-              <Route index element={<Dashboard />} />
+              <Route index element={
+                <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista', 'Vendedor']}>
+                  <DashboardRouter />
+                </RoleProtectedRoute>
+              } />
               
               {/* Rutas para administradores */}
               <Route path="inventario" element={

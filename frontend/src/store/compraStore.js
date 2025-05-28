@@ -6,6 +6,8 @@ export const useCompraStore = create((set) => ({
     loading: false,
     error: null,
     selectedCompra: null,
+    resumen: null,
+    productosMasComprados: [],
 
     // Fetch all purchases
     fetchCompras: async () => {
@@ -33,11 +35,25 @@ export const useCompraStore = create((set) => ({
     fetchResumen: async (fechaInicio, fechaFin) => {
         set({ loading: true, error: null });
         try {
-            const resumen = await compraService.getResumen(fechaInicio, fechaFin);
-            set({ loading: false });
-            return resumen;
+            const response = await compraService.getResumen(fechaInicio, fechaFin);
+            console.log('Resumen de compras:', response); // Para debugging
+            set({ 
+                resumen: response.resumen,
+                productosMasComprados: response.productos_mas_comprados || [],
+                loading: false 
+            });
+            return {
+                resumen: response.resumen,
+                productosMasComprados: response.productos_mas_comprados
+            };
         } catch (error) {
-            set({ error: error.message, loading: false });
+            console.error('Error al obtener resumen:', error);
+            set({ 
+                error: error.message,
+                loading: false,
+                resumen: null,
+                productosMasComprados: []
+            });
             throw error;
         }
     },

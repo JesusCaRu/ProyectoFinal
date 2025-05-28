@@ -35,13 +35,23 @@ export const useVentaStore = create((set, get) => ({
     fetchResumen: async (fechaInicio, fechaFin) => {
         set({ loading: true, error: null });
         try {
-            const resumen = await ventaService.fetchResumen(fechaInicio, fechaFin);
-            set({ resumen, loading: false });
-        } catch (error) {
+            const response = await ventaService.fetchResumen(fechaInicio, fechaFin);
+            console.log('Resumen de ventas:', response); // Para debugging
             set({ 
-                error: error.message,
+                resumen: response.resumen,
+                productosMasVendidos: response.productos_mas_vendidos || [],
                 loading: false 
             });
+            return response;
+        } catch (error) {
+            console.error('Error al obtener resumen:', error);
+            set({ 
+                error: error.message,
+                loading: false,
+                resumen: null,
+                productosMasVendidos: []
+            });
+            throw error;
         }
     },
 

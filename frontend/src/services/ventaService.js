@@ -35,6 +35,8 @@ export const ventaService = {
         fecha_fin: fechaFin.toISOString().split('T')[0]
       };
 
+      console.log('Enviando parámetros:', params); // Para debugging
+
       const response = await axiosInstance.get(`${API_URL}/ventas/resumen`, { 
         params,
         headers: {
@@ -42,8 +44,16 @@ export const ventaService = {
           'Content-Type': 'application/json'
         }
       });
+
+      console.log('Respuesta del servidor:', response.data); // Para debugging
+
+      if (!response.data || !response.data.data) {
+        throw new Error('Formato de respuesta inválido');
+      }
+
       return response.data.data;
     } catch (error) {
+      console.error('Error en fetchResumen:', error);
       throw new Error(error.response?.data?.message || 'Error al obtener el resumen de ventas');
     }
   },

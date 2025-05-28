@@ -26,6 +26,7 @@ const DashboardLayout = ({ children }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveringCollapse, setHoveringCollapse] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loadUser, logout } = useAuthStore();
@@ -33,6 +34,11 @@ const DashboardLayout = ({ children }) => {
   useEffect(() => {
     loadUser();
   }, [loadUser]);
+
+  // Cerrar el menú móvil cuando cambia la ruta
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
 
   // Definir las opciones de navegación según el rol
   const getNavigationByRole = () => {
@@ -128,9 +134,21 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-bg font-satoshi">
+      {/* Mobile menu button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-bg-secondary border border-border text-accessibility-text hover:bg-interactive-component transition-colors"
+      >
+        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
       {/* Sidebar */}
       <aside
-        className={`relative ${isCollapsed ? 'w-20' : 'w-64'} bg-bg-secondary border-r border-border transition-all duration-300 ease-in-out flex flex-col`}
+        className={`fixed lg:relative inset-y-0 left-0 z-40 transform ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0 transition-transform duration-300 ease-in-out ${
+          isCollapsed ? 'w-20' : 'w-64'
+        } bg-bg-secondary border-r border-border flex flex-col`}
         onMouseEnter={() => setHoveringCollapse(true)}
         onMouseLeave={() => setHoveringCollapse(false)}
       >
@@ -240,6 +258,14 @@ const DashboardLayout = ({ children }) => {
           </button>
         </div>
       </aside>
+
+      {/* Overlay for mobile */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">

@@ -57,11 +57,15 @@ const Reportes = () => {
       setLoading(true);
       setError(null);
 
+      console.log('Cargando resúmenes con fechas:', { fechaInicio, fechaFin });
+
       const [ventasData, comprasData, movimientosData] = await Promise.all([
         fetchVentasResumen(fechaInicio, fechaFin),
         fetchComprasResumen(fechaInicio, fechaFin),
         getMovementsSummary(fechaInicio, fechaFin)
       ]);
+
+      console.log('Datos recibidos:', { ventasData, comprasData, movimientosData });
 
       setResumenVentas(ventasData);
       setResumenCompras(comprasData);
@@ -84,9 +88,19 @@ const Reportes = () => {
 
   // Renderizar resumen de ventas
   const renderVentasReport = () => {
-    if (!resumenVentas) return null;
+    if (!resumenVentas) {
+      console.log('No hay datos de resumen de ventas');
+      return null;
+    }
+
+    console.log('Renderizando resumen de ventas:', resumenVentas);
 
     const { resumen, productos_mas_vendidos } = resumenVentas;
+
+    if (!resumen || !productos_mas_vendidos) {
+      console.log('Datos incompletos en resumen de ventas');
+      return null;
+    }
 
     // Datos para el gráfico de ventas por día
     const ventasPorDia = {
@@ -225,7 +239,14 @@ const Reportes = () => {
   const renderComprasReport = () => {
     if (!resumenCompras) return null;
 
-    const { resumen, productos_mas_comprados } = resumenCompras;
+    console.log('Resumen de compras en reportes:', resumenCompras);
+
+    const { resumen, productosMasComprados } = resumenCompras;
+
+    if (!resumen || !productosMasComprados) {
+      console.log('Datos incompletos en resumen de compras');
+      return null;
+    }
 
     // Datos para el gráfico de compras por día
     const comprasPorDia = {
@@ -243,11 +264,11 @@ const Reportes = () => {
 
     // Datos para el gráfico de productos más comprados
     const productosMasCompradosData = {
-      labels: productos_mas_comprados.map(p => p.producto.nombre),
+      labels: productosMasComprados.map(p => p.producto.nombre),
       datasets: [
         {
           label: 'Unidades compradas',
-          data: productos_mas_comprados.map(p => p.total_comprado),
+          data: productosMasComprados.map(p => p.total_comprado),
           backgroundColor: [
             'rgba(255, 99, 132, 0.5)',
             'rgba(54, 162, 235, 0.5)',
@@ -283,7 +304,7 @@ const Reportes = () => {
           <div className="bg-bg p-4 rounded-lg border border-border">
             <h3 className="text-lg font-semibold text-text-secondary">Productos Comprados</h3>
             <p className="text-2xl font-bold text-solid-color">
-              {productos_mas_comprados.reduce((sum, p) => sum + p.total_comprado, 0)}
+              {productosMasComprados.reduce((sum, p) => sum + p.total_comprado, 0)}
             </p>
           </div>
         </div>
@@ -339,7 +360,7 @@ const Reportes = () => {
                 </tr>
               </thead>
               <tbody className="bg-bg divide-y divide-border">
-                {productos_mas_comprados.map((producto, index) => (
+                {productosMasComprados.map((producto, index) => (
                   <tr key={index} className="hover:bg-interactive-component/50 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-accessibility-text">
                       {producto.producto.nombre}
