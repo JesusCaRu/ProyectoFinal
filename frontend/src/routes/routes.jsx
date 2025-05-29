@@ -13,6 +13,7 @@ import Facturas from '../pages/dashboard/Facturas';
 import Usuarios from '../pages/dashboard/Usuarios';
 import Configuracion from '../pages/dashboard/Configuracion';
 import Gestiones from '../pages/dashboard/Gestiones';
+import Sedes from '../pages/dashboard/Sedes';
 import ProtectedRoute from '../components/ProtectedRoute';
 import RoleProtectedRoute from '../components/RoleProtectedRoute';
 import Notificaciones from '../pages/dashboard/Notificaciones';
@@ -85,6 +86,11 @@ const AppRoutes = () => {
               <Route path="auditoria" element={
                 <RoleProtectedRoute allowedRoles={['Administrador']}>
                   <Auditoria />
+                </RoleProtectedRoute>
+              } />
+              <Route path="sedes" element={
+                <RoleProtectedRoute allowedRoles={['Administrador']}>
+                  <Sedes />
                 </RoleProtectedRoute>
               } />
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import UserProfileModal from '../components/UserProfileModal';
+import NotificationBell from '../components/NotificationBell';
 import { 
   LayoutDashboard, 
   Package, 
@@ -19,7 +20,8 @@ import {
   Activity,
   ShieldUser,
   Store,
-  DollarSign
+  DollarSign,
+  Building2
 } from 'lucide-react';
 
 const DashboardLayout = ({ children }) => {
@@ -60,6 +62,7 @@ const DashboardLayout = ({ children }) => {
             { name: 'Inventario', path: '/dashboard/inventario', icon: Package },
             { name: 'Ventas', path: '/dashboard/ventas', icon: DollarSign },
             { name: 'Compras', path: '/dashboard/compras', icon: Store },
+            { name: 'Sedes', path: '/dashboard/sedes', icon: Building2 },
           ],
         },
         {
@@ -276,6 +279,7 @@ const DashboardLayout = ({ children }) => {
               .flatMap(section => section.items)
               .find(item => location.pathname === item.path)?.name || 'Dashboard'}
           </h2>
+          <NotificationBell />
         </header>
         
         {/* Scrollable content area */}

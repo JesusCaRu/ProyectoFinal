@@ -18,7 +18,7 @@ class MovimientoController extends Controller
     public function index()
     {
         $movimientos = Movimiento::with(['producto', 'usuario'])
-            ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
         return response()->json(['data' => $movimientos]);
     }
@@ -173,7 +173,7 @@ class MovimientoController extends Controller
     {
         $movimientos = Movimiento::with(['producto', 'usuario'])
             ->where('producto_id', $productoId)
-            ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json(['data' => $movimientos]);
@@ -188,7 +188,7 @@ class MovimientoController extends Controller
             ->whereHas('producto', function ($query) use ($sedeId) {
                 $query->where('sede_id', $sedeId);
             })
-            ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json(['data' => $movimientos]);
@@ -209,11 +209,11 @@ class MovimientoController extends Controller
         }
 
         $movimientos = Movimiento::with(['producto', 'usuario'])
-            ->whereBetween('fecha', [
+            ->whereBetween('created_at', [
                 Carbon::parse($request->query('fecha_inicio'))->startOfDay(),
                 Carbon::parse($request->query('fecha_fin'))->endOfDay()
             ])
-            ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json(['data' => $movimientos]);
@@ -234,7 +234,7 @@ class MovimientoController extends Controller
         }
 
         $resumen = Movimiento::select('tipo', DB::raw('COUNT(*) as total_movimientos'), DB::raw('SUM(cantidad) as total_cantidad'))
-            ->whereBetween('fecha', [
+            ->whereBetween('created_at', [
                 Carbon::parse($request->query('fecha_inicio'))->startOfDay(),
                 Carbon::parse($request->query('fecha_fin'))->endOfDay()
             ])
