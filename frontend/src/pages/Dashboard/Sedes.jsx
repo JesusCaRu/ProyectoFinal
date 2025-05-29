@@ -10,7 +10,9 @@ import {
   Filter,
   Send,
   Download,
-  Printer
+  Printer,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Modal from '../../components/Modal';
@@ -22,7 +24,14 @@ import { useMensajeStore } from '../../store/mensajeStore';
 const Sedes = () => {
   const { sedes, isLoading, error, fetchSedes } = useSedeStore();
   const { products, loadProducts } = useProductStore();
-  const { createTransferencia, isLoading: isTransferLoading, error: transferError } = useTransferenciaStore();
+  const { 
+    createTransferencia, 
+    updateTransferencia, 
+    transferencias, 
+    fetchTransferencias,
+    isLoading: isTransferLoading,
+    error: transferError 
+  } = useTransferenciaStore();
   const { createMensaje, isLoading: isMensajeLoading, error: mensajeError } = useMensajeStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
@@ -38,7 +47,8 @@ const Sedes = () => {
   useEffect(() => {
     fetchSedes();
     loadProducts();
-  }, [fetchSedes, loadProducts]);
+    fetchTransferencias();
+  }, [fetchSedes, loadProducts, fetchTransferencias]);
 
   // Calcular el stock total de una sede
   const getStockTotal = (sedeId) => {
@@ -76,6 +86,25 @@ const Sedes = () => {
     }
   ];
 
+  // Obtener transferencias pendientes para una sede
+  const getTransferenciasPendientes = (sedeId) => {
+    return transferencias.filter(t => 
+      t.sede_destino_id === sedeId && t.estado === 'pendiente'
+    );
+  };
+
+  // Manejar aceptación de transferencia
+  const handleAceptarTransferencia = async (transferenciaId) => {
+    try {
+      await updateTransferencia(transferenciaId, { estado: 'recibido' });
+      toast.success('Transferencia aceptada correctamente');
+      fetchTransferencias(); // Recargar transferencias
+    } catch (err) {
+      console.error('Error al aceptar transferencia:', err);
+      toast.error('Error al aceptar la transferencia');
+    }
+  };
+
   const handleTransfer = async () => {
     // Validar campos
     if (!transferData.origen || !transferData.destino || !transferData.producto || !transferData.cantidad) {
@@ -86,16 +115,31 @@ const Sedes = () => {
       toast.error('La sede origen y destino deben ser diferentes');
       return;
     }
+
+    // Validar stock disponible
+    const producto = products.find(p => p.id === Number(transferData.producto));
+    const stockDisponible = producto?.sedes?.find(s => s.id === Number(transferData.origen))?.pivot?.stock || 0;
+    
+    if (Number(transferData.cantidad) > stockDisponible) {
+      toast.error(`Stock insuficiente. Solo hay ${stockDisponible} unidades disponibles en la sede origen.`);
+      return;
+    }
+
     const data = {
       producto_id: transferData.producto,
       cantidad: Number(transferData.cantidad),
       sede_origen_id: transferData.origen,
       sede_destino_id: transferData.destino,
-      estado: 'pending',
-      fecha: new Date().toISOString()
+      estado: 'pendiente',
+      fecha: new Date().toISOString().slice(0, 19).replace('T', ' ')
     };
     const ok = await createTransferencia(data);
     if (ok) {
+      // Crear mensaje de notificación para la sede destino
+      const sedeOrigen = sedes.find(s => s.id === Number(transferData.origen));
+      const mensaje = `Nueva transferencia #${ok.id} pendiente: ${transferData.cantidad} unidades de ${producto.nombre} desde ${sedeOrigen.nombre}`;
+      await createMensaje(mensaje, transferData.destino);
+      
       toast.success('Transferencia iniciada correctamente');
       setIsTransferModalOpen(false);
       setTransferData({ origen: '', destino: '', producto: '', cantidad: '' });
@@ -222,6 +266,9 @@ const Sedes = () => {
                 <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Stock Total
                 </th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-text-tertiary uppercase tracking-wider">
+                  Transferencias
+                </th>
                 <th className="px-8 py-4 text-right text-sm font-medium text-text-tertiary uppercase tracking-wider">
                   Acciones
                 </th>
@@ -230,75 +277,100 @@ const Sedes = () => {
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="px-8 py-4 text-center text-text-tertiary">
+                  <td colSpan="6" className="px-8 py-4 text-center text-text-tertiary">
                     Cargando sedes...
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="5" className="px-8 py-4 text-center text-error">
+                  <td colSpan="6" className="px-8 py-4 text-center text-error">
                     {error}
                   </td>
                 </tr>
               ) : filteredSedes.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-8 py-4 text-center text-text-tertiary">
+                  <td colSpan="6" className="px-8 py-4 text-center text-text-tertiary">
                     No se encontraron sedes
                   </td>
                 </tr>
               ) : (
-                filteredSedes.map((sede) => (
-                  <tr key={sede.id} className="hover:bg-interactive-component/50 transition-colors duration-200">
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-interactive-component rounded-lg">
-                          <Building2 className="h-5 w-5 text-solid-color" />
-                        </div>
-                        <div>
-                          <div className="text-base font-medium text-accessibility-text">
-                            {sede.nombre}
+                filteredSedes.map((sede) => {
+                  const transferenciasPendientes = getTransferenciasPendientes(sede.id);
+                  return (
+                    <tr key={sede.id} className="hover:bg-interactive-component/50 transition-colors duration-200">
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <div className="flex items-center space-x-4">
+                          <div className="p-2 bg-interactive-component rounded-lg">
+                            <Building2 className="h-5 w-5 text-solid-color" />
+                          </div>
+                          <div>
+                            <div className="text-base font-medium text-accessibility-text">
+                              {sede.nombre}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap text-accessibility-text">
-                      {sede.direccion}
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap text-accessibility-text">
-                      {sede.telefono}
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap">
-                      <div className="flex items-center space-x-3">
-                        <Package className="h-5 w-5 text-text-tertiary" />
-                        <span className="text-base text-text-tertiary">
-                          {getStockTotal(sede.id)} unidades
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end space-x-3">
-                        <button
-                          onClick={() => {
-                            setIsTransferModalOpen(true);
-                          }}
-                          className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
-                          title="Transferir stock"
-                        >
-                          <ArrowRightLeft className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsMessageModalOpen(true);
-                          }}
-                          className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
-                          title="Enviar mensaje"
-                        >
-                          <MessageSquare className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap text-accessibility-text">
+                        {sede.direccion}
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap text-accessibility-text">
+                        {sede.telefono}
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
+                          <Package className="h-5 w-5 text-text-tertiary" />
+                          <span className="text-base text-text-tertiary">
+                            {getStockTotal(sede.id)} unidades
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap">
+                        {transferenciasPendientes.length > 0 ? (
+                          <div className="flex items-center space-x-2">
+                            <AlertCircle className="h-5 w-5 text-warning" />
+                            <span className="text-warning">{transferenciasPendientes.length} pendientes</span>
+                            <div className="flex space-x-2">
+                              {transferenciasPendientes.map(t => (
+                                <button
+                                  key={t.id}
+                                  onClick={() => handleAceptarTransferencia(t.id)}
+                                  className="p-1 rounded-full hover:bg-success/20 text-success"
+                                  title="Aceptar transferencia"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-text-tertiary">Sin transferencias pendientes</span>
+                        )}
+                      </td>
+                      <td className="px-8 py-5 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end space-x-3">
+                          <button
+                            onClick={() => {
+                              setIsTransferModalOpen(true);
+                            }}
+                            className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
+                            title="Transferir stock"
+                          >
+                            <ArrowRightLeft className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsMessageModalOpen(true);
+                            }}
+                            className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
+                            title="Enviar mensaje"
+                          >
+                            <MessageSquare className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -353,7 +425,14 @@ const Sedes = () => {
               className="w-full rounded-lg border border-border bg-bg text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent"
             >
               <option value="">Seleccionar producto</option>
-              {/* Aquí irían los productos */}
+              {products.map((producto) => {
+                const sedeStock = producto.sedes?.find(s => s.id === Number(transferData.origen))?.pivot?.stock || 0;
+                return (
+                  <option key={producto.id} value={producto.id}>
+                    {producto.nombre} - Stock en sede: {sedeStock}
+                  </option>
+                );
+              })}
             </select>
           </div>
           <div>

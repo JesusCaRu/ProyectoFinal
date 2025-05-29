@@ -279,7 +279,9 @@ const DashboardLayout = ({ children }) => {
               .flatMap(section => section.items)
               .find(item => location.pathname === item.path)?.name || 'Dashboard'}
           </h2>
-          <NotificationBell />
+          <div className="flex items-center space-x-2 ml-auto mr-10">
+            <NotificationBell />
+          </div>
         </header>
         
         {/* Scrollable content area */}

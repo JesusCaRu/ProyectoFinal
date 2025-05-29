@@ -18,6 +18,7 @@ use App\Http\Controllers\API\VentaDetalleController;
 use App\Http\Controllers\API\MovimientoController;
 use App\Http\Controllers\API\ConfigController;
 use App\Http\Controllers\API\DashboardController;
+use App\Http\Controllers\API\MensajeSedeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,6 +63,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Sedes
     Route::apiResource('sedes', SedeController::class);
+    Route::get('/sedes/mensajes', [MensajeSedeController::class, 'index']);
+    Route::post('/sedes/mensajes', [MensajeSedeController::class, 'store']);
+    Route::put('/sedes/mensajes/{id}/leido', [MensajeSedeController::class, 'marcarLeido']);
+    Route::delete('/sedes/mensajes/{id}', [MensajeSedeController::class, 'destroy']);
 
     // Productos
     Route::get('/productos', [ProductoController::class, 'index']);

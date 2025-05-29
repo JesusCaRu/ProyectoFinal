@@ -8,6 +8,7 @@ use App\Models\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TransferenciaController extends Controller
 {
@@ -25,51 +26,121 @@ class TransferenciaController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'producto_id' => 'required|exists:productos,id',
-            'cantidad' => 'required|integer|min:1',
-            'sede_origen_id' => 'required|exists:sedes,id',
-            'sede_destino_id' => 'required|exists:sedes,id|different:sede_origen_id',
-            'estado' => 'required|in:pending,completed,cancelled',
-            'fecha' => 'required|date'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         try {
+            Log::info('Iniciando transferencia con datos:', $request->all());
+
+            $validator = Validator::make($request->all(), [
+                'producto_id' => 'required|exists:productos,id',
+                'cantidad' => 'required|integer|min:1',
+                'sede_origen_id' => 'required|exists:sedes,id',
+                'sede_destino_id' => 'required|exists:sedes,id|different:sede_origen_id',
+                'estado' => 'required|in:pendiente,enviado,recibido',
+                'fecha' => 'required|date'
+            ]);
+
+            if ($validator->fails()) {
+                Log::error('Error de validación:', $validator->errors()->toArray());
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
             DB::beginTransaction();
 
             $producto = Producto::findOrFail($request->producto_id);
+            Log::info('Producto encontrado:', $producto->toArray());
 
-            if ($producto->stock < $request->cantidad) {
-                return response()->json(['message' => 'Stock insuficiente'], 422);
+            // Verificar stock en la sede origen
+            $pivot = $producto->sedes()->where('sedes.id', $request->sede_origen_id)->first();
+            Log::info('Pivot encontrado:', [
+                'producto_id' => $producto->id,
+                'sede_id' => $request->sede_origen_id,
+                'pivot' => $pivot ? $pivot->toArray() : null
+            ]);
+
+            if (!$pivot || !$pivot->pivot) {
+                Log::error('Producto no disponible en sede origen');
+                return response()->json(['message' => 'El producto no está disponible en la sede origen'], 422);
             }
 
-            $transferencia = Transferencia::create($request->all());
+            $stockDisponible = $pivot->pivot->stock ?? 0;
+            Log::info('Stock disponible:', [
+                'stock' => $stockDisponible,
+                'cantidad_solicitada' => $request->cantidad
+            ]);
 
-            if ($request->estado === 'completed') {
-                $producto->stock -= $request->cantidad;
-                $producto->save();
+            if ($stockDisponible < $request->cantidad) {
+                Log::error('Stock insuficiente', [
+                    'stock_disponible' => $stockDisponible,
+                    'cantidad_solicitada' => $request->cantidad
+                ]);
+                return response()->json(['message' => 'Stock insuficiente en la sede origen'], 422);
+            }
 
-                $productoDestino = Producto::where('sede_id', $request->sede_destino_id)
-                    ->where('categoria_id', $producto->categoria_id)
-                    ->where('marca_id', $producto->marca_id)
-                    ->first();
+            // Crear la transferencia con el estado como string
+            $transferencia = Transferencia::create([
+                'producto_id' => $request->producto_id,
+                'cantidad' => $request->cantidad,
+                'sede_origen_id' => $request->sede_origen_id,
+                'sede_destino_id' => $request->sede_destino_id,
+                'estado' => 'pendiente',
+                'fecha' => $request->fecha
+            ]);
 
-                if ($productoDestino) {
-                    $productoDestino->stock += $request->cantidad;
-                    $productoDestino->save();
+            Log::info('Transferencia creada:', $transferencia->toArray());
+
+            if ($request->estado === 'recibido') {
+                // Descontar stock de la sede origen
+                $nuevoStockOrigen = $stockDisponible - $request->cantidad;
+                $producto->sedes()->updateExistingPivot($request->sede_origen_id, [
+                    'stock' => $nuevoStockOrigen
+                ]);
+                Log::info('Stock actualizado en sede origen:', [
+                    'sede_id' => $request->sede_origen_id,
+                    'nuevo_stock' => $nuevoStockOrigen
+                ]);
+
+                // Aumentar stock en la sede destino
+                $pivotDestino = $producto->sedes()->where('sedes.id', $request->sede_destino_id)->first();
+                Log::info('Pivot destino encontrado:', [
+                    'sede_id' => $request->sede_destino_id,
+                    'pivot' => $pivotDestino ? $pivotDestino->toArray() : null
+                ]);
+
+                if ($pivotDestino && $pivotDestino->pivot) {
+                    $stockDestino = $pivotDestino->pivot->stock ?? 0;
+                    $producto->sedes()->updateExistingPivot($request->sede_destino_id, [
+                        'stock' => $stockDestino + $request->cantidad
+                    ]);
+                    Log::info('Stock actualizado en sede destino:', [
+                        'sede_id' => $request->sede_destino_id,
+                        'nuevo_stock' => $stockDestino + $request->cantidad
+                    ]);
+                } else {
+                    // Si el producto no existe en la sede destino, crearlo
+                    $producto->sedes()->attach($request->sede_destino_id, [
+                        'stock' => $request->cantidad,
+                        'precio_compra' => $pivot->pivot->precio_compra,
+                        'precio_venta' => $pivot->pivot->precio_venta
+                    ]);
+                    Log::info('Producto creado en sede destino:', [
+                        'sede_id' => $request->sede_destino_id,
+                        'stock' => $request->cantidad
+                    ]);
                 }
             }
 
             DB::commit();
+            Log::info('Transferencia completada exitosamente');
             return response()->json(['data' => $transferencia], 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error al procesar la transferencia'], 500);
+            Log::error('Error en transferencia:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+            return response()->json(['message' => 'Error al procesar la transferencia: ' . $e->getMessage()], 500);
         }
     }
 
@@ -87,7 +158,7 @@ class TransferenciaController extends Controller
     public function update(Request $request, Transferencia $transferencia)
     {
         $validator = Validator::make($request->all(), [
-            'estado' => 'required|in:pending,completed,cancelled'
+            'estado' => 'required|in:pendiente,enviado,recibido'
         ]);
 
         if ($validator->fails()) {
@@ -97,34 +168,54 @@ class TransferenciaController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($transferencia->estado === 'pending' && $request->estado === 'completed') {
+            // Si el estado es 'recibido', actualizar el stock
+            if ($request->estado === 'recibido') {
                 $producto = $transferencia->producto;
 
-                if ($producto->stock < $transferencia->cantidad) {
-                    return response()->json(['message' => 'Stock insuficiente'], 422);
+                // Verificar stock en la sede origen
+                $pivotOrigen = $producto->sedes()->where('sedes.id', $transferencia->sede_origen_id)->first();
+                if (!$pivotOrigen || !$pivotOrigen->pivot) {
+                    return response()->json(['message' => 'El producto no está disponible en la sede origen'], 422);
                 }
 
-                $producto->stock -= $transferencia->cantidad;
-                $producto->save();
+                $stockDisponible = $pivotOrigen->pivot->stock ?? 0;
+                if ($stockDisponible < $transferencia->cantidad) {
+                    return response()->json(['message' => 'Stock insuficiente en la sede origen'], 422);
+                }
 
-                $productoDestino = Producto::where('sede_id', $transferencia->sede_destino_id)
-                    ->where('categoria_id', $producto->categoria_id)
-                    ->where('marca_id', $producto->marca_id)
-                    ->first();
+                // Descontar stock de la sede origen
+                $nuevoStockOrigen = $stockDisponible - $transferencia->cantidad;
+                $producto->sedes()->updateExistingPivot($transferencia->sede_origen_id, [
+                    'stock' => $nuevoStockOrigen
+                ]);
 
-                if ($productoDestino) {
-                    $productoDestino->stock += $transferencia->cantidad;
-                    $productoDestino->save();
+                // Aumentar stock en la sede destino
+                $pivotDestino = $producto->sedes()->where('sedes.id', $transferencia->sede_destino_id)->first();
+                if ($pivotDestino && $pivotDestino->pivot) {
+                    $stockDestino = $pivotDestino->pivot->stock ?? 0;
+                    $producto->sedes()->updateExistingPivot($transferencia->sede_destino_id, [
+                        'stock' => $stockDestino + $transferencia->cantidad
+                    ]);
+                } else {
+                    // Si el producto no existe en la sede destino, crearlo
+                    $producto->sedes()->attach($transferencia->sede_destino_id, [
+                        'stock' => $transferencia->cantidad,
+                        'precio_compra' => $pivotOrigen->pivot->precio_compra,
+                        'precio_venta' => $pivotOrigen->pivot->precio_venta
+                    ]);
                 }
             }
 
-            $transferencia->update($request->all());
+            // Actualizar el estado de la transferencia
+            $transferencia->estado = $request->estado;
+            $transferencia->save();
+
             DB::commit();
             return response()->json(['data' => $transferencia]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error al actualizar la transferencia'], 500);
+            return response()->json(['message' => 'Error al actualizar la transferencia: ' . $e->getMessage()], 500);
         }
     }
 
