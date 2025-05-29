@@ -183,7 +183,7 @@ const Dashboard = () => {
                     <TableCard
                         title="Productos con Stock Bajo"
                         headers={['Producto', 'Stock Actual', 'Stock Mínimo']}
-                        data={stats?.productosStockBajo?.map(p => ({
+                        data={stats?.productosStockBajo?.data?.map(p => ({
                             nombre: p.nombre,
                             stock: p.stock,
                             stock_minimo: p.stock_minimo
@@ -206,7 +206,7 @@ const Dashboard = () => {
                     <TableCard
                         title="Últimos Movimientos"
                         headers={['Tipo', 'Cantidad', 'Producto', 'Usuario']}
-                        data={stats?.ultimosMovimientos?.map(m => ({
+                        data={stats?.ultimosMovimientos?.data?.map(m => ({
                             tipo: m.tipo,
                             cantidad: m.cantidad,
                             producto: m.producto,

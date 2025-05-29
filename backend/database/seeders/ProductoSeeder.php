@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Producto;
+use App\Models\Sede;
+use Illuminate\Support\Facades\DB;
 
 class ProductoSeeder extends Seeder
 {
@@ -12,68 +14,131 @@ class ProductoSeeder extends Seeder
         $productos = [
             [
                 'nombre' => 'Robot Industrial RX-100',
-                'sku' => 'RX100-001',
+                'sku' => 'ROB-001',
                 'descripcion' => 'Robot industrial de alta precisión para líneas de producción',
-                'precio_compra' => 12000.00,
-                'precio_venta' => 15000.00,
-                'stock' => 10,
-                'stock_minimo' => 2,
                 'categoria_id' => 1,
                 'marca_id' => 1,
-                'sede_id' => 1
+                'stock_minimo' => 5,
+                'sede_data' => [
+                    [
+                        'stock' => 10,
+                        'precio_compra' => 150000.00,
+                        'precio_venta' => 180000.00,
+                        'sede_id' => 1
+                    ],
+                    [
+                        'stock' => 8,
+                        'precio_compra' => 150000.00,
+                        'precio_venta' => 180000.00,
+                        'sede_id' => 2
+                    ]
+                ]
             ],
             [
                 'nombre' => 'Robot Educativo EduBot',
-                'sku' => 'EDUBOT-002',
+                'sku' => 'ROB-002',
                 'descripcion' => 'Robot educativo para enseñanza de programación',
-                'precio_compra' => 249.99,
-                'precio_venta' => 299.99,
-                'stock' => 50,
-                'stock_minimo' => 10,
                 'categoria_id' => 2,
                 'marca_id' => 2,
-                'sede_id' => 1
+                'stock_minimo' => 3,
+                'sede_data' => [
+                    [
+                        'stock' => 15,
+                        'precio_compra' => 25000.00,
+                        'precio_venta' => 30000.00,
+                        'sede_id' => 1
+                    ],
+                    [
+                        'stock' => 12,
+                        'precio_compra' => 25000.00,
+                        'precio_venta' => 30000.00,
+                        'sede_id' => 2
+                    ]
+                ]
             ],
             [
                 'nombre' => 'Robot de Servicio HelperBot',
-                'sku' => 'HELPER-003',
-                'descripcion' => 'Robot de servicio para asistencia en el hogar',
-                'precio_compra' => 1599.99,
-                'precio_venta' => 1999.99,
-                'stock' => 15,
-                'stock_minimo' => 3,
+                'sku' => 'ROB-003',
+                'descripcion' => 'Robot de servicio para asistencia en oficinas',
                 'categoria_id' => 3,
-                'marca_id' => 3,
-                'sede_id' => 1
+                'marca_id' => 1,
+                'stock_minimo' => 2,
+                'sede_data' => [
+                    [
+                        'stock' => 5,
+                        'precio_compra' => 75000.00,
+                        'precio_venta' => 90000.00,
+                        'sede_id' => 1
+                    ],
+                    [
+                        'stock' => 4,
+                        'precio_compra' => 75000.00,
+                        'precio_venta' => 90000.00,
+                        'sede_id' => 2
+                    ]
+                ]
             ],
             [
                 'nombre' => 'Kit de Repuestos Básico',
-                'sku' => 'KITREP-004',
-                'descripcion' => 'Kit de repuestos básicos para mantenimiento',
-                'precio_compra' => 119.99,
-                'precio_venta' => 149.99,
-                'stock' => 100,
-                'stock_minimo' => 20,
+                'sku' => 'REP-001',
+                'descripcion' => 'Kit de repuestos básicos para mantenimiento de robots',
                 'categoria_id' => 4,
-                'marca_id' => 4,
-                'sede_id' => 1
+                'marca_id' => 2,
+                'stock_minimo' => 10,
+                'sede_data' => [
+                    [
+                        'stock' => 25,
+                        'precio_compra' => 5000.00,
+                        'precio_venta' => 7500.00,
+                        'sede_id' => 1
+                    ],
+                    [
+                        'stock' => 20,
+                        'precio_compra' => 5000.00,
+                        'precio_venta' => 7500.00,
+                        'sede_id' => 2
+                    ]
+                ]
             ],
             [
-                'nombre' => 'Cargador Universal',
-                'sku' => 'CARGA-005',
-                'descripcion' => 'Cargador universal para robots',
-                'precio_compra' => 39.99,
-                'precio_venta' => 49.99,
-                'stock' => 200,
-                'stock_minimo' => 40,
+                'nombre' => 'Cargador Universal para Robots',
+                'sku' => 'ACC-001',
+                'descripcion' => 'Cargador universal compatible con múltiples modelos de robots',
                 'categoria_id' => 5,
-                'marca_id' => 5,
-                'sede_id' => 1
+                'marca_id' => 1,
+                'stock_minimo' => 8,
+                'sede_data' => [
+                    [
+                        'stock' => 15,
+                        'precio_compra' => 3000.00,
+                        'precio_venta' => 4500.00,
+                        'sede_id' => 1
+                    ],
+                    [
+                        'stock' => 12,
+                        'precio_compra' => 3000.00,
+                        'precio_venta' => 4500.00,
+                        'sede_id' => 2
+                    ]
+                ]
             ]
         ];
 
-        foreach ($productos as $producto) {
-            Producto::create($producto);
+        foreach ($productos as $productoData) {
+            $sedeData = $productoData['sede_data'];
+            unset($productoData['sede_data']);
+
+            DB::transaction(function () use ($productoData, $sedeData) {
+                $producto = Producto::create($productoData);
+
+                foreach ($sedeData as $sede) {
+                    $producto->sedes()->attach($sede['sede_id'], [
+                        'stock' => $sede['stock'],
+                        'precio_compra' => $sede['precio_compra'],
+                        'precio_venta' => $sede['precio_venta']
+                    ]);
+                }
+            });
         }
     }
 }

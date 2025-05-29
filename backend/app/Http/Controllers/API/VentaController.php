@@ -18,10 +18,12 @@ class VentaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $sedeId = $request->user()->sede_id;
         $ventas = Venta::with(['usuario', 'detalles.producto'])
-            ->orderBy('fecha', 'desc')
+            ->where('sede_id', $sedeId)
+            ->orderBy('created_at', 'desc')
             ->get();
         return response()->json(['data' => $ventas]);
     }
@@ -38,6 +40,7 @@ class VentaController extends Controller
                 'productos' => 'required|array|min:1',
                 'productos.*.producto_id' => 'required|exists:productos,id',
                 'productos.*.cantidad' => 'required|integer|min:1',
+                'sede_id' => 'required|exists:sedes,id',
                 'fecha' => 'required|date'
             ]);
 
@@ -49,51 +52,60 @@ class VentaController extends Controller
             DB::beginTransaction();
 
             try {
-                // Verificar stock y calcular total
                 $total = 0;
                 $productos = [];
+                $sedeId = $request->sede_id;
                 foreach ($request->productos as $item) {
                     Log::info('Procesando producto:', $item);
 
                     $producto = Producto::findOrFail($item['producto_id']);
                     Log::info('Producto encontrado:', $producto->toArray());
 
-                    if ($producto->stock < $item['cantidad']) {
-                        Log::warning('Stock insuficiente:', [
-                            'producto' => $producto->nombre,
-                            'stock_disponible' => $producto->stock,
-                            'cantidad_solicitada' => $item['cantidad']
-                        ]);
+                    // Buscar el registro en producto_sede
+                    $pivot = $producto->sedes()->where('sedes.id', $sedeId)->first();
+                    Log::info('Pivot encontrado:', [
+                        'producto_id' => $producto->id,
+                        'sede_id' => $sedeId,
+                        'pivot' => $pivot,
+                        'pivot_stock' => $pivot?->pivot?->stock
+                    ]);
+
+                    if (!$pivot || !$pivot->pivot) {
                         return response()->json([
-                            'message' => "Stock insuficiente para el producto {$producto->nombre}"
+                            'message' => "El producto {$producto->nombre} no está disponible en la sede seleccionada"
+                        ], 422);
+                    }
+
+                    $stockActual = $pivot->pivot->stock ?? 0;
+
+                    if ($stockActual < $item['cantidad']) {
+                        return response()->json([
+                            'message' => "Stock insuficiente para el producto {$producto->nombre} en la sede seleccionada (stock actual: $stockActual)"
                         ], 422);
                     }
 
                     $productos[] = [
                         'producto' => $producto,
                         'cantidad' => $item['cantidad'],
-                        'precio_unitario' => $producto->precio_venta
+                        'precio_unitario' => $pivot->pivot->precio_venta
                     ];
 
-                    $total += $producto->precio_venta * $item['cantidad'];
+                    $total += $pivot->pivot->precio_venta * $item['cantidad'];
                 }
 
                 Log::info('Total calculado:', ['total' => $total]);
 
-                // Convertir la fecha al formato correcto de MySQL
                 $fecha = Carbon::parse($request->fecha)->format('Y-m-d H:i:s');
                 Log::info('Fecha convertida:', ['fecha_original' => $request->fecha, 'fecha_convertida' => $fecha]);
 
-                // Crear la venta
                 $venta = Venta::create([
                     'usuario_id' => $request->user()->id,
                     'total' => $total,
-                    'fecha' => $fecha
+                    'sede_id' => $sedeId
                 ]);
 
                 Log::info('Venta creada:', $venta->toArray());
 
-                // Crear los detalles y actualizar stock
                 foreach ($productos as $item) {
                     Log::info('Creando detalle de venta:', [
                         'venta_id' => $venta->id,
@@ -101,7 +113,6 @@ class VentaController extends Controller
                         'cantidad' => $item['cantidad']
                     ]);
 
-                    // Crear detalle de venta
                     VentaDetalle::create([
                         'venta_id' => $venta->id,
                         'producto_id' => $item['producto']->id,
@@ -109,13 +120,17 @@ class VentaController extends Controller
                         'precio_unitario' => $item['precio_unitario']
                     ]);
 
-                    // Actualizar stock
-                    $item['producto']->stock -= $item['cantidad'];
-                    $item['producto']->save();
+                    // Descontar stock en producto_sede
+                    $pivot = $item['producto']->sedes()->where('sedes.id', $sedeId)->first();
+                    $nuevoStock = $pivot->pivot->stock - $item['cantidad'];
+                    $item['producto']->sedes()->updateExistingPivot($sedeId, [
+                        'stock' => $nuevoStock
+                    ]);
 
-                    Log::info('Stock actualizado:', [
+                    Log::info('Stock actualizado en producto_sede:', [
                         'producto' => $item['producto']->nombre,
-                        'nuevo_stock' => $item['producto']->stock
+                        'sede_id' => $sedeId,
+                        'nuevo_stock' => $nuevoStock
                     ]);
 
                     // Registrar movimiento
@@ -125,12 +140,14 @@ class VentaController extends Controller
                         'tipo' => 'salida',
                         'cantidad' => $item['cantidad'],
                         'descripcion' => 'Venta #' . $venta->id,
-                        'fecha' => $fecha
+                        'fecha' => $fecha,
+                        'sede_id' => $sedeId
                     ]);
 
                     Log::info('Movimiento registrado para producto:', [
                         'producto' => $item['producto']->nombre,
-                        'cantidad' => $item['cantidad']
+                        'cantidad' => $item['cantidad'],
+                        'sede_id' => $sedeId
                     ]);
                 }
 
@@ -167,8 +184,12 @@ class VentaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Venta $venta)
+    public function show(Request $request, Venta $venta)
     {
+        $sedeId = $request->user()->sede_id;
+        if ($venta->sede_id !== $sedeId) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
         return response()->json([
             'data' => $venta->load(['usuario', 'detalles.producto'])
         ]);
@@ -208,12 +229,14 @@ class VentaController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $sedeId = $request->user()->sede_id;
         $ventas = Venta::with(['usuario', 'detalles.producto'])
-            ->whereBetween('fecha', [
+            ->where('sede_id', $sedeId)
+            ->whereBetween('created_at', [
                 Carbon::parse($request->fecha_inicio)->startOfDay(),
                 Carbon::parse($request->fecha_fin)->endOfDay()
             ])
-            ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json(['data' => $ventas]);
@@ -236,10 +259,12 @@ class VentaController extends Controller
         try {
             $fechaInicio = Carbon::parse($request->fecha_inicio)->startOfDay();
             $fechaFin = Carbon::parse($request->fecha_fin)->endOfDay();
+            $sedeId = $request->user()->sede_id;
 
-            // Obtener resumen de ventas
+            // Obtener resumen de ventas solo de la sede
             $resumen = DB::table('ventas')
-                ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+                ->where('sede_id', $sedeId)
+                ->whereBetween('created_at', [$fechaInicio, $fechaFin])
                 ->selectRaw('
                     COUNT(*) as total_ventas,
                     COALESCE(SUM(total), 0) as total_monto,
@@ -247,11 +272,12 @@ class VentaController extends Controller
                 ')
                 ->first();
 
-            // Obtener productos más vendidos
+            // Obtener productos más vendidos solo de la sede
             $productosMasVendidos = DB::table('venta_detalles')
                 ->join('ventas', 'ventas.id', '=', 'venta_detalles.venta_id')
                 ->join('productos', 'productos.id', '=', 'venta_detalles.producto_id')
-                ->whereBetween('ventas.fecha', [$fechaInicio, $fechaFin])
+                ->where('ventas.sede_id', $sedeId)
+                ->whereBetween('ventas.created_at', [$fechaInicio, $fechaFin])
                 ->select(
                     'productos.id as producto_id',
                     'productos.nombre as producto_nombre',

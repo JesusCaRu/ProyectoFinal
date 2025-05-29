@@ -14,10 +14,10 @@ class Venta extends Model
     protected $fillable = [
         'usuario_id',
         'total',
-        'fecha'
+        'sede_id'
     ];
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public function usuario()
     {

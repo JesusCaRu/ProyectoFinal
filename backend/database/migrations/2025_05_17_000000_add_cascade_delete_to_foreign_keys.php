@@ -12,7 +12,6 @@ return new class extends Migration
         Schema::table('productos', function (Blueprint $table) {
             $table->dropForeign(['categoria_id']);
             $table->dropForeign(['marca_id']);
-            $table->dropForeign(['sede_id']);
 
             $table->foreign('categoria_id')
                 ->references('id')
@@ -22,6 +21,23 @@ return new class extends Migration
             $table->foreign('marca_id')
                 ->references('id')
                 ->on('marcas')
+                ->onDelete('cascade');
+        });
+
+        // Producto Sede
+        Schema::table('producto_sede', function (Blueprint $table) {
+            // Check if foreign keys exist before dropping them
+            if (Schema::hasColumn('producto_sede', 'producto_id')) {
+                $table->dropForeign(['producto_id']);
+            }
+            if (Schema::hasColumn('producto_sede', 'sede_id')) {
+                $table->dropForeign(['sede_id']);
+            }
+
+            // Add foreign keys with cascade delete
+            $table->foreign('producto_id')
+                ->references('id')
+                ->on('productos')
                 ->onDelete('cascade');
 
             $table->foreign('sede_id')
@@ -139,7 +155,6 @@ return new class extends Migration
         Schema::table('productos', function (Blueprint $table) {
             $table->dropForeign(['categoria_id']);
             $table->dropForeign(['marca_id']);
-            $table->dropForeign(['sede_id']);
 
             $table->foreign('categoria_id')
                 ->references('id')
@@ -148,10 +163,12 @@ return new class extends Migration
             $table->foreign('marca_id')
                 ->references('id')
                 ->on('marcas');
+        });
 
-            $table->foreign('sede_id')
-                ->references('id')
-                ->on('sedes');
+        // Producto Sede
+        Schema::table('producto_sede', function (Blueprint $table) {
+            $table->dropForeign(['producto_id']);
+            $table->dropForeign(['sede_id']);
         });
 
         // Compras

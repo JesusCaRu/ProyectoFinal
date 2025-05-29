@@ -17,7 +17,7 @@ class MovimientoController extends Controller
      */
     public function index()
     {
-        $movimientos = Movimiento::with(['producto', 'usuario', 'producto.sede'])
+        $movimientos = Movimiento::with(['producto', 'usuario'])
             ->orderBy('fecha', 'desc')
             ->get();
         return response()->json(['data' => $movimientos]);
@@ -75,7 +75,7 @@ class MovimientoController extends Controller
 
             DB::commit();
             return response()->json([
-                'data' => $movimiento->load(['producto', 'usuario', 'producto.sede']),
+                'data' => $movimiento->load(['producto', 'usuario']),
                 'message' => 'Movimiento registrado correctamente'
             ], 201);
 
@@ -94,7 +94,7 @@ class MovimientoController extends Controller
     public function show(Movimiento $movimiento)
     {
         return response()->json([
-            'data' => $movimiento->load(['producto', 'usuario', 'producto.sede'])
+            'data' => $movimiento->load(['producto', 'usuario'])
         ]);
     }
 
@@ -119,7 +119,7 @@ class MovimientoController extends Controller
 
             DB::commit();
             return response()->json([
-                'data' => $movimiento->load(['producto', 'usuario', 'producto.sede']),
+                'data' => $movimiento->load(['producto', 'usuario']),
                 'message' => 'Movimiento actualizado correctamente'
             ]);
 
@@ -171,7 +171,7 @@ class MovimientoController extends Controller
      */
     public function getByProducto($productoId)
     {
-        $movimientos = Movimiento::with(['producto', 'usuario', 'producto.sede'])
+        $movimientos = Movimiento::with(['producto', 'usuario'])
             ->where('producto_id', $productoId)
             ->orderBy('fecha', 'desc')
             ->get();
@@ -184,7 +184,7 @@ class MovimientoController extends Controller
      */
     public function getBySede($sedeId)
     {
-        $movimientos = Movimiento::with(['producto', 'usuario', 'producto.sede'])
+        $movimientos = Movimiento::with(['producto', 'usuario'])
             ->whereHas('producto', function ($query) use ($sedeId) {
                 $query->where('sede_id', $sedeId);
             })
@@ -208,7 +208,7 @@ class MovimientoController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $movimientos = Movimiento::with(['producto', 'usuario', 'producto.sede'])
+        $movimientos = Movimiento::with(['producto', 'usuario'])
             ->whereBetween('fecha', [
                 Carbon::parse($request->query('fecha_inicio'))->startOfDay(),
                 Carbon::parse($request->query('fecha_fin'))->endOfDay()

@@ -13,12 +13,17 @@ return new class extends Migration
     {
         Schema::create('compras', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('proveedor_id')->constrained('proveedores');
-            $table->foreignId('usuario_id')->constrained('usuarios');
+            $table->unsignedBigInteger('usuario_id');
+            $table->unsignedBigInteger('proveedor_id');
+            $table->unsignedBigInteger('sede_id');
             $table->decimal('total', 10, 2);
-            $table->enum('estado', ['pendiente', 'completada', 'cancelada'])->default('pendiente');
-            $table->timestamp('fecha')->useCurrent();
+            $table->string('estado', 20)->default('completada');
+            $table->text('observaciones')->nullable();
             $table->timestamps();
+
+            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
+            $table->foreign('proveedor_id')->references('id')->on('proveedores')->onDelete('cascade');
+            $table->foreign('sede_id')->references('id')->on('sedes')->onDelete('cascade');
         });
     }
 

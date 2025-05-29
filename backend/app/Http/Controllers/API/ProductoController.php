@@ -15,7 +15,10 @@ class ProductoController extends Controller
      */
     public function index()
     {
-        $productos = Producto::with(['categoria', 'marca', 'sede'])->get();
+        $productos = Producto::with(['categoria', 'marca', 'sedes' => function($query) {
+            $query->select('sedes.*')
+                  ->addSelect(['producto_sede.stock', 'producto_sede.precio_compra', 'producto_sede.precio_venta']);
+        }])->get();
         return response()->json(['data' => $productos]);
     }
 
@@ -29,11 +32,11 @@ class ProductoController extends Controller
             'descripcion' => 'nullable|string',
             'categoria_id' => 'required|exists:categorias,id',
             'marca_id' => 'required|exists:marcas,id',
-            'stock' => 'required|integer|min:0',
             'stock_minimo' => 'required|integer|min:0',
+            'sede_id' => 'required|exists:sedes,id',
+            'stock' => 'required|integer|min:0',
             'precio_compra' => 'required|numeric|min:0',
-            'precio_venta' => 'required|numeric|min:0',
-            'sede_id' => 'required|exists:sedes,id'
+            'precio_venta' => 'required|numeric|min:0'
         ]);
 
         if ($validator->fails()) {
@@ -43,11 +46,25 @@ class ProductoController extends Controller
         try {
             DB::beginTransaction();
 
-            $producto = Producto::create($request->all());
+            // Create the product
+            $producto = Producto::create([
+                'nombre' => $request->nombre,
+                'descripcion' => $request->descripcion,
+                'categoria_id' => $request->categoria_id,
+                'marca_id' => $request->marca_id,
+                'stock_minimo' => $request->stock_minimo
+            ]);
+
+            // Create the product-sede relationship
+            $producto->sedes()->attach($request->sede_id, [
+                'stock' => $request->stock,
+                'precio_compra' => $request->precio_compra,
+                'precio_venta' => $request->precio_venta
+            ]);
 
             DB::commit();
             return response()->json([
-                'data' => $producto->load(['categoria', 'marca', 'sede']),
+                'data' => $producto->load(['categoria', 'marca', 'sedes']),
                 'message' => 'Producto creado correctamente'
             ], 201);
 
@@ -66,7 +83,7 @@ class ProductoController extends Controller
     public function show(Producto $producto)
     {
         return response()->json([
-            'data' => $producto->load(['categoria', 'marca', 'sede'])
+            'data' => $producto->load(['categoria', 'marca', 'sedes'])
         ]);
     }
 
@@ -80,11 +97,11 @@ class ProductoController extends Controller
             'descripcion' => 'nullable|string',
             'categoria_id' => 'required|exists:categorias,id',
             'marca_id' => 'required|exists:marcas,id',
-            'stock' => 'required|integer|min:0',
             'stock_minimo' => 'required|integer|min:0',
+            'sede_id' => 'required|exists:sedes,id',
+            'stock' => 'required|integer|min:0',
             'precio_compra' => 'required|numeric|min:0',
-            'precio_venta' => 'required|numeric|min:0',
-            'sede_id' => 'required|exists:sedes,id'
+            'precio_venta' => 'required|numeric|min:0'
         ]);
 
         if ($validator->fails()) {
@@ -94,11 +111,27 @@ class ProductoController extends Controller
         try {
             DB::beginTransaction();
 
-            $producto->update($request->all());
+            // Update the product
+            $producto->update([
+                'nombre' => $request->nombre,
+                'descripcion' => $request->descripcion,
+                'categoria_id' => $request->categoria_id,
+                'marca_id' => $request->marca_id,
+                'stock_minimo' => $request->stock_minimo
+            ]);
+
+            // Update the product-sede relationship
+            $producto->sedes()->syncWithoutDetaching([
+                $request->sede_id => [
+                    'stock' => $request->stock,
+                    'precio_compra' => $request->precio_compra,
+                    'precio_venta' => $request->precio_venta
+                ]
+            ]);
 
             DB::commit();
             return response()->json([
-                'data' => $producto->load(['categoria', 'marca', 'sede']),
+                'data' => $producto->load(['categoria', 'marca', 'sedes']),
                 'message' => 'Producto actualizado correctamente'
             ]);
 
@@ -119,53 +152,13 @@ class ProductoController extends Controller
         try {
             DB::beginTransaction();
 
-            // Verificar si el producto tiene stock
-            if ($producto->stock > 0) {
-                return response()->json([
-                    'message' => 'No se puede eliminar un producto con stock existente',
-                    'details' => "El producto tiene {$producto->stock} unidades en stock"
-                ], 422);
-            }
-
-            // Verificar si el producto tiene movimientos asociados
-            if ($producto->movimientos()->exists()) {
-                return response()->json([
-                    'message' => 'No se puede eliminar un producto con movimientos asociados',
-                    'details' => 'El producto tiene movimientos de entrada/salida registrados'
-                ], 422);
-            }
-
-            // Verificar si el producto tiene transferencias asociadas
-            if ($producto->transferencias()->exists()) {
-                return response()->json([
-                    'message' => 'No se puede eliminar un producto con transferencias asociadas',
-                    'details' => 'El producto tiene transferencias entre sedes registradas'
-                ], 422);
-            }
-
-            // Verificar si el producto tiene detalles de compra asociados
-            if ($producto->compraDetalles()->exists()) {
-                return response()->json([
-                    'message' => 'No se puede eliminar un producto con compras asociadas',
-                    'details' => 'El producto tiene compras registradas'
-                ], 422);
-            }
-
-            // Verificar si el producto tiene detalles de venta asociados
-            if ($producto->ventaDetalles()->exists()) {
-                return response()->json([
-                    'message' => 'No se puede eliminar un producto con ventas asociadas',
-                    'details' => 'El producto tiene ventas registradas'
-                ], 422);
-            }
-
+            // Delete the product (this will cascade delete the producto_sede records)
             $producto->delete();
 
             DB::commit();
             return response()->json([
                 'message' => 'Producto eliminado correctamente'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -176,59 +169,43 @@ class ProductoController extends Controller
     }
 
     /**
-     * Obtener productos por sede
+     * Get products by sede
      */
-    public function getBySede($sedeId)
+    public function getProductsBySede($sedeId)
     {
-        $productos = Producto::with(['categoria', 'marca', 'sede'])
-            ->where('sede_id', $sedeId)
-            ->get();
+        $productos = Producto::whereHas('sedes', function ($query) use ($sedeId) {
+            $query->where('sedes.id', $sedeId);
+        })->with(['categoria', 'marca', 'sedes' => function ($query) use ($sedeId) {
+            $query->where('sedes.id', $sedeId)
+                  ->select('sedes.*')
+                  ->addSelect(['producto_sede.stock', 'producto_sede.precio_compra', 'producto_sede.precio_venta']);
+        }])->get();
 
         return response()->json(['data' => $productos]);
     }
 
     /**
-     * Obtener productos con stock bajo
+     * Get low stock products
      */
-    public function getLowStock()
+    public function getLowStockProducts(Request $request)
     {
-        $productos = Producto::with(['categoria', 'marca', 'sede'])
-            ->whereRaw('stock <= stock_minimo')
-            ->get();
+        $sedeId = $request->query('sede_id');
+
+        $query = Producto::whereHas('sedes', function ($query) use ($sedeId) {
+            if ($sedeId) {
+                $query->where('sedes.id', $sedeId);
+            }
+            $query->whereRaw('producto_sede.stock <= productos.stock_minimo');
+        });
+
+        if ($sedeId) {
+            $query->with(['sedes' => function ($query) use ($sedeId) {
+                $query->where('sedes.id', $sedeId);
+            }]);
+        }
+
+        $productos = $query->with(['categoria', 'marca'])->get();
 
         return response()->json(['data' => $productos]);
-    }
-
-    /**
-     * Actualizar stock de un producto
-     */
-    public function updateStock(Request $request, Producto $producto)
-    {
-        $validator = Validator::make($request->all(), [
-            'stock' => 'required|integer|min:0'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $producto->update(['stock' => $request->stock]);
-
-            DB::commit();
-            return response()->json([
-                'data' => $producto->load(['categoria', 'marca', 'sede']),
-                'message' => 'Stock actualizado correctamente'
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Error al actualizar el stock',
-                'error' => $e->getMessage()
-            ], 500);
-        }
     }
 }

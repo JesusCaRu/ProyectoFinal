@@ -425,7 +425,7 @@ const Compras = () => {
                                             #{compra.id}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
-                                            {format(new Date(compra.fecha), "dd/MM/yyyy HH:mm", { locale: es })}
+                                            {format(new Date(compra.created_at || compra.fecha), "dd/MM/yyyy HH:mm", { locale: es })}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
                                             {compra.proveedor?.nombre || 'No especificado'}

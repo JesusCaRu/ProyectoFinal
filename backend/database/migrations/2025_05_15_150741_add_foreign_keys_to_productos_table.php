@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::table('productos', function (Blueprint $table) {
             $table->foreign('categoria_id')->references('id')->on('categorias');
             $table->foreign('marca_id')->references('id')->on('marcas');
-            $table->foreign('sede_id')->references('id')->on('sedes');
         });
     }
 
@@ -26,7 +25,6 @@ return new class extends Migration
         Schema::table('productos', function (Blueprint $table) {
             $table->dropForeign(['categoria_id']);
             $table->dropForeign(['marca_id']);
-            $table->dropForeign(['sede_id']);
         });
     }
 };

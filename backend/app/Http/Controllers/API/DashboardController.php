@@ -170,9 +170,9 @@ class DashboardController extends Controller
             Log::info('Obteniendo ventas para el año: ' . $añoActual);
 
             // Obtener ventas por mes
-            $ventasPorMes = Venta::whereYear('fecha', $añoActual)
+            $ventasPorMes = Venta::whereYear('created_at', $añoActual)
                 ->select(
-                    DB::raw('MONTH(fecha) as mes'),
+                    DB::raw('MONTH(created_at) as mes'),
                     DB::raw('COALESCE(SUM(total), 0) as total')
                 )
                 ->groupBy('mes')
@@ -288,16 +288,28 @@ class DashboardController extends Controller
     /**
      * Obtener productos con stock bajo
      */
-    public function getProductosStockBajo()
+    public function getProductosStockBajo(Request $request)
     {
         try {
-            $productosStockBajo = Producto::where('stock_minimo', '>', DB::raw('stock'))
-                ->select('id', 'nombre', 'stock', 'stock_minimo')
-                ->orderBy(DB::raw('stock_minimo - stock'), 'desc')
-                ->limit(5)
-                ->get();
+            $sedeId = $request->user()->sede_id;
 
-            return response()->json($productosStockBajo);
+            $productos = Producto::select('productos.id', 'productos.nombre', 'productos.stock_minimo')
+                ->join('producto_sede', 'productos.id', '=', 'producto_sede.producto_id')
+                ->where('producto_sede.sede_id', $sedeId)
+                ->whereRaw('producto_sede.stock < productos.stock_minimo')
+                ->orderByRaw('productos.stock_minimo - producto_sede.stock DESC')
+                ->limit(5)
+                ->get()
+                ->map(function ($producto) {
+                    return [
+                        'id' => $producto->id,
+                        'nombre' => $producto->nombre,
+                        'stock' => $producto->sedes->first()->pivot->stock,
+                        'stock_minimo' => $producto->stock_minimo
+                    ];
+                });
+
+            return response()->json(['data' => $productos]);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al obtener productos con stock bajo',
@@ -313,14 +325,14 @@ class DashboardController extends Controller
     {
         try {
             $ultimasVentas = Venta::with(['usuario'])
-                ->orderBy('fecha', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()
                 ->map(function ($venta) {
                     return [
                         'id' => $venta->id,
                         'total' => $venta->total,
-                        'fecha' => $venta->fecha,
+                        'fecha' => $venta->created_at,
                         'usuario' => $venta->usuario->nombre
                     ];
                 });
@@ -341,7 +353,7 @@ class DashboardController extends Controller
     {
         try {
             $ultimasCompras = Compra::with(['usuario', 'proveedor'])
-                ->orderBy('fecha', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()
                 ->map(function ($compra) {
@@ -349,7 +361,7 @@ class DashboardController extends Controller
                         'id' => $compra->id,
                         'total' => $compra->total,
                         'estado' => $compra->estado,
-                        'fecha' => $compra->fecha,
+                        'fecha' => $compra->created_at,
                         'usuario' => $compra->usuario->nombre,
                         'proveedor' => $compra->proveedor->nombre
                     ];
@@ -367,10 +379,15 @@ class DashboardController extends Controller
     /**
      * Obtener últimos movimientos
      */
-    public function getUltimosMovimientos()
+    public function getUltimosMovimientos(Request $request)
     {
         try {
+            $sedeId = $request->user()->sede_id;
+
             $ultimosMovimientos = Movimiento::with(['usuario', 'producto'])
+                ->whereHas('producto.sedes', function($query) use ($sedeId) {
+                    $query->where('sedes.id', $sedeId);
+                })
                 ->orderBy('fecha', 'desc')
                 ->limit(5)
                 ->get()
@@ -385,7 +402,7 @@ class DashboardController extends Controller
                     ];
                 });
 
-            return response()->json($ultimosMovimientos);
+            return response()->json(['data' => $ultimosMovimientos]);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al obtener últimos movimientos',

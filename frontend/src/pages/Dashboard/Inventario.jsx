@@ -24,9 +24,9 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useProductStore } from '../../store/productStore';
-import { useSedeStore } from '../../store/sedeStore';
 import { useCategoryStore } from '../../store/categoryStore';
 import { useBrandStore } from '../../store/brandStore';
+import { useAuthStore } from '../../store/authStore';
 import Modal from '../../components/Modal';
 import ProductForm from '../../components/ProductForm';
 
@@ -39,12 +39,12 @@ const Inventario = () => {
     loadMovements,
     deleteProduct
   } = useProductStore();
-  const { sedes, fetchSedes } = useSedeStore();
   const { categories, fetchCategories } = useCategoryStore();
   const { brands, fetchBrands } = useBrandStore();
+  const { user } = useAuthStore();
+  const sedeId = user?.data?.sede?.id;
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSede, setSelectedSede] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [showMovements, setShowMovements] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -53,67 +53,47 @@ const Inventario = () => {
   const [productToDelete, setProductToDelete] = useState(null);
 
   useEffect(() => {
-    loadProducts();
-    loadMovements();
-    fetchSedes();
+    if (sedeId) {
+      loadProducts(sedeId);
+      loadMovements(sedeId);
+    }
     fetchCategories();
     fetchBrands();
-  }, [loadProducts, loadMovements, fetchSedes, fetchCategories, fetchBrands]);
+  }, [sedeId, loadProducts, loadMovements, fetchCategories, fetchBrands]);
 
   const filteredProducts = products.filter(product => {
-    console.log('Filtering product:', {
-      id: product.id,
-      sede_id: product.sede_id,
-      selectedSede: selectedSede,
-      sede_id_type: typeof product.sede_id,
-      selectedSede_type: typeof selectedSede,
-      matchesSede: !selectedSede || Number(product.sede_id) === Number(selectedSede)
-    });
-
     const matchesSearch = 
       product.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.sku?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !selectedCategory || Number(product.categoria_id) === Number(selectedCategory);
-    const matchesSede = !selectedSede || Number(product.sede_id) === Number(selectedSede);
+    const matchesSede = product.sedes?.some(s => s.id === Number(sedeId));
     const matchesBrand = !selectedBrand || Number(product.marca_id) === Number(selectedBrand);
-    
     return matchesSearch && matchesCategory && matchesSede && matchesBrand;
   });
 
+  const getProductStock = (product) => {
+    const sedeStock = product.sedes?.find(s => s.id === Number(sedeId))?.pivot;
+    return sedeStock ? sedeStock.stock : 0;
+  };
+
+  const getProductPrice = (product, type = 'venta') => {
+    const sedeStock = product.sedes?.find(s => s.id === Number(sedeId))?.pivot;
+    return sedeStock ? sedeStock[`precio_${type}`] : 0;
+  };
+
   const getProductStatus = (product) => {
-    // Convertir a números para asegurar comparaciones correctas
-    const stock = Number(product.stock);
+    const stock = getProductStock(product);
     const stockMinimo = Number(product.stock_minimo);
 
-    console.log('Calculating product status:', {
-      id: product.id,
-      nombre: product.nombre,
-      raw_stock: product.stock,
-      raw_stock_minimo: product.stock_minimo,
-      processed_stock: stock,
-      processed_stock_minimo: stockMinimo,
-      stock_type: typeof stock,
-      stock_minimo_type: typeof stockMinimo,
-      is_zero: stock === 0,
-      is_below_min: stock <= stockMinimo,
-      is_above_min: stock > stockMinimo
-    });
-
-    // Si el stock es 0, está sin stock
     if (stock === 0) {
-      console.log(`Product ${product.nombre} (${product.id}): Sin stock (stock = 0)`);
       return 'sin_stock';
     }
 
-    // Si el stock es menor o igual al mínimo, está bajo
     if (stock <= stockMinimo) {
-      console.log(`Product ${product.nombre} (${product.id}): Stock bajo (${stock} <= ${stockMinimo})`);
       return 'stock_bajo';
     }
 
-    // Si el stock es mayor que el mínimo, está en stock
-    console.log(`Product ${product.nombre} (${product.id}): En stock (${stock} > ${stockMinimo})`);
     return 'en_stock';
   };
 
@@ -241,7 +221,7 @@ const Inventario = () => {
       Descripción: product.descripcion,
       Categoría: product.categoria?.nombre || 'Sin categoría',
       Marca: product.marca?.nombre || 'Sin marca',
-      Sede: product.sede?.nombre || 'Sin sede',
+      Sede: product.sedes?.find(s => s.id === Number(sedeId))?.nombre || 'Sin sede',
       Stock: product.stock,
       'Stock Mínimo': product.stock_minimo,
       'Precio de Compra': product.precio_compra,
@@ -267,7 +247,7 @@ const Inventario = () => {
     console.log('Filtros aplicados:', {
       searchTerm,
       selectedCategory,
-      selectedSede,
+      sedeId,
       selectedBrand
     });
   };
@@ -362,18 +342,6 @@ const Inventario = () => {
             </option>
           ))}
         </select>
-        <select
-          value={selectedSede}
-          onChange={(e) => setSelectedSede(e.target.value)}
-          className="px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
-        >
-          <option value="">Todas las sedes</option>
-          {sedes.map(sede => (
-            <option key={sede.id} value={sede.id}>
-              {sede.nombre}
-            </option>
-          ))}
-        </select>
         <button 
           onClick={handleFilter}
           className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200"
@@ -437,6 +405,10 @@ const Inventario = () => {
               ) : (
                 filteredProducts.map((product) => {
                   const status = getProductStatus(product);
+                  const stock = getProductStock(product);
+                  const precioVenta = getProductPrice(product, 'venta');
+                  const precioCompra = getProductPrice(product, 'compra');
+
                   return (
                     <tr key={product.id} className="hover:bg-interactive-component/50 transition-colors duration-200">
                       <td className="px-8 py-5 whitespace-nowrap">
@@ -472,7 +444,7 @@ const Inventario = () => {
                           <Package className="h-5 w-5 text-text-tertiary" />
                           <div className="flex flex-col">
                             <span className="text-base text-text-tertiary">
-                              {product.stock?.toLocaleString() || '0'}
+                              {stock.toLocaleString()}
                             </span>
                             <span className="text-sm text-text-tertiary">
                               Mín: {product.stock_minimo?.toLocaleString() || '0'}
@@ -485,11 +457,11 @@ const Inventario = () => {
                           <DollarSign className="h-5 w-5 text-text-tertiary" />
                           <div className="flex flex-col">
                             <span className="text-base text-text-tertiary">
-                              {formatCurrency(product.precio_venta)}
+                              {formatCurrency(precioVenta)}
                             </span>
-                            {product.precio_compra && (
+                            {precioCompra && (
                               <span className="text-sm text-text-tertiary">
-                                Compra: {formatCurrency(product.precio_compra)}
+                                Compra: {formatCurrency(precioCompra)}
                               </span>
                             )}
                           </div>

@@ -19,18 +19,13 @@ class Producto extends Model
         'descripcion',
         'categoria_id',
         'marca_id',
-        'stock',
-        'stock_minimo',
-        'precio_compra',
-        'precio_venta',
-        'sede_id',
-        'estado'
+        'stock_minimo'
     ];
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['nombre', 'descripcion', 'stock', 'stock_minimo', 'precio_compra', 'precio_venta'])
+            ->logOnly(['nombre', 'descripcion', 'stock_minimo'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
@@ -45,9 +40,11 @@ class Producto extends Model
         return $this->belongsTo(Marca::class, 'marca_id');
     }
 
-    public function sede()
+    public function sedes()
     {
-        return $this->belongsTo(Sede::class, 'sede_id');
+        return $this->belongsToMany(Sede::class, 'producto_sede')
+            ->withPivot(['stock', 'precio_compra', 'precio_venta'])
+            ->withTimestamps();
     }
 
     public function transferencias()

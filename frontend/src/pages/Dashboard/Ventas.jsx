@@ -428,7 +428,13 @@ const Ventas = () => {
                                             #{venta.id}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
-                                            {format(new Date(venta.fecha), "dd/MM/yyyy HH:mm", { locale: es })}
+                                            {(() => {
+                                                const fecha = venta.fecha || venta.created_at;
+                                                if (!fecha) return 'N/A';
+                                                const dateObj = new Date(fecha);
+                                                if (isNaN(dateObj)) return 'N/A';
+                                                return format(dateObj, "dd/MM/yyyy HH:mm", { locale: es });
+                                            })()}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
                                             {venta.usuario?.nombre || 'No especificado'}

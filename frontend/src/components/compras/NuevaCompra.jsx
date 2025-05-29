@@ -3,6 +3,7 @@ import { motion as _motion } from 'framer-motion';
 import { useCompraStore } from '../../store/compraStore';
 import { useProductStore } from '../../store/productStore';
 import { useProveedorStore } from '../../store/proveedorStore';
+import { useAuthStore } from '../../store/authStore';
 import { formatCurrency } from '../../lib/utils';
 import { 
     X, 
@@ -21,6 +22,9 @@ const NuevaCompra = ({ isOpen, onClose }) => {
     const { createCompra, loading } = useCompraStore();
     const { products, loadProducts, isLoading: productsLoading } = useProductStore();
     const { proveedores, fetchProveedores, loading: proveedoresLoading } = useProveedorStore();
+    const user = useAuthStore(state => state.user);
+    const sedeId = user?.data?.sede?.id;
+    console.log(sedeId);
 
     const [proveedorId, setProveedorId] = useState('');
     const [detalles, setDetalles] = useState([]);
@@ -122,6 +126,7 @@ const NuevaCompra = ({ isOpen, onClose }) => {
                     cantidad: d.cantidad,
                     precio_unitario: d.precio_unitario
                 })),
+                sede_id: sedeId,
                 fecha: new Date().toISOString()
             };
 

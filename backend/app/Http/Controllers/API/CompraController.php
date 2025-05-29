@@ -18,10 +18,12 @@ class CompraController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $sedeId = $request->user()->sede_id;
         $compras = Compra::with(['proveedor', 'detalles.producto'])
-            ->orderBy('fecha', 'desc')
+            ->where('sede_id', $sedeId)
+            ->orderBy('created_at', 'desc')
             ->get();
         return response()->json(['data' => $compras]);
     }
@@ -40,7 +42,8 @@ class CompraController extends Controller
                 'productos.*.producto_id' => 'required|exists:productos,id',
                 'productos.*.cantidad' => 'required|integer|min:1',
                 'productos.*.precio_unitario' => 'required|numeric|min:0',
-                'fecha' => 'required|date'
+                'fecha' => 'required|date',
+                'sede_id' => 'required|exists:sedes,id'
             ]);
 
             if ($validator->fails()) {
@@ -79,8 +82,9 @@ class CompraController extends Controller
                 $compra = Compra::create([
                     'proveedor_id' => $request->proveedor_id,
                     'usuario_id' => $request->user()->id,
+                    'sede_id' => $request->sede_id,
                     'total' => $total,
-                    'fecha' => $fecha,
+                    'created_at' => $fecha,
                     'estado' => 'pendiente'
                 ]);
 
@@ -109,7 +113,7 @@ class CompraController extends Controller
                         'tipo' => 'entrada',
                         'cantidad' => $item['cantidad'],
                         'descripcion' => 'Compra #' . $compra->id,
-                        'fecha' => $fecha
+                        'created_at' => $fecha
                     ]);
 
                     Log::info('Movimiento registrado para producto:', [
@@ -151,8 +155,12 @@ class CompraController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Compra $compra)
+    public function show(Request $request, Compra $compra)
     {
+        $sedeId = $request->user()->sede_id;
+        if ($compra->sede_id !== $sedeId) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
         return response()->json([
             'data' => $compra->load(['proveedor', 'detalles.producto'])
         ]);
@@ -189,8 +197,15 @@ class CompraController extends Controller
             if ($compra->estado === 'pendiente' && $request->estado === 'completada') {
                 foreach ($compra->detalles as $detalle) {
                     $producto = $detalle->producto;
-                    $producto->stock += $detalle->cantidad;
-                    $producto->save();
+                    $sedeId = $compra->sede_id;
+
+                    // Buscar el registro en producto_sede
+                    $pivot = $producto->sedes()->where('sedes.id', $sedeId)->first();
+
+                    if ($pivot && $pivot->pivot) {
+                        $nuevoStock = $pivot->pivot->stock + $detalle->cantidad;
+                        $producto->sedes()->updateExistingPivot($sedeId, ['stock' => $nuevoStock]);
+                    }
 
                     // Registrar movimiento de entrada
                     Movimiento::create([
@@ -199,7 +214,7 @@ class CompraController extends Controller
                         'tipo' => 'entrada',
                         'cantidad' => $detalle->cantidad,
                         'descripcion' => 'Compra #' . $compra->id . ' completada',
-                        'fecha' => now()
+                        'created_at' => now()
                     ]);
                 }
             }
@@ -282,12 +297,14 @@ class CompraController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $sedeId = $request->user()->sede_id;
         $compras = Compra::with(['proveedor', 'detalles.producto'])
-            ->whereBetween('fecha', [
+            ->where('sede_id', $sedeId)
+            ->whereBetween('created_at', [
                 Carbon::parse($request->fecha_inicio)->startOfDay(),
                 Carbon::parse($request->fecha_fin)->endOfDay()
             ])
-            ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json(['data' => $compras]);
@@ -310,10 +327,12 @@ class CompraController extends Controller
         try {
             $fechaInicio = Carbon::parse($request->fecha_inicio)->startOfDay();
             $fechaFin = Carbon::parse($request->fecha_fin)->endOfDay();
+            $sedeId = $request->user()->sede_id;
 
-            // Obtener resumen de compras
+            // Obtener resumen de compras solo de la sede
             $resumen = DB::table('compras')
-                ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+                ->where('sede_id', $sedeId)
+                ->whereBetween('created_at', [$fechaInicio, $fechaFin])
                 ->selectRaw('
                     COUNT(*) as total_compras,
                     COALESCE(SUM(total), 0) as total_monto,
@@ -321,11 +340,12 @@ class CompraController extends Controller
                 ')
                 ->first();
 
-            // Obtener productos más comprados
+            // Obtener productos más comprados solo de la sede
             $productosMasComprados = DB::table('compra_detalles')
                 ->join('compras', 'compras.id', '=', 'compra_detalles.compra_id')
                 ->join('productos', 'productos.id', '=', 'compra_detalles.producto_id')
-                ->whereBetween('compras.fecha', [$fechaInicio, $fechaFin])
+                ->where('compras.sede_id', $sedeId)
+                ->whereBetween('compras.created_at', [$fechaInicio, $fechaFin])
                 ->select(
                     'productos.id as producto_id',
                     'productos.nombre as producto_nombre',

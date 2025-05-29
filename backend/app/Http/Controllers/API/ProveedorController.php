@@ -64,7 +64,7 @@ class ProveedorController extends Controller
         return response()->json([
             'data' => $proveedor->load(['compras' => function($query) {
                 $query->with(['detalles.producto'])
-                    ->orderBy('fecha', 'desc');
+                    ->orderBy('created_at', 'desc');
             }])
         ]);
     }
@@ -149,8 +149,8 @@ class ProveedorController extends Controller
                     COUNT(*) as total_compras,
                     COALESCE(SUM(total), 0) as total_monto,
                     COALESCE(AVG(total), 0) as promedio_compra,
-                    MIN(fecha) as primera_compra,
-                    MAX(fecha) as ultima_compra
+                    MIN(created_at) as primera_compra,
+                    MAX(created_at) as ultima_compra
                 ')
                 ->first();
 

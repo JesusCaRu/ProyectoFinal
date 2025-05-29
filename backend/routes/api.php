@@ -64,10 +64,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('sedes', SedeController::class);
 
     // Productos
-    Route::apiResource('productos', ProductoController::class);
-    Route::get('productos/por-sede/{sedeId}', [ProductoController::class, 'getBySede']);
-    Route::get('productos/stock-bajo', [ProductoController::class, 'getLowStock']);
-    Route::patch('productos/{producto}/stock', [ProductoController::class, 'updateStock']);
+    Route::get('/productos', [ProductoController::class, 'index']);
+    Route::get('/productos/{producto}', [ProductoController::class, 'show']);
+    Route::post('/productos', [ProductoController::class, 'store']);
+    Route::put('/productos/{producto}', [ProductoController::class, 'update']);
+    Route::delete('/productos/{producto}', [ProductoController::class, 'destroy']);
+    Route::get('/productos/por-sede/{sedeId}', [ProductoController::class, 'getProductsBySede']);
+    Route::get('/productos/stock-bajo', [ProductoController::class, 'getLowStockProducts']);
 
     // Transferencias
     Route::apiResource('transferencias', TransferenciaController::class);

@@ -3,10 +3,13 @@ import { useVentaStore } from '../../store/ventaStore';
 import { useProductStore } from '../../store/productStore';
 import { formatCurrency } from '../../lib/utils';
 import { X, Plus, Minus } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 const NuevaVenta = ({ onClose }) => {
     const { createVenta } = useVentaStore();
     const { products, loadProducts, isLoading: productsLoading, error: productsError } = useProductStore();
+    const { user } = useAuthStore();
+    const sedeId = user?.data?.sede?.id;
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -36,14 +39,20 @@ const NuevaVenta = ({ onClose }) => {
         setSelectedProducts(selectedProducts.filter((_, i) => i !== index));
     };
 
+    const getProductPrice = (productoId) => {
+        const producto = products.find(p => p.id === productoId);
+        if (!producto || !sedeId) return 0;
+        const sedeStock = producto.sedes?.find(s => s.id === Number(sedeId));
+        return sedeStock ? sedeStock.pivot.precio_venta : 0;
+    };
+
     const handleProductChange = (index, field, value) => {
         const newProducts = [...selectedProducts];
         if (field === 'producto_id') {
-            const producto = products.find(p => p.id === parseInt(value));
             newProducts[index] = {
                 ...newProducts[index],
                 producto_id: parseInt(value),
-                precio_unitario: producto?.precio_venta || 0
+                precio_unitario: getProductPrice(parseInt(value))
             };
         } else {
             newProducts[index] = {
@@ -56,7 +65,10 @@ const NuevaVenta = ({ onClose }) => {
 
     const getProductStock = (productoId) => {
         const producto = products.find(p => p.id === productoId);
-        return producto?.stock || 0;
+        if (!producto || !sedeId) return 0;
+        const sedeStock = producto.sedes?.find(s => s.id === Number(sedeId));
+        console.log(sedeStock);
+        return sedeStock ? sedeStock.pivot.stock : 0;
     };
 
     const calculateTotal = () => {
@@ -86,6 +98,7 @@ const NuevaVenta = ({ onClose }) => {
 
                 // Validar stock
                 const stock = getProductStock(item.producto_id);
+                console.log(stock);
                 if (stock < item.cantidad) {
                     const producto = products.find(p => p.id === item.producto_id);
                     throw new Error(`Stock insuficiente para ${producto?.nombre || 'el producto'}. Stock disponible: ${stock}`);
@@ -98,6 +111,7 @@ const NuevaVenta = ({ onClose }) => {
                     producto_id: parseInt(item.producto_id),
                     cantidad: parseInt(item.cantidad)
                 })),
+                sede_id: sedeId,
                 fecha: new Date().toLocaleString('sv', { timeZone: 'America/Mexico_City' }).replace(' ', 'T')
             };
 
@@ -172,9 +186,9 @@ const NuevaVenta = ({ onClose }) => {
                                                 <option 
                                                     key={producto.id} 
                                                     value={producto.id}
-                                                    disabled={!producto.stock || producto.stock <= 0}
+                                                    disabled={getProductStock(producto.id) <= 0}
                                                 >
-                                                    {producto.nombre} - Stock: {producto.stock || 0}
+                                                    {producto.nombre} - Stock: {getProductStock(producto.id)}
                                                 </option>
                                             ))}
                                         </select>

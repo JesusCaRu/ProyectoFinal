@@ -13,9 +13,12 @@ export const productService = {
     }
   },
 
-  getProductById: async (id) => {
+  getProductById: async (id, sedeId = null) => {
     try {
-      const response = await axiosInstance.get(`${API_URL}/productos/${id}`);
+      const url = sedeId 
+        ? `${API_URL}/productos/${id}?sede_id=${sedeId}`
+        : `${API_URL}/productos/${id}`;
+      const response = await axiosInstance.get(url);
       return response.data.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al obtener el producto');
@@ -51,16 +54,19 @@ export const productService = {
 
   getProductsBySede: async (sedeId) => {
     try {
-      const response = await axiosInstance.get(`${API_URL}/productos/sede/${sedeId}`);
+      const response = await axiosInstance.get(`${API_URL}/productos/por-sede/${sedeId}`);
       return response.data.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al cargar los productos por sede');
     }
   },
 
-  getLowStockProducts: async () => {
+  getLowStockProducts: async (sedeId = null) => {
     try {
-      const response = await axiosInstance.get(`${API_URL}/productos/low-stock`);
+      const url = sedeId 
+        ? `${API_URL}/productos/stock-bajo?sede_id=${sedeId}`
+        : `${API_URL}/productos/stock-bajo`;
+      const response = await axiosInstance.get(url);
       return response.data.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al cargar los productos con stock bajo');
@@ -86,31 +92,61 @@ export const productService = {
     }
   },
 
-  getMovementsByDateRange: async (fechaInicio, fechaFin) => {
+  getMovementsByDateRange: async (fechaInicio, fechaFin, sedeId = null) => {
     try {
-      const response = await axiosInstance.get(`${API_URL}/movimientos/por-fecha`, {
-        params: {
-          fecha_inicio: fechaInicio.toISOString().split('T')[0],
-          fecha_fin: fechaFin.toISOString().split('T')[0]
-        }
-      });
+      const params = {
+        fecha_inicio: fechaInicio.toISOString().split('T')[0],
+        fecha_fin: fechaFin.toISOString().split('T')[0]
+      };
+      
+      if (sedeId) {
+        params.sede_id = sedeId;
+      }
+
+      const response = await axiosInstance.get(`${API_URL}/movimientos/por-fecha`, { params });
       return response.data.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al cargar los movimientos por fecha');
     }
   },
 
-  getMovementsSummary: async (fechaInicio, fechaFin) => {
+  getMovementsSummary: async (fechaInicio, fechaFin, sedeId = null) => {
     try {
-      const response = await axiosInstance.get(`${API_URL}/movimientos/resumen`, {
-        params: {
-          fecha_inicio: fechaInicio.toISOString().split('T')[0],
-          fecha_fin: fechaFin.toISOString().split('T')[0]
-        }
-      });
+      const params = {
+        fecha_inicio: fechaInicio.toISOString().split('T')[0],
+        fecha_fin: fechaFin.toISOString().split('T')[0]
+      };
+      
+      if (sedeId) {
+        params.sede_id = sedeId;
+      }
+
+      const response = await axiosInstance.get(`${API_URL}/movimientos/resumen`, { params });
       return response.data.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al obtener el resumen de movimientos');
+    }
+  },
+
+  // Stock por sede
+  updateProductStock: async (productId, sedeId, stock) => {
+    try {
+      const response = await axiosInstance.patch(`${API_URL}/productos/${productId}/stock`, {
+        sede_id: sedeId,
+        stock: stock
+      });
+      return response.data.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error al actualizar el stock del producto');
+    }
+  },
+
+  getProductStockBySede: async (productId, sedeId) => {
+    try {
+      const response = await axiosInstance.get(`${API_URL}/productos/${productId}/stock/${sedeId}`);
+      return response.data.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error al obtener el stock del producto');
     }
   }
 }; 

@@ -14,13 +14,12 @@ class Compra extends Model
     protected $fillable = [
         'proveedor_id',
         'usuario_id',
+        'sede_id',
         'total',
-        'fecha',
         'estado'
     ];
 
     protected $casts = [
-        'fecha' => 'datetime',
         'total' => 'decimal:2'
     ];
 
