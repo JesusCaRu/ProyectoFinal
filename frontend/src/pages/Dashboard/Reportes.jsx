@@ -383,28 +383,30 @@ const Reportes = () => {
 
   // Renderizar resumen de inventario
   const renderInventarioReport = () => {
-    if (!resumenMovimientos) return null;
+    if (!resumenMovimientos) {
+      console.log('No hay datos de resumen de movimientos');
+      return null;
+    }
+
+    console.log('Renderizando resumen de movimientos:', resumenMovimientos);
 
     // Datos para el gráfico de movimientos por tipo
     const movimientosPorTipo = {
-      labels: ['Entradas', 'Salidas', 'Ajustes'],
+      labels: ['Entradas', 'Salidas'],
       datasets: [
         {
           label: 'Movimientos por tipo',
           data: [
             resumenMovimientos.find(m => m.tipo === 'entrada')?.total_movimientos || 0,
-            resumenMovimientos.find(m => m.tipo === 'salida')?.total_movimientos || 0,
-            resumenMovimientos.find(m => m.tipo === 'ajuste')?.total_movimientos || 0
+            resumenMovimientos.find(m => m.tipo === 'salida')?.total_movimientos || 0
           ],
           backgroundColor: [
             'rgba(75, 192, 192, 0.5)',
-            'rgba(255, 99, 132, 0.5)',
-            'rgba(255, 206, 86, 0.5)'
+            'rgba(255, 99, 132, 0.5)'
           ],
           borderColor: [
             'rgba(75, 192, 192, 1)',
-            'rgba(255, 99, 132, 1)',
-            'rgba(255, 206, 86, 1)'
+            'rgba(255, 99, 132, 1)'
           ],
           borderWidth: 1
         }
@@ -413,14 +415,13 @@ const Reportes = () => {
 
     // Datos para el gráfico de cantidad por tipo de movimiento
     const cantidadPorTipo = {
-      labels: ['Entradas', 'Salidas', 'Ajustes'],
+      labels: ['Entradas', 'Salidas'],
       datasets: [
         {
           label: 'Cantidad por tipo',
           data: [
             resumenMovimientos.find(m => m.tipo === 'entrada')?.total_cantidad || 0,
-            resumenMovimientos.find(m => m.tipo === 'salida')?.total_cantidad || 0,
-            resumenMovimientos.find(m => m.tipo === 'ajuste')?.total_cantidad || 0
+            resumenMovimientos.find(m => m.tipo === 'salida')?.total_cantidad || 0
           ],
           backgroundColor: 'rgba(153, 102, 255, 0.5)',
           borderColor: 'rgba(153, 102, 255, 1)',
@@ -428,6 +429,11 @@ const Reportes = () => {
         }
       ]
     };
+
+    console.log('Datos procesados para gráficos:', {
+      movimientosPorTipo,
+      cantidadPorTipo
+    });
 
     return (
       <div className="space-y-6">
@@ -507,7 +513,9 @@ const Reportes = () => {
                 {resumenMovimientos.map((movimiento, index) => (
                   <tr key={index} className="hover:bg-interactive-component/50 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-accessibility-text">
-                      {movimiento.tipo.charAt(0).toUpperCase() + movimiento.tipo.slice(1)}
+                      {movimiento.tipo === 'entrada' ? 'Entrada' : 
+                       movimiento.tipo === 'salida' ? 'Salida' : 
+                       movimiento.tipo.charAt(0).toUpperCase() + movimiento.tipo.slice(1)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-tertiary">
                       {movimiento.total_movimientos}

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class MovimientoController extends Controller
 {
@@ -199,24 +200,70 @@ class MovimientoController extends Controller
      */
     public function getByDateRange(Request $request)
     {
-        $validator = Validator::make($request->query(), [
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio'
-        ]);
+        try {
+            Log::info('Iniciando getByDateRange con datos:', $request->query());
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            $validator = Validator::make($request->query(), [
+                'fecha_inicio' => 'required|date',
+                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio'
+            ]);
+
+            if ($validator->fails()) {
+                Log::error('Error de validación:', $validator->errors()->toArray());
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $fechaInicio = Carbon::parse($request->query('fecha_inicio'))->startOfDay();
+            $fechaFin = Carbon::parse($request->query('fecha_fin'))->endOfDay();
+            $sedeId = $request->user()->sede_id;
+
+            Log::info('Parámetros procesados:', [
+                'fecha_inicio' => $fechaInicio,
+                'fecha_fin' => $fechaFin,
+                'sede_id' => $sedeId
+            ]);
+
+            // Obtener movimientos de la sede
+            $movimientos = Movimiento::with(['producto', 'usuario', 'sede', 'sedeOrigen', 'sedeDestino'])
+                ->where(function($query) use ($sedeId) {
+                    $query->where('sede_id', $sedeId)
+                          ->orWhere('sede_origen_id', $sedeId)
+                          ->orWhere('sede_destino_id', $sedeId);
+                })
+                ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+                ->orderBy('fecha', 'desc')
+                ->get();
+
+            Log::info('Movimientos encontrados:', ['count' => $movimientos->count()]);
+
+            // Obtener resumen de movimientos
+            $resumen = Movimiento::where(function($query) use ($sedeId) {
+                    $query->where('sede_id', $sedeId)
+                          ->orWhere('sede_origen_id', $sedeId)
+                          ->orWhere('sede_destino_id', $sedeId);
+                })
+                ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+                ->select('tipo', DB::raw('COUNT(*) as total_movimientos'), DB::raw('SUM(cantidad) as total_cantidad'))
+                ->groupBy('tipo')
+                ->get();
+
+            Log::info('Resumen generado:', ['resumen' => $resumen->toArray()]);
+
+            return response()->json([
+                'data' => $movimientos,
+                'resumen' => $resumen
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error en getByDateRange:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => 'Error al obtener los movimientos',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $movimientos = Movimiento::with(['producto', 'usuario'])
-            ->whereBetween('created_at', [
-                Carbon::parse($request->query('fecha_inicio'))->startOfDay(),
-                Carbon::parse($request->query('fecha_fin'))->endOfDay()
-            ])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json(['data' => $movimientos]);
     }
 
     /**
@@ -224,23 +271,93 @@ class MovimientoController extends Controller
      */
     public function getResumen(Request $request)
     {
-        $validator = Validator::make($request->query(), [
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio'
-        ]);
+        try {
+            Log::info('Iniciando getResumen con datos:', $request->query());
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            $validator = Validator::make($request->query(), [
+                'fecha_inicio' => 'required|date',
+                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio'
+            ]);
+
+            if ($validator->fails()) {
+                Log::error('Error de validación:', $validator->errors()->toArray());
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $fechaInicio = Carbon::parse($request->query('fecha_inicio'))->startOfDay();
+            $fechaFin = Carbon::parse($request->query('fecha_fin'))->endOfDay();
+
+            // Obtener resumen de movimientos sin filtrar por sede
+            $queryMovimientos = Movimiento::whereBetween('fecha', [$fechaInicio, $fechaFin]);
+
+            Log::info('Query movimientos:', ['sql' => $queryMovimientos->toSql()]);
+
+            $resumenMovimientos = $queryMovimientos
+                ->select(
+                    'tipo',
+                    DB::raw('COUNT(*) as total_movimientos'),
+                    DB::raw('SUM(cantidad) as total_cantidad')
+                )
+                ->groupBy('tipo')
+                ->get();
+
+            Log::info('Resumen de movimientos:', ['movimientos' => $resumenMovimientos->toArray()]);
+
+            // Obtener resumen de compras sin filtrar por sede
+            $queryCompras = DB::table('compras')
+                ->join('compra_detalles', 'compras.id', '=', 'compra_detalles.compra_id')
+                ->whereBetween('compras.created_at', [$fechaInicio, $fechaFin]);
+
+            Log::info('Query compras:', ['sql' => $queryCompras->toSql()]);
+
+            $resumenCompras = $queryCompras
+                ->select(
+                    DB::raw('"entrada" as tipo'),
+                    DB::raw('COUNT(DISTINCT compras.id) as total_movimientos'),
+                    DB::raw('COALESCE(SUM(compra_detalles.cantidad), 0) as total_cantidad')
+                )
+                ->groupBy(DB::raw('"entrada"'))
+                ->get();
+
+            Log::info('Resumen de compras:', ['compras' => $resumenCompras->toArray()]);
+
+            // Combinar los resultados
+            $resumen = collect([...$resumenMovimientos, ...$resumenCompras])
+                ->groupBy('tipo')
+                ->map(function ($group) {
+                    return [
+                        'tipo' => $group->first()->tipo,
+                        'total_movimientos' => $group->sum('total_movimientos'),
+                        'total_cantidad' => $group->sum('total_cantidad')
+                    ];
+                })
+                ->values();
+
+            Log::info('Resumen final:', ['resumen' => $resumen->toArray()]);
+
+            // Si no hay datos, devolver array vacío
+            if ($resumen->isEmpty()) {
+                Log::info('No se encontraron datos para el resumen');
+                return response()->json([
+                    'data' => [],
+                    'message' => 'No se encontraron movimientos en el período especificado'
+                ]);
+            }
+
+            return response()->json([
+                'data' => $resumen,
+                'message' => 'Resumen de movimientos obtenido correctamente'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error en getResumen:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => 'Error al obtener el resumen de movimientos',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $resumen = Movimiento::select('tipo', DB::raw('COUNT(*) as total_movimientos'), DB::raw('SUM(cantidad) as total_cantidad'))
-            ->whereBetween('created_at', [
-                Carbon::parse($request->query('fecha_inicio'))->startOfDay(),
-                Carbon::parse($request->query('fecha_fin'))->endOfDay()
-            ])
-            ->groupBy('tipo')
-            ->get();
-
-        return response()->json(['data' => $resumen]);
     }
 }

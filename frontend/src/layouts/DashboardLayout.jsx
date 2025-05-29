@@ -57,21 +57,21 @@ const DashboardLayout = ({ children }) => {
     const roleSpecificOptions = {
       'Administrador': [
         {
+          category: 'Administración',
+          items: [
+            { name: 'Usuarios', path: '/dashboard/usuarios', icon: Users },
+            { name: 'Gestiones', path: '/dashboard/gestiones', icon: ShieldUser },
+            { name: 'Auditoría', path: '/dashboard/auditoria', icon: Activity },
+            { name: 'Configuración', path: '/dashboard/configuracion', icon: Settings },
+          ],
+        },
+        {
           category: 'Gestión',
           items: [
             { name: 'Inventario', path: '/dashboard/inventario', icon: Package },
             { name: 'Ventas', path: '/dashboard/ventas', icon: DollarSign },
             { name: 'Compras', path: '/dashboard/compras', icon: Store },
             { name: 'Sedes', path: '/dashboard/sedes', icon: Building2 },
-          ],
-        },
-        {
-          category: 'Administración',
-          items: [
-            { name: 'Auditoría', path: '/dashboard/auditoria', icon: Activity },
-            { name: 'Gestiones', path: '/dashboard/gestiones', icon: ShieldUser },
-            { name: 'Usuarios', path: '/dashboard/usuarios', icon: Users },
-            { name: 'Configuración', path: '/dashboard/configuracion', icon: Settings },
           ],
         },
         {
@@ -109,6 +109,8 @@ const DashboardLayout = ({ children }) => {
           category: 'Gestión',
           items: [
             { name: 'Inventario', path: '/dashboard/inventario', icon: Package },
+            { name: 'Sedes', path: '/dashboard/sedes', icon: Building2 },
+            { name: 'Historial', path: '/dashboard/historial', icon: FileText },
           ],
         },
       ],

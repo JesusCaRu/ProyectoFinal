@@ -225,15 +225,17 @@ export const useProductStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const summary = await productService.getMovementsSummary(fechaInicio, fechaFin);
+      console.log('Resumen de movimientos obtenido:', summary);
       set({ isLoading: false });
       return summary;
     } catch (error) {
+      console.error('Error en getMovementsSummary:', error);
       set({ 
         error: error.message,
         isLoading: false 
       });
-      return null;
-    }
+      return [];
+    }  
   },
 
   // Buscar productos

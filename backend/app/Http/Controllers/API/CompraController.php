@@ -113,12 +113,14 @@ class CompraController extends Controller
                         'tipo' => 'entrada',
                         'cantidad' => $item['cantidad'],
                         'descripcion' => 'Compra #' . $compra->id,
-                        'created_at' => $fecha
+                        'fecha' => $fecha,
+                        'sede_id' => $request->sede_id
                     ]);
 
                     Log::info('Movimiento registrado para producto:', [
                         'producto' => $item['producto']->nombre,
-                        'cantidad' => $item['cantidad']
+                        'cantidad' => $item['cantidad'],
+                        'sede_id' => $request->sede_id
                     ]);
                 }
 
@@ -214,7 +216,8 @@ class CompraController extends Controller
                         'tipo' => 'entrada',
                         'cantidad' => $detalle->cantidad,
                         'descripcion' => 'Compra #' . $compra->id . ' completada',
-                        'created_at' => now()
+                        'fecha' => now(),
+                        'sede_id' => $sedeId
                     ]);
                 }
             }

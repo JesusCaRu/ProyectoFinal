@@ -18,6 +18,9 @@ return new class extends Migration
             $table->integer('cantidad');
             $table->text('descripcion')->nullable();
             $table->foreignId('usuario_id')->constrained('usuarios');
+            $table->foreignId('sede_id')->nullable()->constrained('sedes');
+            $table->foreignId('sede_origen_id')->nullable()->constrained('sedes');
+            $table->foreignId('sede_destino_id')->nullable()->constrained('sedes');
             $table->timestamp('fecha')->useCurrent();
         });
     }

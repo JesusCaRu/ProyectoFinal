@@ -5,6 +5,7 @@ import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import Dashboard from '../pages/dashboard/Dashboard';
 import VendedorDashboard from '../pages/dashboard/VendedorDashboard';
+import DashboardAlmacenista from '../pages/dashboard/DashboardAlmacenista';
 import Inventario from '../pages/dashboard/Inventario';
 import Ventas from '../pages/dashboard/Ventas';
 import Compras from '../pages/dashboard/Compras';
@@ -16,11 +17,11 @@ import Gestiones from '../pages/dashboard/Gestiones';
 import Sedes from '../pages/dashboard/Sedes';
 import ProtectedRoute from '../components/ProtectedRoute';
 import RoleProtectedRoute from '../components/RoleProtectedRoute';
-import Notificaciones from '../pages/dashboard/Notificaciones';
 import Auditoria from '../pages/dashboard/Auditoria';
 import CatalogoProductos from '../pages/dashboard/CatalogoProductos';
 import HistorialVentas from '../pages/dashboard/HistorialVentas';
 import { useAuthStore } from '../store/authStore';
+import HistorialMovimientos from '../pages/dashboard/HistorialMovimientos';
 
 const DashboardRouter = () => {
   const { user } = useAuthStore();
@@ -28,6 +29,10 @@ const DashboardRouter = () => {
   
   if (userRole === 'Vendedor') {
     return <VendedorDashboard />;
+  }
+  
+  if (userRole === 'Almacenista') {
+    return <DashboardAlmacenista />;
   }
   
   return <Dashboard />;
@@ -54,6 +59,11 @@ const AppRoutes = () => {
               <Route index element={
                 <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista', 'Vendedor']}>
                   <DashboardRouter />
+                </RoleProtectedRoute>
+              } />
+              <Route path="historial" element={
+                <RoleProtectedRoute allowedRoles={['Almacenista']}>
+                  <HistorialMovimientos />
                 </RoleProtectedRoute>
               } />
               
@@ -89,7 +99,7 @@ const AppRoutes = () => {
                 </RoleProtectedRoute>
               } />
               <Route path="sedes" element={
-                <RoleProtectedRoute allowedRoles={['Administrador']}>
+                <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista']}>
                   <Sedes />
                 </RoleProtectedRoute>
               } />
@@ -122,7 +132,6 @@ const AppRoutes = () => {
               } />
 
               {/* Rutas comunes */}
-              <Route path="notificaciones" element={<Notificaciones />} />
             </Routes>
           </DashboardLayout>
         </ProtectedRoute>

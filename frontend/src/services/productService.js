@@ -122,8 +122,12 @@ export const productService = {
       }
 
       const response = await axiosInstance.get(`${API_URL}/movimientos/resumen`, { params });
-      return response.data.data;
+      console.log('Respuesta del resumen de movimientos:', response);
+      
+      // Asegurarnos de que siempre devolvemos un array, incluso si está vacío
+      return response.data.data || [];
     } catch (error) {
+      console.error('Error al obtener resumen de movimientos:', error);
       throw new Error(error.response?.data?.message || 'Error al obtener el resumen de movimientos');
     }
   },
