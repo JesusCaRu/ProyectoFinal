@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { useAuthStore } from '../../store/authStore';
 import { useSedeStore } from '../../store/sedeStore';
-import { Settings, Package, DollarSign, ShoppingCart, Users, TrendingUp, TrendingDown, Building2 } from 'lucide-react';
+import { Settings, Package, Euro, ShoppingCart, Users, TrendingUp, TrendingDown, Building2 } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { toast } from 'react-hot-toast';
+import LoadingIndicator from '../../components/LoadingIndicator';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -54,7 +55,9 @@ const Dashboard = () => {
                 <div>
                     <p className="text-sm font-medium text-text-tertiary">{title}</p>
                     {isLoading ? (
-                        <div className="h-8 w-24 bg-interactive-component animate-pulse rounded mt-2"></div>
+                        <div className="mt-2">
+                            <LoadingIndicator text="" />
+                        </div>
                     ) : (
                         <p className="text-2xl font-semibold text-accessibility-text mt-2">
                             {(() => {
@@ -114,15 +117,11 @@ const Dashboard = () => {
                     </thead>
                     <tbody className="bg-bg-secondary divide-y divide-border">
                         {isLoading ? (
-                            Array(5).fill(0).map((_, index) => (
-                                <tr key={index}>
-                                    {headers.map((_, i) => (
-                                        <td key={i} className="px-6 py-4">
-                                            <div className="h-4 bg-interactive-component animate-pulse rounded"></div>
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))
+                            <LoadingIndicator 
+                                variant="table" 
+                                colSpan={headers.length} 
+                                text={`Cargando ${title.toLowerCase()}...`}
+                            />
                         ) : data.length === 0 ? (
                             <tr>
                                 <td colSpan={headers.length} className="px-6 py-4 text-center text-text-tertiary">
@@ -187,7 +186,7 @@ const Dashboard = () => {
                 <StatCard
                     title="Ventas Totales"
                     value={stats?.totalVentas ? Number(stats.totalVentas) : 0}
-                    icon={DollarSign}
+                    icon={Euro}
                     trend={stats?.cambios?.ventas}
                     isLoading={isLoading}
                 />

@@ -18,7 +18,7 @@ import {
   Trash2,
   BarChart2,
   ShoppingCart,
-  DollarSign,
+  Euro,
   Building,
   Briefcase
 } from 'lucide-react';
@@ -29,6 +29,7 @@ import { useBrandStore } from '../../store/brandStore';
 import { useAuthStore } from '../../store/authStore';
 import Modal from '../../components/Modal';
 import ProductForm from '../../components/ProductForm';
+import LoadingIndicator from '../../components/LoadingIndicator';
 
 const Inventario = () => {
   const { 
@@ -51,6 +52,7 @@ const Inventario = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (sedeId) {
@@ -206,10 +208,12 @@ const Inventario = () => {
 
   const confirmDelete = async () => {
     if (productToDelete) {
+      setIsDeleting(true);
       const success = await deleteProduct(productToDelete.id);
       if (success) {
         setDeleteModalOpen(false);
         setProductToDelete(null);
+        setIsDeleting(false);
       }
     }
   };
@@ -391,11 +395,11 @@ const Inventario = () => {
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                <tr>
-                  <td colSpan="8" className="px-8 py-4 text-center text-text-tertiary">
-                    Cargando productos...
-                  </td>
-                </tr>
+                <LoadingIndicator 
+                  variant="table" 
+                  colSpan={8} 
+                  text="Cargando productos..."
+                />
               ) : filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-8 py-4 text-center text-text-tertiary">
@@ -454,7 +458,7 @@ const Inventario = () => {
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
                         <div className="flex items-center space-x-3">
-                          <DollarSign className="h-5 w-5 text-text-tertiary" />
+                          <Euro className="h-5 w-5 text-text-tertiary" />
                           <div className="flex flex-col">
                             <span className="text-base text-text-tertiary">
                               {formatCurrency(precioVenta)}
@@ -555,7 +559,11 @@ const Inventario = () => {
               onClick={confirmDelete}
               className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
             >
-              Eliminar
+              {isDeleting ? (
+                <LoadingIndicator variant="button" text="Eliminando..." />
+              ) : (
+                "Eliminar"
+              )}
             </button>
           </div>
         </div>

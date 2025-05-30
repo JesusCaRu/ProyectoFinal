@@ -12,7 +12,7 @@ import {
   User,
   Star,
   ShoppingCart,
-  DollarSign
+  Euro
 } from 'lucide-react';
 
 const Clientes = () => {
@@ -200,7 +200,7 @@ const Clientes = () => {
                   <span className="text-xs text-text-tertiary">Compras</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <DollarSign className="h-4 w-4 text-text-tertiary" />
+                  <Euro className="h-4 w-4 text-text-tertiary" />
                   <span className="text-sm font-medium text-accessibility-text mt-1">
                     €{customer.totalSpent.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </span>

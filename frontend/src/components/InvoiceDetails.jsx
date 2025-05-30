@@ -2,7 +2,7 @@ import {
   X, 
   Printer, 
   Download,
-  DollarSign,
+  Euro,
   Calendar,
   User,
   Building,
@@ -128,7 +128,7 @@ const InvoiceDetails = ({ invoice, onClose, onPrint, onDownload, onMarkAsPaid, o
 
           <div>
             <div className="flex items-center space-x-2 text-text-tertiary mb-1">
-              <DollarSign className="h-5 w-5" />
+              <Euro className="h-5 w-5" />
               <span className="text-sm font-medium">Total</span>
             </div>
             <div className="text-xl font-semibold text-accessibility-text">

@@ -7,7 +7,7 @@ import { formatCurrency } from '../../lib/utils';
 import NuevaVenta from '../../components/ventas/NuevaVenta';
 import DetalleVenta from '../../components/ventas/DetalleVenta';
 import { 
-    DollarSign, 
+    Euro, 
     ShoppingCart, 
     Package, 
     TrendingUp,
@@ -20,6 +20,7 @@ import {
     CheckCircle,
     Clock
 } from 'lucide-react';
+import LoadingIndicator from '../../components/LoadingIndicator';
 
 const Ventas = () => {
     const { 
@@ -250,7 +251,7 @@ const Ventas = () => {
                         >
                             <div className="flex items-center justify-between">
                                 <div className="p-2 bg-interactive-component rounded-lg">
-                                    <DollarSign className="h-6 w-6 text-success" />
+                                    <Euro className="h-6 w-6 text-success" />
                                 </div>
                                 <span className="text-sm font-medium text-success">
                                     {resumen?.total_monto > 0 ? 
@@ -399,16 +400,11 @@ const Ventas = () => {
                         </thead>
                         <tbody className="divide-y divide-border">
                             {isLoading ? (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-8 text-center">
-                                        <div className="flex flex-col items-center justify-center gap-3">
-                                            <Loader2 className="h-8 w-8 animate-spin text-solid-color" />
-                                            <p className="text-text-tertiary">
-                                                {isUpdating ? 'Actualizando datos...' : 'Cargando ventas...'}
-                                            </p>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <LoadingIndicator
+                                    variant="table"
+                                    colSpan={6}
+                                    text={isUpdating ? 'Actualizando datos...' : 'Cargando ventas...'}
+                                />
                             ) : filteredVentas.length === 0 ? (
                                 <tr>
                                     <td colSpan="6" className="px-6 py-8 text-center text-text-tertiary">

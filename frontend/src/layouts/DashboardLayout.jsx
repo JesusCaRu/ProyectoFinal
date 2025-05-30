@@ -21,7 +21,7 @@ import {
   Activity,
   ShieldUser,
   Store,
-  DollarSign,
+  Euro,
   Building2,
   MessageSquare
 } from 'lucide-react';
@@ -80,7 +80,7 @@ const DashboardLayout = ({ children }) => {
           category: 'Gestión',
           items: [
             { name: 'Inventario', path: '/dashboard/inventario', icon: Package },
-            { name: 'Ventas', path: '/dashboard/ventas', icon: DollarSign },
+            { name: 'Ventas', path: '/dashboard/ventas', icon: Euro },
             { name: 'Compras', path: '/dashboard/compras', icon: Store },
             { name: 'Sedes', path: '/dashboard/sedes', icon: Building2 },
           ],

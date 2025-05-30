@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Modal from '../../components/Modal';
+import LoadingIndicator from '../../components/LoadingIndicator';
 import { useSedeStore } from '../../store/sedeStore';
 import { useProductStore } from '../../store/productStore';
 import { useTransferenciaStore } from '../../store/transferenciaStore';
@@ -262,11 +263,11 @@ const Sedes = () => {
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                <tr>
-                  <td colSpan="6" className="px-8 py-4 text-center text-text-tertiary">
-                    Cargando sedes...
-                  </td>
-                </tr>
+                <LoadingIndicator
+                  variant="table"
+                  colSpan={6}
+                  text="Cargando sedes..."
+                />
               ) : error ? (
                 <tr>
                   <td colSpan="6" className="px-8 py-4 text-center text-error">
@@ -448,7 +449,9 @@ const Sedes = () => {
             disabled={isTransferLoading}
             className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg transition-colors"
           >
-            {isTransferLoading ? 'Enviando...' : 'Iniciar Transferencia'}
+            {isTransferLoading ? (
+              <LoadingIndicator variant="button" text="Enviando..." />
+            ) : 'Iniciar Transferencia'}
           </button>
         </div>
         {transferError && (

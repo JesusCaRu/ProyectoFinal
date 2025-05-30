@@ -4,7 +4,7 @@ import { useVentaStore } from '../../store/ventaStore';
 import { format } from 'date-fns';
 import { formatCurrency } from '../../lib/utils';
 import { 
-    DollarSign, 
+    Euro, 
     ShoppingCart, 
     TrendingUp,
     Package,
@@ -12,6 +12,7 @@ import {
     Loader2,
     AlertCircle
 } from 'lucide-react';
+import LoadingIndicator from '../../components/LoadingIndicator';
 
 const VendedorDashboard = () => {
     const { 
@@ -151,7 +152,7 @@ const VendedorDashboard = () => {
                         >
                             <div className="flex items-center justify-between">
                                 <div className="p-2 bg-interactive-component rounded-lg">
-                                    <DollarSign className="h-6 w-6 text-success" />
+                                    <Euro className="h-6 w-6 text-success" />
                                 </div>
                                 <span className="text-sm font-medium text-success">
                                     {resumen?.total_monto > 0 ? 
@@ -296,14 +297,11 @@ const VendedorDashboard = () => {
                         </thead>
                         <tbody className="divide-y divide-border">
                             {isLoading ? (
-                                <tr>
-                                    <td colSpan="3" className="px-6 py-8 text-center">
-                                        <div className="flex flex-col items-center justify-center gap-3">
-                                            <Loader2 className="h-8 w-8 animate-spin text-solid-color" />
-                                            <p className="text-text-tertiary">Cargando productos...</p>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <LoadingIndicator
+                                    variant="table"
+                                    colSpan={3}
+                                    text="Cargando productos..."
+                                />
                             ) : productosMasVendidos?.length === 0 ? (
                                 <tr>
                                     <td colSpan="3" className="px-6 py-8 text-center text-text-tertiary">

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Modal from '../../components/Modal';
+import LoadingIndicator from '../../components/LoadingIndicator';
 
 const Auditoria = () => {
     const {
@@ -309,15 +310,11 @@ const Auditoria = () => {
                             </thead>
                             <tbody className="bg-bg-secondary divide-y divide-border">
                                 {isLoading ? (
-                                    Array(5).fill(0).map((_, index) => (
-                                        <tr key={index}>
-                                            {Array(5).fill(0).map((_, i) => (
-                                                <td key={i} className="px-6 py-4">
-                                                    <div className="h-4 bg-interactive-component animate-pulse rounded"></div>
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
+                                    <LoadingIndicator
+                                        variant="table"
+                                        colSpan={5}
+                                        text="Cargando registros de auditoría..."
+                                    />
                                 ) : !Array.isArray(registros) || registros.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="px-6 py-4 text-center text-text-tertiary">

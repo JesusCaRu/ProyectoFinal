@@ -7,7 +7,7 @@ import {
   Download,
   Printer,
   Eye,
-  DollarSign,
+  Euro,
   TrendingUp,
   TrendingDown,
   Calendar,
@@ -22,6 +22,7 @@ import { useFacturaStore } from '../../store/facturaStore';
 import { useSedeStore } from '../../store/sedeStore';
 import Modal from '../../components/Modal';
 import { toast } from 'react-hot-toast';
+import LoadingIndicator from '../../components/LoadingIndicator';
 
 // Funciones de utilidad
 const formatDate = (dateString) => {
@@ -136,6 +137,8 @@ const Facturas = () => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [facturaToView, setFacturaToView] = useState(null);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -166,7 +169,7 @@ const Facturas = () => {
     {
       title: 'Total Facturado',
       value: formatCurrency(facturas.reduce((sum, factura) => sum + Number(factura.total), 0)),
-      icon: <DollarSign className="h-6 w-6 text-success" />,
+      icon: <Euro className="h-6 w-6 text-success" />,
       change: '+8%',
       trend: 'up'
     },
@@ -200,18 +203,24 @@ const Facturas = () => {
 
   const handleDownload = async (factura) => {
     try {
+      setIsDownloading(true);
       await descargarFactura(factura.tipo, factura.id);
       toast.success('Factura descargada correctamente');
     } catch (error) {
       toast.error('Error al descargar la factura: ' + (error.message || 'Error desconocido'));
+    } finally {
+      setIsDownloading(false);
     }
   };
 
   const handleOpenPdf = async (factura) => {
     try {
+      setIsPdfLoading(true);
       await abrirFactura(factura.tipo, factura.id);
     } catch (error) {
       toast.error('Error al abrir la factura: ' + (error.message || 'Error desconocido'));
+    } finally {
+      setIsPdfLoading(false);
     }
   };
 
@@ -390,11 +399,11 @@ const Facturas = () => {
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                <tr>
-                  <td colSpan="7" className="px-8 py-4 text-center text-text-tertiary">
-                    Cargando facturas...
-                  </td>
-                </tr>
+                <LoadingIndicator 
+                  variant="table" 
+                  colSpan={7} 
+                  text="Cargando facturas..."
+                />
               ) : filteredFacturas.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="px-8 py-4 text-center text-text-tertiary">
@@ -437,7 +446,7 @@ const Facturas = () => {
                     </td>
                     <td className="px-8 py-5 whitespace-nowrap">
                       <div className="flex items-center space-x-3">
-                        <DollarSign className="h-5 w-5 text-text-tertiary" />
+                        <Euro className="h-5 w-5 text-text-tertiary" />
                         <span className="text-base font-medium text-accessibility-text">
                           {formatCurrency(factura.total)}
                         </span>
@@ -472,15 +481,25 @@ const Facturas = () => {
                           onClick={() => handleOpenPdf(factura)}
                           className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
                           title="Ver PDF"
+                          disabled={isPdfLoading}
                         >
-                          <Printer className="h-5 w-5" />
+                          {isPdfLoading ? (
+                            <LoadingIndicator variant="button" text="Cargando PDF..." />
+                          ) : (
+                            <Printer className="h-5 w-5" />
+                          )}
                         </button>
                         <button 
                           onClick={() => handleDownload(factura)}
                           className="p-2 text-success hover:text-success-hover rounded-lg transition-colors duration-200"
                           title="Descargar factura"
+                          disabled={isDownloading}
                         >
-                          <Download className="h-5 w-5" />
+                          {isDownloading ? (
+                            <LoadingIndicator variant="button" text="Descargando..." />
+                          ) : (
+                            <Download className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                     </td>
@@ -538,16 +557,30 @@ const Facturas = () => {
               <button
                 onClick={() => handleOpenPdf(facturaToView)}
                 className="px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                disabled={isPdfLoading}
               >
-                <Printer className="h-5 w-5" />
-                <span>Ver PDF</span>
+                {isPdfLoading ? (
+                  <LoadingIndicator variant="button" text="Cargando PDF..." />
+                ) : (
+                  <>
+                    <Printer className="h-5 w-5" />
+                    <span>Ver PDF</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={() => handleDownload(facturaToView)}
                 className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                disabled={isDownloading}
               >
-                <Download className="h-5 w-5" />
-                <span>Descargar</span>
+                {isDownloading ? (
+                  <LoadingIndicator variant="button" text="Descargando..." />
+                ) : (
+                  <>
+                    <Download className="h-5 w-5" />
+                    <span>Descargar</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -13,6 +13,7 @@ import { useMovimientoStore } from '../../store/movimientoStore';
 import { useTransferenciaStore } from '../../store/transferenciaStore';
 import { useSedeStore } from '../../store/sedeStore';
 import { useAuthStore } from '../../store/authStore';
+import LoadingIndicator from '../../components/LoadingIndicator';
 
 const DashboardAlmacenista = () => {
     const { products, loadProducts } = useProductStore();
@@ -111,8 +112,11 @@ const DashboardAlmacenista = () => {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-solid-color"></div>
+            <div className="p-6">
+                <LoadingIndicator
+                    variant="container"
+                    text="Cargando datos del dashboard..."
+                />
             </div>
         );
     }

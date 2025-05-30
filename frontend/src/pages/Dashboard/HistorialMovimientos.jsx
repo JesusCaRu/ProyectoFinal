@@ -11,6 +11,8 @@ import {
     Truck,
     RefreshCw
 } from 'lucide-react';
+import { formatDate } from '../../utils/formatters';
+import LoadingIndicator from '../../components/LoadingIndicator';
 
 const HistorialMovimientos = () => {
     const { movimientos, loadMovimientos, isLoading, error } = useMovimientoStore();
@@ -97,8 +99,11 @@ const HistorialMovimientos = () => {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-solid-color"></div>
+            <div className="p-6">
+                <LoadingIndicator
+                    variant="container"
+                    text="Cargando historial de movimientos..."
+                />
             </div>
         );
     }

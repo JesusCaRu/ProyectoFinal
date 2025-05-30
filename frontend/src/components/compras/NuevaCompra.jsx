@@ -14,7 +14,7 @@ import {
     Search,
     Package,
     User,
-    DollarSign,
+    Euro,
     Trash2
 } from 'lucide-react';
 
@@ -325,7 +325,7 @@ const NuevaCompra = ({ isOpen, onClose }) => {
                             <div className="bg-bg rounded-lg p-4 border border-border">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
-                                        <DollarSign className="h-5 w-5 text-text-tertiary" />
+                                        <Euro className="h-5 w-5 text-text-tertiary" />
                                         <h3 className="font-medium text-accessibility-text">Total</h3>
                                     </div>
                                     <p className="text-2xl font-semibold text-accessibility-text">
