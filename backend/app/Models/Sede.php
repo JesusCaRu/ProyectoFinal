@@ -48,4 +48,14 @@ class Sede extends Model
     {
         return $this->hasMany(Transferencia::class, 'sede_destino_id');
     }
+
+    public function ventas()
+    {
+        return $this->hasMany(Venta::class);
+    }
+
+    public function compras()
+    {
+        return $this->hasMany(Compra::class);
+    }
 }

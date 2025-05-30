@@ -183,6 +183,19 @@ class VentaController extends Controller
                     ]
                 );
 
+                // Generar factura automáticamente
+                try {
+                    Log::info('Intentando generar factura automáticamente para la venta #' . $venta->id);
+                    $facturaController = new \App\Http\Controllers\API\FacturaController();
+                    $facturaController->generarFacturaVenta($request, $venta->id);
+                    Log::info('Factura de venta generada automáticamente');
+                } catch (\Exception $e) {
+                    Log::error('Error al generar factura automáticamente: ' . $e->getMessage(), [
+                        'venta_id' => $venta->id,
+                        'error_trace' => $e->getTraceAsString()
+                    ]);
+                }
+
                 return response()->json([
                     'data' => $venta->load(['usuario', 'detalles.producto']),
                     'message' => 'Venta registrada correctamente'

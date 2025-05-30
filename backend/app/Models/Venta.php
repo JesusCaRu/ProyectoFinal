@@ -16,7 +16,8 @@ class Venta extends Model
     protected $fillable = [
         'usuario_id',
         'total',
-        'sede_id'
+        'sede_id',
+        'factura_url'
     ];
 
     public $timestamps = true;
@@ -37,5 +38,10 @@ class Venta extends Model
     public function detalles()
     {
         return $this->hasMany(VentaDetalle::class, 'venta_id');
+    }
+
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class, 'sede_id');
     }
 }

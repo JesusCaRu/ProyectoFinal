@@ -18,7 +18,8 @@ class Compra extends Model
         'usuario_id',
         'sede_id',
         'total',
-        'estado'
+        'estado',
+        'factura_url'
     ];
 
     protected $casts = [
@@ -41,6 +42,11 @@ class Compra extends Model
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'usuario_id');
+    }
+
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class, 'sede_id');
     }
 
     public function detalles()

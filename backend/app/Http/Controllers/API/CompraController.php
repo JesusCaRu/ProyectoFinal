@@ -236,6 +236,19 @@ class CompraController extends Controller
                         'sede_id' => $sedeId
                     ]);
                 }
+
+                // Generar factura automáticamente cuando se completa la compra
+                try {
+                    Log::info('Intentando generar factura automáticamente para la compra #' . $compra->id);
+                    $facturaController = new \App\Http\Controllers\API\FacturaController();
+                    $facturaController->generarFacturaCompra($request, $compra->id);
+                    Log::info('Factura de compra generada automáticamente');
+                } catch (\Exception $e) {
+                    Log::error('Error al generar factura automáticamente: ' . $e->getMessage(), [
+                        'compra_id' => $compra->id,
+                        'error_trace' => $e->getTraceAsString()
+                    ]);
+                }
             }
 
             $compra->estado = $request->estado;

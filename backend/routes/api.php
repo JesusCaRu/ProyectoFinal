@@ -274,4 +274,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sede', [MessageController::class, 'sendToSede']);
         Route::post('/all', [MessageController::class, 'sendToAll']);
     });
+
+    // Rutas para facturas
+    Route::get('/facturas', [App\Http\Controllers\API\FacturaController::class, 'index']);
+    Route::get('/facturas/venta/{id}', [App\Http\Controllers\API\FacturaController::class, 'generarFacturaVenta']);
+    Route::get('/facturas/compra/{id}', [App\Http\Controllers\API\FacturaController::class, 'generarFacturaCompra']);
+    Route::get('/facturas/descargar/{tipo}/{id}', [App\Http\Controllers\API\FacturaController::class, 'descargarFactura']);
 });

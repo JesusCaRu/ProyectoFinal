@@ -104,6 +104,7 @@ const DashboardLayout = ({ children }) => {
           category: 'Reportes',
           items: [
             { name: 'Reportes', path: '/dashboard/reportes', icon: BarChart2 },
+            { name: 'Facturas', path: '/dashboard/facturas', icon: FileText },
           ],
         },
       ],
