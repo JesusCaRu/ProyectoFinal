@@ -5,6 +5,7 @@ export const useAuditoriaStore = create((set) => ({
     registros: [],
     acciones: [],
     tablas: [],
+    logNames: [],
     isLoading: false,
     error: null,
     pagination: {
@@ -19,14 +20,23 @@ export const useAuditoriaStore = create((set) => ({
         try {
             const response = await auditoriaService.fetchRegistros(filtros);
             if (response.success) {
-                const registros = response.data.data.map(registro => ({
-                    ...registro,
-                    usuario: registro.causer,
-                    accion: registro.description,
-                    tabla: registro.subject_type ? registro.subject_type.split('\\').pop() : null,
-                    registro_id: registro.subject_id,
-                    fecha: registro.created_at
-                }));
+                const registros = response.data.data.map(registro => {
+                    // Determinar el tipo de tabla a partir del subject_type
+                    let tabla = registro.subject_type ? registro.subject_type.split('\\').pop() : null;
+                    
+                    // Extraer información adicional de las propiedades
+                    let tipo = registro.properties?.tipo || null;
+                    
+                    return {
+                        ...registro,
+                        usuario: registro.causer,
+                        accion: registro.description,
+                        tabla: tabla,
+                        registro_id: registro.subject_id,
+                        fecha: registro.created_at,
+                        tipo: tipo
+                    };
+                });
                 
                 set({ 
                     registros,
@@ -37,6 +47,10 @@ export const useAuditoriaStore = create((set) => ({
                         lastPage: response.data.last_page
                     }
                 });
+
+                // Extraer y guardar los tipos de logs únicos
+                const uniqueLogNames = [...new Set(registros.map(r => r.log_name))].filter(Boolean);
+                set({ logNames: uniqueLogNames });
             } else {
                 throw new Error(response.message || 'Error al cargar registros');
             }
@@ -78,6 +92,24 @@ export const useAuditoriaStore = create((set) => ({
             }
         } catch (error) {
             console.error('Error en fetchTablas:', error);
+            set({ error: error.message });
+            throw error;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+    
+    fetchLogNames: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await auditoriaService.fetchLogNames();
+            if (response.success) {
+                set({ logNames: response.data || [] });
+            } else {
+                throw new Error(response.message || 'Error al cargar tipos de logs');
+            }
+        } catch (error) {
+            console.error('Error en fetchLogNames:', error);
             set({ error: error.message });
             throw error;
         } finally {

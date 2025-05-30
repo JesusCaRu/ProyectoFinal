@@ -32,6 +32,20 @@ export const auditoriaService = {
         }
     },
 
+    async fetchLogNames() {
+        try {
+            const response = await axiosInstance.get(`${API_URL}/auditoria/log-names`);
+            return response.data;
+        } catch (error) {
+            // Si el endpoint no existe, no fallar y retornar una lista predefinida
+            console.warn('Error al cargar log_names, usando valores predefinidos:', error);
+            return {
+                success: true,
+                data: ['sistema', 'autenticacion', 'ventas', 'compras', 'transferencias', 'inventario']
+            };
+        }
+    },
+
     async getRegistroById(id) {
         try {
             const response = await axiosInstance.get(`${API_URL}/auditoria/${id}`);
