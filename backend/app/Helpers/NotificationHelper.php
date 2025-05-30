@@ -62,27 +62,39 @@ class NotificationHelper
                 $users->push($transferencia->usuario);
             }
 
-            // Si es una nueva transferencia, notificar a los administradores y almacenistas de la sede destino
+            // Si es una nueva transferencia, notificar a todos los usuarios de la sede destino y a los administradores
             if ($action === 'created') {
-                $adminUsers = Usuario::where(function ($query) use ($transferencia) {
-                    $query->where('rol_id', 1) // Administradores
-                        ->orWhere(function ($q) use ($transferencia) {
-                            $q->where('rol_id', 3) // Almacenistas
-                                ->where('sede_id', $transferencia->sede_destino_id);
-                        });
-                })->get();
-
+                // Administradores globales
+                $adminUsers = Usuario::where('rol_id', 1)->get();
                 $users = $users->merge($adminUsers);
+
+                // Todos los usuarios de la sede destino
+                $sedeDestinoUsers = Usuario::where('sede_id', $transferencia->sede_destino_id)->get();
+                $users = $users->merge($sedeDestinoUsers);
+
+                Log::info("Notificando a {$sedeDestinoUsers->count()} usuarios de la sede destino #{$transferencia->sede_destino_id}");
             }
 
-            // Si es aprobada o rechazada, notificar a los administradores y al creador
+            // Si es aprobada o rechazada, notificar a los administradores, a los usuarios de ambas sedes y al creador
             else {
-                $adminUsers = Usuario::where('rol_id', 1)->get(); // Administradores
+                // Administradores globales
+                $adminUsers = Usuario::where('rol_id', 1)->get();
                 $users = $users->merge($adminUsers);
+
+                // Usuarios de la sede origen
+                $sedeOrigenUsers = Usuario::where('sede_id', $transferencia->sede_origen_id)->get();
+                $users = $users->merge($sedeOrigenUsers);
+
+                // Usuarios de la sede destino
+                $sedeDestinoUsers = Usuario::where('sede_id', $transferencia->sede_destino_id)->get();
+                $users = $users->merge($sedeDestinoUsers);
+
+                Log::info("Notificando a usuarios de sedes origen #{$transferencia->sede_origen_id} y destino #{$transferencia->sede_destino_id}");
             }
 
             // Eliminar duplicados
             $users = $users->unique('id');
+            Log::info("Total de usuarios a notificar: {$users->count()}");
 
             foreach ($users as $user) {
                 if ($user) {
