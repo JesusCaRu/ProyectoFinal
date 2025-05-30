@@ -7,12 +7,14 @@ import DarkModeToggle from './components/DarkModeToggle';
 import LoadingScreen from './components/LoadingScreen';
 import './styles/globals.css';
 import { useAuthStore } from './store/authStore';
+import { setupEchoOnLogin, disconnectEcho, reconnectEcho } from './services/echoService';
 import Auditoria from './pages/dashboard/Auditoria';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const loadUser = useAuthStore(state => state.loadUser);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
   // Handle loading state and network status
   useEffect(() => {
@@ -31,9 +33,33 @@ function App() {
     };
   }, []);
 
+  // Load user data
   useEffect(() => {
     loadUser();
   }, [loadUser]);
+
+  // Initialize Echo for real-time notifications when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('Setting up Echo for real-time notifications...');
+      setupEchoOnLogin();
+    } else {
+      console.log('Disconnecting Echo...');
+      disconnectEcho();
+    }
+
+    return () => {
+      disconnectEcho();
+    };
+  }, [isAuthenticated]);
+
+  // Reconnect Echo when network comes back online
+  useEffect(() => {
+    if (isOnline && isAuthenticated) {
+      console.log('Network is back online, reconnecting Echo...');
+      reconnectEcho();
+    }
+  }, [isOnline, isAuthenticated]);
 
   return (
     <BrowserRouter>

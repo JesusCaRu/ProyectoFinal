@@ -50,6 +50,17 @@ class Usuario extends Authenticatable
         'recordatorios_stock' => 'boolean'
     ];
 
+    /**
+     * Route notifications for the broadcast channel.
+     *
+     * @param  \Illuminate\Notifications\Notification  $notification
+     * @return string
+     */
+    public function routeNotificationForBroadcast($notification)
+    {
+        return 'App.Models.Usuario.'.$this->id;
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

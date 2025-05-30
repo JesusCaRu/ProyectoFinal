@@ -4,9 +4,11 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Producto;
+use App\Models\Sede;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\NotificationHelper;
 
 class ProductoController extends Controller
 {
@@ -128,6 +130,12 @@ class ProductoController extends Controller
                     'precio_venta' => $request->precio_venta
                 ]
             ]);
+
+            // Check if stock is below minimum and send notification if needed
+            if ($request->stock <= $producto->stock_minimo) {
+                $sede = Sede::find($request->sede_id);
+                NotificationHelper::sendLowStockNotification($producto, $sede, $request->stock);
+            }
 
             DB::commit();
             return response()->json([

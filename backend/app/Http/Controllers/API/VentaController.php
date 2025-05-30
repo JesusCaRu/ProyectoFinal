@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\NotificationHelper;
+use App\Models\Sede;
 
 class VentaController extends Controller
 {
@@ -132,6 +134,18 @@ class VentaController extends Controller
                         'sede_id' => $sedeId,
                         'nuevo_stock' => $nuevoStock
                     ]);
+
+                    // Verificar si el stock está por debajo del mínimo y enviar notificación
+                    if ($nuevoStock <= $item['producto']->stock_minimo) {
+                        $sede = Sede::find($sedeId);
+                        NotificationHelper::sendLowStockNotification($item['producto'], $sede, $nuevoStock);
+                        Log::info('Notificación de stock bajo enviada:', [
+                            'producto' => $item['producto']->nombre,
+                            'sede_id' => $sedeId,
+                            'stock_actual' => $nuevoStock,
+                            'stock_minimo' => $item['producto']->stock_minimo
+                        ]);
+                    }
 
                     // Registrar movimiento
                     Movimiento::create([

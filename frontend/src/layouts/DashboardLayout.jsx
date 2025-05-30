@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import UserProfileModal from '../components/UserProfileModal';
 import NotificationBell from '../components/NotificationBell';
+import SendMessageModal from '../components/SendMessageModal';
 import { 
   LayoutDashboard, 
   Package, 
@@ -21,7 +22,8 @@ import {
   ShieldUser,
   Store,
   DollarSign,
-  Building2
+  Building2,
+  MessageSquare
 } from 'lucide-react';
 
 const DashboardLayout = ({ children }) => {
@@ -29,6 +31,7 @@ const DashboardLayout = ({ children }) => {
   const [hoveringCollapse, setHoveringCollapse] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loadUser, logout } = useAuthStore();
@@ -275,14 +278,23 @@ const DashboardLayout = ({ children }) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Optional top header bar */}
-        <header className="h-16 border-b border-border flex items-center px-6 bg-bg-secondary">
+        <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-bg-secondary">
           <h2 className="text-lg font-medium text-accessibility-text">
             {navigation
               .flatMap(section => section.items)
               .find(item => location.pathname === item.path)?.name || 'Dashboard'}
           </h2>
-          <div className="flex items-center space-x-2 ml-auto mr-10">
-            <NotificationBell />
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsMessageModalOpen(true)}
+              className="p-2 rounded-full bg-interactive-component text-accessibility-text hover:bg-interactive-component-secondary transition-colors border border-border"
+              title="Enviar mensaje"
+            >
+              <MessageSquare className="h-6 w-6" />
+            </button>
+            <div className='mr-12'>
+              <NotificationBell />
+            </div>
           </div>
         </header>
         
@@ -299,6 +311,12 @@ const DashboardLayout = ({ children }) => {
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         user={user?.data}
+      />
+
+      {/* Send Message Modal */}
+      <SendMessageModal
+        isOpen={isMessageModalOpen}
+        onClose={() => setIsMessageModalOpen(false)}
       />
     </div>
   );

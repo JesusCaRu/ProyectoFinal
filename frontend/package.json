@@ -19,6 +19,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "frontend": "file:",
+    "laravel-echo": "^2.1.4",
     "lucide-react": "^0.506.0",
     "motion": "^12.9.4",
     "react": "^19.0.0",

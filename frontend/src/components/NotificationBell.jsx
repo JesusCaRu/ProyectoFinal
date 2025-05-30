@@ -1,107 +1,79 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Loader2, X, Check, ArrowRightLeft, Clock, Eye, AlertCircle, RefreshCcw } from 'lucide-react';
-import { useMensajeStore } from '../store/mensajeStore';
-import { useTransferenciaStore } from '../store/transferenciaStore';
-import { useAuthStore } from '../store/authStore';
+import { Link } from 'react-router-dom';
+import { 
+  Bell, 
+  Loader2, 
+  X, 
+  Check, 
+  ArrowRightLeft, 
+  Package, 
+  MessageSquare, 
+  Eye, 
+  AlertCircle, 
+  RefreshCcw, 
+  Trash2
+} from 'lucide-react';
+import { useNotificationStore } from '../store/notificationStore';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const NotificationBell = () => {
   const { 
-    mensajes, 
-    fetchMensajes, 
+    notifications, 
+    unreadCount,
+    fetchNotifications, 
+    markAsRead, 
+    markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications,
     isLoading, 
-    marcarLeido, 
-    eliminarMensaje,
-    marcarTodosLeidos,
-    error: mensajeError,
+    error,
     clearError
-  } = useMensajeStore();
-  const { updateTransferencia, fetchTransferencias } = useTransferenciaStore();
-  const { user } = useAuthStore();
+  } = useNotificationStore();
   const [open, setOpen] = useState(false);
   const bellRef = useRef(null);
-  const [localMensajes, setLocalMensajes] = useState([]);
   const [loadError, setLoadError] = useState(false);
   
-  // Usuario actual
-  const currentUserSedeId = user?.data?.sede_id;
-
-  // Manejar errores
+  // Handle errors
   useEffect(() => {
-    if (mensajeError) {
+    if (error) {
       setLoadError(true);
-      console.error('Error en notificaciones:', mensajeError);
+      console.error('Error en notificaciones:', error);
     } else {
       setLoadError(false);
     }
-  }, [mensajeError]);
+  }, [error]);
 
-  // Actualizar mensajes locales cuando cambian los mensajes del store
+  // Load notifications periodically and when panel opens
   useEffect(() => {
-    console.log('Mensajes recibidos:', mensajes);
-    console.log('ID de sede actual:', currentUserSedeId);
-    
-    if (mensajes && Array.isArray(mensajes)) {
-      // Filtrar mensajes para esta sede o mensajes globales
-      const filteredMensajes = mensajes.filter(msg => 
-        msg && (Number(msg.sede_id) === Number(currentUserSedeId))
-      );
-      console.log('Mensajes filtrados:', filteredMensajes);
-      setLocalMensajes(filteredMensajes);
-    } else {
-      // Si no hay mensajes o no es un array, inicializar como array vacío
-      console.log('No hay mensajes o no es un array');
-      setLocalMensajes([]);
-    }
-  }, [mensajes, currentUserSedeId]);
-
-  // Cargar mensajes periódicamente y cuando se abre el panel
-  useEffect(() => {
-    // Cargar mensajes al inicio
-    console.log('Cargando mensajes iniciales para sede:', currentUserSedeId);
-    fetchMensajes(currentUserSedeId)
-      .then(result => {
-        console.log('Resultado de fetchMensajes:', result);
-      })
+    // Load notifications initially
+    fetchNotifications({ perPage: 10 })
       .catch((error) => {
-        console.error('Error al cargar mensajes:', error);
+        console.error('Error al cargar notificaciones:', error);
         setLoadError(true);
       });
     
-    // Configurar intervalo para actualizar cada 10 segundos (más frecuente)
+    // Set up interval to update every 30 seconds
     const interval = setInterval(() => {
-      console.log('Actualizando mensajes para sede:', currentUserSedeId);
-      fetchMensajes(currentUserSedeId)
-        .then(result => {
-          console.log('Resultado de actualización:', result);
-        })
+      fetchNotifications({ perPage: 10 })
         .catch((error) => {
           console.error('Error en actualización periódica:', error);
           setLoadError(true);
         });
-    }, 10000);
+    }, 30000);
     
     return () => clearInterval(interval);
-  }, [fetchMensajes, currentUserSedeId]);
+  }, [fetchNotifications]);
 
-  // Actualizar cuando cambia el usuario o la sede
-  useEffect(() => {
-    if (currentUserSedeId) {
-      fetchMensajes(currentUserSedeId);
-    }
-  }, [currentUserSedeId, fetchMensajes]);
-
-  // Cargar mensajes adicionales cuando se abre el panel
+  // Load additional notifications when panel opens
   useEffect(() => {
     if (open) {
-      fetchMensajes(currentUserSedeId);
-      fetchTransferencias();
+      fetchNotifications({ perPage: 10 });
     }
-  }, [open, fetchMensajes, fetchTransferencias, currentUserSedeId]);
+  }, [open, fetchNotifications]);
 
-  // Cerrar el panel si se hace click fuera
+  // Close panel when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (bellRef.current && !bellRef.current.contains(event.target)) {
@@ -118,94 +90,47 @@ const NotificationBell = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
-  const handleMarcarLeido = async (mensajeId) => {
+  const handleMarkAsRead = async (notificationId) => {
     try {
-      await marcarLeido(mensajeId);
-      setLocalMensajes(prev => prev.map(msg => 
-        msg.id === mensajeId ? { ...msg, leido: true } : msg
-      ));
-      toast.success('Mensaje marcado como leído');
+      await markAsRead(notificationId);
+      toast.success('Notificación marcada como leída');
     } catch (error) {
-      console.error('Error al marcar mensaje como leído:', error);
-      toast.error('Error al marcar como leído');
+      console.error('Error al marcar como leída:', error);
+      toast.error('Error al marcar como leída');
     }
   };
 
-  const handleEliminar = async (mensajeId) => {
+  const handleDelete = async (notificationId) => {
     try {
-      await eliminarMensaje(mensajeId);
-      setLocalMensajes(prev => prev.filter(msg => msg.id !== mensajeId));
+      await deleteNotification(notificationId);
       toast.success('Notificación eliminada');
     } catch (error) {
-      console.error('Error al eliminar mensaje:', error);
-      toast.error('Error al eliminar la notificación');
+      console.error('Error al eliminar notificación:', error);
+      toast.error('Error al eliminar notificación');
     }
   };
 
-  const handleAceptarTransferencia = async (mensajeId, transferenciaId) => {
+  const handleMarkAllAsRead = async () => {
     try {
-      // Verificar que el usuario pertenece a la sede destino
-      const transferencia = await getTransferenciaFromMessage(mensajeId);
-      
-      if (!transferencia) {
-        toast.error('Transferencia no encontrada');
-        return;
-      }
-      
-      if (currentUserSedeId !== transferencia.sede_destino_id) {
-        toast.error('Solo la sede destino puede aceptar transferencias');
-        return;
-      }
-      
-      await updateTransferencia(transferenciaId, { estado: 'recibido' });
-      await marcarLeido(mensajeId);
-      
-      setLocalMensajes(prev => prev.map(msg => 
-        msg.id === mensajeId ? { ...msg, leido: true } : msg
-      ));
-      
-      toast.success('Transferencia aceptada correctamente');
-      fetchTransferencias();
+      await markAllAsRead();
+      toast.success('Todas las notificaciones marcadas como leídas');
     } catch (error) {
-      console.error('Error al aceptar transferencia:', error);
-      toast.error('Error al aceptar la transferencia');
+      console.error('Error al marcar todas como leídas:', error);
+      toast.error('Error al marcar notificaciones');
     }
   };
 
-  // Función para extraer el ID de transferencia del mensaje
-  const getTransferenciaId = (mensaje) => {
-    const match = mensaje.mensaje.match(/transferencia #(\d+)/i);
-    return match ? match[1] : null;
-  };
-  
-  // Función para obtener información de la transferencia desde un mensaje
-  const getTransferenciaFromMessage = async (mensajeId) => {
-    const mensaje = localMensajes.find(m => m && m.id === mensajeId);
-    if (!mensaje) return null;
-    
-    const transferenciaId = getTransferenciaId(mensaje);
-    if (!transferenciaId) return null;
-    
+  const handleDeleteAll = async () => {
     try {
-      const { fetchTransferencias } = useTransferenciaStore.getState();
-      await fetchTransferencias();
-      const { transferencias } = useTransferenciaStore.getState();
-      
-      if (!transferencias || !Array.isArray(transferencias)) {
-        return null;
-      }
-      
-      return transferencias.find(t => t && t.id === Number(transferenciaId));
+      await deleteAllNotifications();
+      toast.success('Todas las notificaciones eliminadas');
     } catch (error) {
-      console.error('Error al obtener transferencia:', error);
-      return null;
+      console.error('Error al eliminar todas las notificaciones:', error);
+      toast.error('Error al eliminar notificaciones');
     }
   };
 
-  // Badge si hay mensajes no leídos
-  const unreadCount = localMensajes.filter(msg => !msg.leido).length;
-
-  // Formatear fecha
+  // Format date
   const formatDate = (dateString) => {
     try {
       return format(new Date(dateString), "dd/MM/yy HH:mm", { locale: es });
@@ -217,18 +142,17 @@ const NotificationBell = () => {
   const handleRetryLoad = () => {
     setLoadError(false);
     clearError();
-    console.log('Reintentando carga de mensajes...');
-    fetchMensajes(currentUserSedeId).catch(() => {
+    console.log('Reintentando carga de notificaciones...');
+    fetchNotifications({ perPage: 10 }).catch(() => {
       setLoadError(true);
     });
   };
 
   const handleForceRefresh = () => {
-    console.log('Forzando recarga de mensajes...');
+    console.log('Forzando recarga de notificaciones...');
     toast.success('Actualizando notificaciones...');
-    fetchMensajes(currentUserSedeId)
-      .then(result => {
-        console.log('Resultado de recarga forzada:', result);
+    fetchNotifications({ perPage: 10 })
+      .then(() => {
         toast.success('Notificaciones actualizadas');
       })
       .catch(error => {
@@ -236,6 +160,21 @@ const NotificationBell = () => {
         toast.error('Error al actualizar notificaciones');
         setLoadError(true);
       });
+  };
+
+  // Get icon based on notification type
+  const getNotificationIcon = (notification) => {
+    const type = notification.data?.type || '';
+    
+    if (type.includes('stock')) {
+      return <Package className="h-5 w-5 text-warning shrink-0 mt-0.5" />;
+    } else if (type.includes('transfer')) {
+      return <ArrowRightLeft className="h-5 w-5 text-info shrink-0 mt-0.5" />;
+    } else if (type.includes('message')) {
+      return <MessageSquare className="h-5 w-5 text-solid-color shrink-0 mt-0.5" />;
+    } else {
+      return <Bell className="h-5 w-5 text-solid-color shrink-0 mt-0.5" />;
+    }
   };
 
   return (
@@ -267,6 +206,14 @@ const NotificationBell = () => {
               >
                 <RefreshCcw className="h-4 w-4" />
               </button>
+              <button 
+                onClick={handleDeleteAll}
+                className="p-1 rounded-full hover:bg-error/20 text-error"
+                title="Eliminar todas las notificaciones"
+                disabled={isLoading || notifications.length === 0}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
           </div>
           
@@ -283,7 +230,7 @@ const NotificationBell = () => {
                   <span>Reintentar</span>
                 </button>
               </div>
-            ) : (!localMensajes || localMensajes.length === 0) && !isLoading ? (
+            ) : (notifications.length === 0) && !isLoading ? (
               <div className="p-6 text-text-tertiary text-center">
                 <Bell className="h-10 w-10 mx-auto mb-2 opacity-30" />
                 <p>No hay notificaciones</p>
@@ -297,53 +244,41 @@ const NotificationBell = () => {
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {localMensajes.map((msg) => {
-                  if (!msg) return null;
+                {notifications.map((notification) => {
+                  if (!notification) return null;
                   
-                  const isTransferencia = msg.mensaje && msg.mensaje.toLowerCase().includes('transferencia');
-                  const transferenciaId = isTransferencia ? getTransferenciaId(msg) : null;
-                  const isUnread = !msg.leido;
+                  const isUnread = !notification.read_at;
+                  const notificationData = notification.data || {};
                   
                   return (
                     <div 
-                      key={msg.id} 
+                      key={notification.id} 
                       className={`p-4 hover:bg-interactive-component/20 transition-colors ${isUnread ? 'bg-interactive-component/10' : ''}`}
                     >
                       <div className="flex justify-between items-start gap-3">
                         <div className={`text-sm flex-1 ${isUnread ? 'font-medium text-accessibility-text' : 'text-text-tertiary'}`}>
                           <div className="flex items-start gap-2">
-                            {isTransferencia ? (
-                              <ArrowRightLeft className="h-5 w-5 text-info shrink-0 mt-0.5" />
-                            ) : (
-                              <Bell className="h-5 w-5 text-solid-color shrink-0 mt-0.5" />
-                            )}
-                            <span>{msg.mensaje}</span>
+                            {getNotificationIcon(notification)}
+                            <div>
+                              <p className="font-medium mb-0.5">{notificationData.title || 'Notificación'}</p>
+                              <p>{notificationData.message || notification.data}</p>
+                            </div>
                           </div>
                         </div>
                         
                         <div className="flex gap-1 shrink-0">
-                          {isTransferencia && !msg.leido && transferenciaId && (
+                          {isUnread && (
                             <button
-                              onClick={() => handleAceptarTransferencia(msg.id, transferenciaId)}
-                              className="p-1.5 rounded-full hover:bg-success/20 text-success"
-                              title="Aceptar transferencia"
-                            >
-                              <Check className="h-4 w-4" />
-                            </button>
-                          )}
-                          
-                          {!msg.leido && (
-                            <button
-                              onClick={() => handleMarcarLeido(msg.id)}
+                              onClick={() => handleMarkAsRead(notification.id)}
                               className="p-1.5 rounded-full hover:bg-info/20 text-info"
-                              title="Marcar como leído"
+                              title="Marcar como leída"
                             >
                               <Eye className="h-4 w-4" />
                             </button>
                           )}
                           
                           <button
-                            onClick={() => handleEliminar(msg.id)}
+                            onClick={() => handleDelete(notification.id)}
                             className="p-1.5 rounded-full hover:bg-error/20 text-error"
                             title="Eliminar notificación"
                           >
@@ -353,9 +288,28 @@ const NotificationBell = () => {
                       </div>
                       
                       <div className="text-xs text-text-tertiary mt-2 flex justify-between">
-                        <span>De: {msg.usuario?.nombre || 'Sistema'}</span>
-                        <span>{formatDate(msg.created_at)}</span>
+                        <span>
+                          {notificationData.sender_name && `De: ${notificationData.sender_name}`}
+                        </span>
+                        <span>{formatDate(notification.created_at)}</span>
                       </div>
+                      
+                      {notificationData.url && (
+                        <div className="mt-2">
+                          <a 
+                            href={notificationData.url} 
+                            className="text-xs text-solid-color hover:underline"
+                            onClick={() => {
+                              if (isUnread) {
+                                handleMarkAsRead(notification.id);
+                              }
+                              setOpen(false);
+                            }}
+                          >
+                            Ver detalles →
+                          </a>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -363,22 +317,23 @@ const NotificationBell = () => {
             )}
           </div>
           
-          {localMensajes && localMensajes.length > 0 && !loadError && (
-            <div className="p-3 border-t border-border bg-interactive-component/10 text-center">
+          {notifications.length > 0 && !loadError && (
+            <div className="p-3 border-t border-border bg-interactive-component/10 text-center flex justify-between items-center">
               <button 
-                onClick={() => {
-                  marcarTodosLeidos(currentUserSedeId)
-                    .then(() => {
-                      setLocalMensajes(prev => prev.map(msg => ({ ...msg, leido: true })));
-                      toast.success('Todas las notificaciones marcadas como leídas');
-                    })
-                    .catch(() => toast.error('Error al marcar notificaciones'));
-                }}
+                onClick={handleMarkAllAsRead}
                 className="text-xs text-solid-color hover:underline"
-                disabled={isLoading}
+                disabled={isLoading || unreadCount === 0}
               >
                 {isLoading ? 'Procesando...' : 'Marcar todas como leídas'}
               </button>
+              
+              <Link 
+                to="/dashboard/notificaciones" 
+                className="text-xs text-solid-color hover:underline"
+                onClick={() => setOpen(false)}
+              >
+                Ver todas las notificaciones →
+              </Link>
             </div>
           )}
         </div>

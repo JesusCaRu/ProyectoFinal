@@ -22,6 +22,7 @@ import CatalogoProductos from '../pages/dashboard/CatalogoProductos';
 import HistorialVentas from '../pages/dashboard/HistorialVentas';
 import { useAuthStore } from '../store/authStore';
 import HistorialMovimientos from '../pages/dashboard/HistorialMovimientos';
+import NotificationsPage from '../pages/dashboard/NotificationsPage';
 
 const DashboardRouter = () => {
   const { user } = useAuthStore();
@@ -131,7 +132,12 @@ const AppRoutes = () => {
                 </RoleProtectedRoute>
               } />
 
-              {/* Rutas comunes */}
+              {/* Ruta de notificaciones (accesible para todos los roles) */}
+              <Route path="notificaciones" element={
+                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor', 'Almacenista']}>
+                  <NotificationsPage />
+                </RoleProtectedRoute>
+              } />
             </Routes>
           </DashboardLayout>
         </ProtectedRoute>

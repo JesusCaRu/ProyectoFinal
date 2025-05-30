@@ -5,22 +5,18 @@ import {
   Package, 
   MessageSquare, 
   ArrowRightLeft,
-  Plus,
   Search,
   Filter,
-  Send,
   Download,
   Printer,
   Check,
-  AlertCircle,
-  Bell
+  AlertCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Modal from '../../components/Modal';
 import { useSedeStore } from '../../store/sedeStore';
 import { useProductStore } from '../../store/productStore';
 import { useTransferenciaStore } from '../../store/transferenciaStore';
-import { useMensajeStore } from '../../store/mensajeStore';
 import { useAuthStore } from '../../store/authStore';
 
 const Sedes = () => {
@@ -34,17 +30,9 @@ const Sedes = () => {
     isLoading: isTransferLoading,
     error: transferError 
   } = useTransferenciaStore();
-  const { 
-    createMensaje, 
-    fetchMensajes,
-    isLoading: isMensajeLoading, 
-    error: mensajeError 
-  } = useMensajeStore();
   const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
-  const [message, setMessage] = useState('');
   const [transferData, setTransferData] = useState({
     origen: '',
     destino: '',
@@ -160,71 +148,11 @@ const Sedes = () => {
     };
     const ok = await createTransferencia(data);
     if (ok) {
-      // Crear mensaje de notificación para la sede destino
-      const sedeOrigen = sedes.find(s => s.id === Number(transferData.origen));
-      const mensaje = `Nueva transferencia #${ok.id} pendiente: ${transferData.cantidad} unidades de ${producto.nombre} desde ${sedeOrigen.nombre}`;
-      await createMensaje(mensaje, transferData.destino);
-      
       toast.success('Transferencia iniciada correctamente');
       setIsTransferModalOpen(false);
       setTransferData({ origen: '', destino: '', producto: '', cantidad: '' });
     } else {
       toast.error('Error al iniciar la transferencia');
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!message.trim()) {
-      toast.error('El mensaje no puede estar vacío');
-      return;
-    }
-    
-    try {
-      // Enviar mensaje a todas las sedes disponibles
-      const promises = sedes.map(sede => 
-        createMensaje(message, sede.id)
-      );
-      
-      await Promise.all(promises);
-      toast.success('Mensaje enviado a todas las sedes');
-      setIsMessageModalOpen(false);
-      setMessage('');
-    } catch (error) {
-      console.error('Error al enviar mensaje:', error);
-      toast.error('Error al enviar el mensaje');
-    }
-  };
-
-  // Función para enviar un mensaje de prueba
-  const handleSendTestMessage = async () => {
-    try {
-      console.log('Enviando mensaje de prueba...');
-      const testMessage = `Mensaje de prueba: ${new Date().toLocaleTimeString()}`;
-      
-      // Obtener la sede del usuario actual
-      const targetSedeId = user?.data?.sede_id;
-      
-      if (!targetSedeId) {
-        toast.error('No se pudo determinar la sede del usuario');
-        return;
-      }
-      
-      console.log('Enviando mensaje a sede:', targetSedeId);
-      
-      // Enviar el mensaje
-      const result = await createMensaje(testMessage, targetSedeId);
-      console.log('Resultado de envío de prueba:', result);
-      
-      if (result) {
-        toast.success('Mensaje de prueba enviado correctamente');
-        // Forzar actualización de mensajes
-        await fetchMensajes(targetSedeId);
-      } else {
-        toast.error('Error al enviar mensaje de prueba');
-      }
-    } catch (error) {
-      console.error('Error al enviar mensaje de prueba:', error);
-      toast.error('Error al enviar mensaje de prueba: ' + error.message);
     }
   };
 
@@ -243,25 +171,11 @@ const Sedes = () => {
         </div>
         <div className="flex space-x-4">
           <button
-            onClick={handleSendTestMessage}
-            className="px-4 py-2 bg-warning hover:bg-warning/80 text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
-          >
-            <Bell className="h-5 w-5" />
-            <span>Enviar Notificación Prueba</span>
-          </button>
-          <button
             onClick={() => setIsTransferModalOpen(true)}
             className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
           >
             <ArrowRightLeft className="h-5 w-5" />
             <span>Nueva Transferencia</span>
-          </button>
-          <button
-            onClick={() => setIsMessageModalOpen(true)}
-            className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
-          >
-            <MessageSquare className="h-5 w-5" />
-            <span>Enviar Mensaje</span>
           </button>
         </div>
       </div>
@@ -440,15 +354,6 @@ const Sedes = () => {
                           >
                             <ArrowRightLeft className="h-5 w-5" />
                           </button>
-                          <button
-                            onClick={() => {
-                              setIsMessageModalOpen(true);
-                            }}
-                            className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
-                            title="Enviar mensaje"
-                          >
-                            <MessageSquare className="h-5 w-5" />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -549,49 +454,6 @@ const Sedes = () => {
         {transferError && (
           <div className="mt-4 text-center text-error">
             {transferError}
-          </div>
-        )}
-      </Modal>
-
-      {/* Message Modal */}
-      <Modal
-        isOpen={isMessageModalOpen}
-        onClose={() => setIsMessageModalOpen(false)}
-        title="Enviar Mensaje a Todas las Sedes"
-        size="md"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-text-tertiary mb-1">
-              Mensaje
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent h-32"
-              placeholder="Escriba su mensaje aquí..."
-            />
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end space-x-4">
-          <button
-            onClick={() => setIsMessageModalOpen(false)}
-            className="px-4 py-2 text-accessibility-text hover:bg-interactive-component rounded-lg transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSendMessage}
-            disabled={isMensajeLoading}
-            className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg transition-colors flex items-center space-x-2"
-          >
-            <Send className="h-5 w-5" />
-            {isMensajeLoading ? 'Enviando...' : 'Enviar Mensaje'}
-          </button>
-        </div>
-        {mensajeError && (
-          <div className="mt-4 text-center text-error">
-            {mensajeError}
           </div>
         )}
       </Modal>
