@@ -3,25 +3,40 @@ import { useProductStore } from '../store/productStore';
 import { useSedeStore } from '../store/sedeStore';
 import { useCategoryStore } from '../store/categoryStore';
 import { useBrandStore } from '../store/brandStore';
+import { useAuthStore } from '../store/authStore';
 
 const ProductForm = ({ product, onClose }) => {
-  const { createProduct, updateProduct } = useProductStore();
+  const { createProduct, updateProduct, products } = useProductStore();
   const { sedes, fetchSedes } = useSedeStore();
   const { categories, fetchCategories } = useCategoryStore();
   const { brands, fetchBrands } = useBrandStore();
+  const { user } = useAuthStore();
+  
+  // Extraer el ID de la sede del usuario
+  const userSedeId = user?.data?.sede_id || user?.data?.sede?.id;  
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
+    sku: '',
+    tipo_producto: 'ROB', // Por defecto: Robot
     categoria_id: '',
     marca_id: '',
     stock: 0,
     stock_minimo: 0,
     precio_compra: 0,
     precio_venta: 0,
-    sede_id: ''
+    sede_id: userSedeId || ''
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Tipos de productos disponibles
+  const tiposProducto = [
+    { id: 'ROB', nombre: 'Robot' },
+    { id: 'REP', nombre: 'Repuesto' },
+    { id: 'ACC', nombre: 'Accesorio' },
+    { id: 'OTR', nombre: 'Otro' }
+  ];
 
   useEffect(() => {
     fetchSedes();
@@ -29,28 +44,91 @@ const ProductForm = ({ product, onClose }) => {
     fetchBrands();
   }, [fetchSedes, fetchCategories, fetchBrands]);
 
+  // Actualizar la sede_id cuando se carga el usuario
+  useEffect(() => {
+    if (userSedeId) {
+      setFormData(prev => ({
+        ...prev,
+        sede_id: userSedeId
+      }));
+    }
+  }, [userSedeId]);
+
+  // Generar SKU automáticamente cuando cambia el tipo de producto
+  useEffect(() => {
+    if (!product && formData.tipo_producto) {
+      // Solo generar SKU para nuevos productos, no para ediciones
+      generateSku(formData.tipo_producto);
+    }
+  }, [formData.tipo_producto, product, products]);
+
   useEffect(() => {
     if (product) {
       setFormData({
         nombre: product.nombre || '',
         descripcion: product.descripcion || '',
+        sku: product.sku || '',
+        tipo_producto: product.tipo_producto || 'ROB',
         categoria_id: product.categoria_id || '',
         marca_id: product.marca_id || '',
         stock: product.stock || 0,
         stock_minimo: product.stock_minimo || 0,
         precio_compra: product.precio_compra || 0,
         precio_venta: product.precio_venta || 0,
-        sede_id: product.sede_id || ''
+        sede_id: userSedeId || product.sede_id || ''
       });
     }
-  }, [product]);
+  }, [product, userSedeId]);
+
+  // Función para generar el SKU automáticamente
+  const generateSku = (tipoProducto) => {
+    // Filtrar productos del mismo tipo
+    const productosDelMismoTipo = products.filter(p => {
+      const skuPrefix = p.sku ? p.sku.split('-')[0] : '';
+      return skuPrefix === tipoProducto;
+    });
+
+    // Encontrar el número más alto actual
+    let maxNumber = 0;
+    productosDelMismoTipo.forEach(p => {
+      if (p.sku) {
+        const parts = p.sku.split('-');
+        if (parts.length === 2) {
+          const num = parseInt(parts[1], 10);
+          if (!isNaN(num) && num > maxNumber) {
+            maxNumber = num;
+          }
+        }
+      }
+    });
+
+    // Generar nuevo número
+    const newNumber = maxNumber + 1;
+    const formattedNumber = String(newNumber).padStart(3, '0'); // Asegurar que tenga 3 dígitos (001, 002, etc.)
+    const newSku = `${tipoProducto}-${formattedNumber}`;
+
+    setFormData(prev => ({
+      ...prev,
+      sku: newSku
+    }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name.includes('precio') || name.includes('stock') ? Number(value) : value
-    }));
+    
+    // Para el cambio de tipo de producto, actualizar el SKU
+    if (name === 'tipo_producto') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: name.includes('precio') || name.includes('stock') ? Number(value) : value
+      }));
+    }
+    
     // Clear error when field is modified
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
@@ -63,6 +141,7 @@ const ProductForm = ({ product, onClose }) => {
     if (!formData.categoria_id) newErrors.categoria_id = 'La categoría es requerida';
     if (!formData.marca_id) newErrors.marca_id = 'La marca es requerida';
     if (!formData.sede_id) newErrors.sede_id = 'La sede es requerida';
+    if (!formData.sku) newErrors.sku = 'El SKU es requerido';
     if (formData.stock < 0) newErrors.stock = 'El stock no puede ser negativo';
     if (formData.stock_minimo < 0) newErrors.stock_minimo = 'El stock mínimo no puede ser negativo';
     if (formData.precio_compra < 0) newErrors.precio_compra = 'El precio de compra no puede ser negativo';
@@ -96,6 +175,11 @@ const ProductForm = ({ product, onClose }) => {
     }
   };
 
+  // Obtener el nombre de la sede actual para mostrar en el formulario
+  const currentSedeName = userSedeId 
+    ? sedes.find(sede => sede.id === parseInt(userSedeId))?.nombre || 'Tu sede actual'
+    : 'Sede no determinada';
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {errors.submit && (
@@ -103,6 +187,12 @@ const ProductForm = ({ product, onClose }) => {
           {errors.submit}
         </div>
       )}
+
+      <div className="bg-bg-secondary p-3 rounded-lg mb-4">
+        <p className="text-sm text-text-secondary">
+          Este producto se creará en: <strong>{currentSedeName}</strong>
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -120,6 +210,53 @@ const ProductForm = ({ product, onClose }) => {
           />
           {errors.nombre && (
             <p className="mt-1 text-sm text-error">{errors.nombre}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">
+            Tipo de Producto
+          </label>
+          <select
+            name="tipo_producto"
+            value={formData.tipo_producto}
+            onChange={handleChange}
+            disabled={!!product} // Deshabilitar en modo edición
+            className={`w-full px-3 py-2 bg-bg border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color ${
+              errors.tipo_producto ? 'border-error' : 'border-border'
+            } ${product ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            {tiposProducto.map(tipo => (
+              <option key={tipo.id} value={tipo.id}>
+                {tipo.nombre} ({tipo.id})
+              </option>
+            ))}
+          </select>
+          {product && (
+            <p className="mt-1 text-xs text-text-tertiary">
+              El tipo de producto no se puede cambiar una vez creado.
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">
+            SKU
+          </label>
+          <input
+            type="text"
+            name="sku"
+            value={formData.sku}
+            readOnly
+            className={`w-full px-3 py-2 bg-bg-secondary border rounded-lg focus:outline-none ${
+              errors.sku ? 'border-error' : 'border-border'
+            } cursor-not-allowed`}
+          />
+          <p className="mt-1 text-xs text-text-tertiary">
+            El SKU se genera automáticamente basado en el tipo de producto.
+          </p>
+          {errors.sku && (
+            <p className="mt-1 text-sm text-error">{errors.sku}</p>
           )}
         </div>
 
@@ -224,7 +361,7 @@ const ProductForm = ({ product, onClose }) => {
 
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-1">
-            Precio de Compra
+            Precio de Compra (€)
           </label>
           <input
             type="number"
@@ -244,7 +381,7 @@ const ProductForm = ({ product, onClose }) => {
 
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-1">
-            Precio de Venta
+            Precio de Venta (€)
           </label>
           <input
             type="number"
@@ -262,29 +399,12 @@ const ProductForm = ({ product, onClose }) => {
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Sede
-          </label>
-          <select
-            name="sede_id"
-            value={formData.sede_id}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 bg-bg border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color ${
-              errors.sede_id ? 'border-error' : 'border-border'
-            }`}
-          >
-            <option value="">Seleccionar sede</option>
-            {sedes.map(sede => (
-              <option key={sede.id} value={sede.id}>
-                {sede.nombre}
-              </option>
-            ))}
-          </select>
-          {errors.sede_id && (
-            <p className="mt-1 text-sm text-error">{errors.sede_id}</p>
-          )}
-        </div>
+        {/* Campo oculto para la sede */}
+        <input 
+          type="hidden" 
+          name="sede_id" 
+          value={formData.sede_id} 
+        />
       </div>
 
       <div className="flex justify-end space-x-3 pt-4">

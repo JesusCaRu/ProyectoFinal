@@ -130,7 +130,7 @@ const CatalogoProductos = () => {
                                     <div className="pt-4 border-t border-border">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xl font-bold text-solid-color">
-                                                    ${precioVenta.toFixed(2)}
+                                                    €{precioVenta.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                                             </span>
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-sm font-medium ${

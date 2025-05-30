@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboardStore } from '../../store/dashboardStore';
-import { Settings, Package, DollarSign, ShoppingCart, Users, TrendingUp, TrendingDown } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
+import { useSedeStore } from '../../store/sedeStore';
+import { Settings, Package, DollarSign, ShoppingCart, Users, TrendingUp, TrendingDown, Building2 } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { toast } from 'react-hot-toast';
 
@@ -13,17 +15,28 @@ const Dashboard = () => {
         error: dashboardError,
         fetchDashboardData
     } = useDashboardStore();
+    const { user } = useAuthStore();
+    const { fetchSedes } = useSedeStore();
+    
+    // Obtener la sede del usuario actual
+    const sedeId = user?.data?.sede?.id;
+    const sedeName = user?.data?.sede?.nombre || 'No asignada';
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                await fetchDashboardData();
+                if (sedeId) {
+                    await fetchSedes();
+                    await fetchDashboardData(sedeId);
+                } else {
+                    toast.error('No se pudo determinar la sede actual');
+                }
             } catch {
                 toast.error('Error al cargar los datos del dashboard');
             }
         };
         loadData();
-    }, [fetchDashboardData]);
+    }, [fetchDashboardData, sedeId, fetchSedes]);
 
     if (dashboardError) {
         return (
@@ -44,7 +57,17 @@ const Dashboard = () => {
                         <div className="h-8 w-24 bg-interactive-component animate-pulse rounded mt-2"></div>
                     ) : (
                         <p className="text-2xl font-semibold text-accessibility-text mt-2">
-                            {typeof value === 'number' && title.includes('Ventas') ? formatCurrency(value) : value}
+                            {(() => {
+                                if (typeof value === 'number') {
+                                    // Si es un valor monetario (ventas o compras)
+                                    if (title.includes('Ventas') || title.includes('Compras')) {
+                                        return formatCurrency(value);
+                                    }
+                                    // Otros valores numéricos
+                                    return value.toLocaleString('es-ES');
+                                }
+                                return value || '0';
+                            })()}
                         </p>
                     )}
                 </div>
@@ -62,7 +85,7 @@ const Dashboard = () => {
                     <span className={`text-sm font-medium ml-1 ${
                         trend.tendencia === 'up' ? 'text-success' : 'text-error'
                     }`}>
-                        {Math.abs(trend.valor).toFixed(1)}%
+                        {Math.abs(trend.valor).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%
                     </span>
                     <span className="text-sm text-text-tertiary ml-1">vs mes anterior</span>
                 </div>
@@ -111,9 +134,18 @@ const Dashboard = () => {
                                 <tr key={index} className="hover:bg-interactive-component/50">
                                     {Object.values(item).map((value, i) => (
                                         <td key={i} className="px-6 py-4 whitespace-nowrap text-sm text-accessibility-text">
-                                            {typeof value === 'number' && !Number.isInteger(value)
-                                                ? formatCurrency(value)
-                                                : value}
+                                            {(() => {
+                                                if (typeof value === 'number') {
+                                                    // Para valores monetarios (con decimales)
+                                                    if (!Number.isInteger(value)) {
+                                                        return formatCurrency(value);
+                                                    }
+                                                    // Para valores enteros
+                                                    return value.toLocaleString('es-ES');
+                                                }
+                                                // Para cualquier otro tipo de valor
+                                                return value;
+                                            })()}
                                         </td>
                                     ))}
                                 </tr>
@@ -128,7 +160,13 @@ const Dashboard = () => {
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-semibold text-accessibility-text">Dashboard</h1>
+                <div>
+                    <h1 className="text-2xl font-semibold text-accessibility-text">Dashboard</h1>
+                    <div className="flex items-center mt-1 text-sm text-text-tertiary">
+                        <Building2 className="h-4 w-4 mr-1" />
+                        <span>Mostrando datos para la sede: <span className="font-medium">{sedeName}</span></span>
+                    </div>
+                </div>
                 <button
                     onClick={() => navigate('/dashboard/configuracion')}
                     className="inline-flex items-center px-4 py-2 border border-border rounded-lg shadow-sm text-sm font-medium text-accessibility-text bg-bg-secondary hover:bg-interactive-component transition-colors duration-200"
@@ -141,27 +179,27 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <StatCard
                     title="Productos en Stock"
-                    value={stats?.totalProductos || 0}
+                    value={stats?.totalProductos ? Number(stats.totalProductos) : 0}
                     icon={Package}
                     trend={stats?.cambios?.productos}
                     isLoading={isLoading}
                 />
                 <StatCard
                     title="Ventas Totales"
-                    value={stats?.totalVentas || 0}
+                    value={stats?.totalVentas ? Number(stats.totalVentas) : 0}
                     icon={DollarSign}
                     trend={stats?.cambios?.ventas}
                     isLoading={isLoading}
                 />
                 <StatCard
                     title="Compras Totales"
-                    value={stats?.totalCompras || 0}
+                    value={stats?.totalCompras ? Number(stats.totalCompras) : 0}
                     icon={ShoppingCart}
                     isLoading={isLoading}
                 />
                 <StatCard
                     title="Usuarios Activos"
-                    value={stats?.totalUsuarios || 0}
+                    value={stats?.totalUsuarios ? Number(stats.totalUsuarios) : 0}
                     icon={Users}
                     trend={stats?.cambios?.usuarios}
                     isLoading={isLoading}
@@ -173,21 +211,51 @@ const Dashboard = () => {
                     <TableCard
                         title="Productos Más Vendidos"
                         headers={['Producto', 'Unidades', 'Total']}
-                        data={stats?.productosMasVendidos?.map(p => ({
-                            nombre: p.nombre,
-                            total_vendido: p.total_vendido,
-                            total_ingresos: p.total_ingresos
-                        })) || []}
+                        data={(stats?.productosMasVendidos || []).map(p => {
+                            // Validación y conversión segura de valores
+                            const totalVendido = typeof p.total_vendido === 'number' 
+                                ? p.total_vendido 
+                                : typeof p.total_vendido === 'string' && !isNaN(p.total_vendido)
+                                ? Number(p.total_vendido)
+                                : 0;
+                            
+                            const totalIngresos = typeof p.total_ingresos === 'number' 
+                                ? p.total_ingresos 
+                                : typeof p.total_ingresos === 'string' && !isNaN(p.total_ingresos)
+                                ? Number(p.total_ingresos)
+                                : 0;
+                            
+                            return {
+                                nombre: p.nombre || 'Sin nombre',
+                                total_vendido: totalVendido,
+                                total_ingresos: totalIngresos
+                            };
+                        })}
                         isLoading={isLoading}
                     />
                     <TableCard
                         title="Productos con Stock Bajo"
                         headers={['Producto', 'Stock Actual', 'Stock Mínimo']}
-                        data={stats?.productosStockBajo?.data?.map(p => ({
-                            nombre: p.nombre,
-                            stock: p.stock,
-                            stock_minimo: p.stock_minimo
-                        })) || []}
+                        data={(stats?.productosStockBajo?.data || []).map(p => {
+                            // Validación y conversión segura de valores
+                            const stock = typeof p.stock === 'number' 
+                                ? p.stock 
+                                : typeof p.stock === 'string' && !isNaN(p.stock)
+                                ? Number(p.stock)
+                                : 0;
+                            
+                            const stockMinimo = typeof p.stock_minimo === 'number' 
+                                ? p.stock_minimo 
+                                : typeof p.stock_minimo === 'string' && !isNaN(p.stock_minimo)
+                                ? Number(p.stock_minimo)
+                                : 0;
+                            
+                            return {
+                                nombre: p.nombre || 'Sin nombre',
+                                stock: stock,
+                                stock_minimo: stockMinimo
+                            };
+                        })}
                         isLoading={isLoading}
                     />
                 </div>
@@ -195,23 +263,54 @@ const Dashboard = () => {
                     <TableCard
                         title="Últimas Ventas"
                         headers={['ID', 'Total', 'Usuario', 'Fecha']}
-                        data={stats?.ultimasVentas?.map(v => ({
-                            id: v.id,
-                            total: v.total,
-                            usuario: v.usuario,
-                            fecha: new Date(v.fecha).toLocaleDateString()
-                        })) || []}
+                        data={(stats?.ultimasVentas || []).map(v => {
+                            // Validación y conversión segura de valores
+                            const total = typeof v.total === 'number' 
+                                ? v.total 
+                                : typeof v.total === 'string' && !isNaN(v.total)
+                                ? Number(v.total)
+                                : 0;
+                            
+                            return {
+                                id: v.id,
+                                total: total,
+                                usuario: v.usuario || 'Sin usuario',
+                                fecha: (() => {
+                                    try {
+                                        if (!v.fecha) return 'N/A';
+                                        const date = new Date(v.fecha);
+                                        if (isNaN(date.getTime())) return 'N/A';
+                                        return date.toLocaleDateString('es-ES', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                        });
+                                    } catch {
+                                        return 'Fecha inválida';
+                                    }
+                                })()
+                            };
+                        })}
                         isLoading={isLoading}
                     />
                     <TableCard
                         title="Últimos Movimientos"
                         headers={['Tipo', 'Cantidad', 'Producto', 'Usuario']}
-                        data={stats?.ultimosMovimientos?.data?.map(m => ({
-                            tipo: m.tipo,
-                            cantidad: m.cantidad,
-                            producto: m.producto,
-                            usuario: m.usuario
-                        })) || []}
+                        data={(stats?.ultimosMovimientos?.data || []).map(m => {
+                            // Validación y conversión segura de valores
+                            const cantidad = typeof m.cantidad === 'number' 
+                                ? m.cantidad 
+                                : typeof m.cantidad === 'string' && !isNaN(m.cantidad)
+                                ? Number(m.cantidad)
+                                : 0;
+                            
+                            return {
+                                tipo: m.tipo || 'Sin tipo',
+                                cantidad: cantidad,
+                                producto: m.producto || 'Sin producto',
+                                usuario: m.usuario || 'Sin usuario'
+                            };
+                        })}
                         isLoading={isLoading}
                     />
                 </div>

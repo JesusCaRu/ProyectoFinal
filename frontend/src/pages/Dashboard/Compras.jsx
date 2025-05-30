@@ -265,7 +265,7 @@ const Compras = () => {
                                 </div>
                                 <span className="text-sm font-medium text-success">
                                     {resumen?.total_monto > 0 ? 
-                                        `+${((resumen.promedio_compra / resumen.total_monto) * 100).toFixed(1)}%` : 
+                                        `+${((resumen.promedio_compra / resumen.total_monto) * 100).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%` : 
                                         '0%'}
                                 </span>
                             </div>
@@ -288,7 +288,7 @@ const Compras = () => {
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Compras Realizadas</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {resumen?.total_compras || 0}
+                                {resumen?.total_compras ? resumen.total_compras.toLocaleString('es-ES') : 0}
                             </p>
                         </_motion.div>
 
@@ -322,7 +322,7 @@ const Compras = () => {
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Productos Comprados</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {productosMasComprados?.reduce((sum, p) => sum + p.total_comprado, 0) || 0}
+                                {(productosMasComprados?.reduce((sum, p) => sum + p.total_comprado, 0) || 0).toLocaleString('es-ES')}
                             </p>
                         </_motion.div>
                     </>
@@ -425,13 +425,23 @@ const Compras = () => {
                                             #{compra.id}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
-                                            {format(new Date(compra.created_at || compra.fecha), "dd/MM/yyyy HH:mm", { locale: es })}
+                                            {(() => {
+                                                try {
+                                                    const fecha = compra.created_at || compra.fecha;
+                                                    if (!fecha) return 'N/A';
+                                                    const dateObj = new Date(fecha);
+                                                    if (isNaN(dateObj.getTime())) return 'N/A';
+                                                    return format(dateObj, "dd/MM/yyyy HH:mm", { locale: es });
+                                                } catch {
+                                                    return 'Fecha inválida';
+                                                }
+                                            })()}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
                                             {compra.proveedor?.nombre || 'No especificado'}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
-                                            {compra.detalles?.length || 0} productos
+                                            {(compra.detalles?.length || 0).toLocaleString('es-ES')} productos
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-accessibility-text font-medium">
                                             {formatCurrency(compra.total)}

@@ -1,11 +1,11 @@
 /**
  * Formatea un número como moneda
  * @param {number} value - El valor a formatear
- * @param {string} [currency='MXN'] - El código de la moneda
+ * @param {string} [currency='EUR'] - El código de la moneda
  * @returns {string} El valor formateado como moneda
  */
-export const formatCurrency = (value, currency = 'MXN') => {
-    return new Intl.NumberFormat('es-MX', {
+export const formatCurrency = (value, currency = 'EUR') => {
+    return new Intl.NumberFormat('es-ES', {
         style: 'currency',
         currency: currency,
         minimumFractionDigits: 2,
@@ -29,7 +29,7 @@ export const formatDate = (date, includeTime = true) => {
             minute: '2-digit'
         })
     };
-    return new Intl.DateTimeFormat('es-MX', options).format(new Date(date));
+    return new Intl.DateTimeFormat('es-ES', options).format(new Date(date));
 };
 
 /**
@@ -39,7 +39,7 @@ export const formatDate = (date, includeTime = true) => {
  * @returns {string} El valor formateado
  */
 export const formatNumber = (value, decimals = 0) => {
-    return new Intl.NumberFormat('es-MX', {
+    return new Intl.NumberFormat('es-ES', {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals
     }).format(value);
@@ -52,7 +52,7 @@ export const formatNumber = (value, decimals = 0) => {
  * @returns {string} El valor formateado como porcentaje
  */
 export const formatPercent = (value, decimals = 1) => {
-    return new Intl.NumberFormat('es-MX', {
+    return new Intl.NumberFormat('es-ES', {
         style: 'percent',
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals

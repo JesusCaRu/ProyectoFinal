@@ -58,16 +58,13 @@ const HistorialVentas = () => {
     };
 
     const formatCurrency = (amount) => {
-        if (amount === undefined || amount === null) return '$0.00';
-        try {
-            return new Intl.NumberFormat('es-MX', {
-                style: 'currency',
-                currency: 'MXN'
-            }).format(amount);
-        } catch (error) {
-            console.error('Error al formatear moneda:', error);
-            return '$0.00';
-        }
+        if (amount === null || amount === undefined) return '€0,00';
+        return new Intl.NumberFormat('es-ES', {
+            style: 'currency',
+            currency: 'EUR',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
     };
 
     const handleViewDetails = (venta) => {

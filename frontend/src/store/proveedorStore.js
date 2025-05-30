@@ -92,6 +92,7 @@ export const useProveedorStore = create((set) => ({
                 proveedorActual: state.proveedorActual?.id === id ? null : state.proveedorActual,
                 loading: false
             }));
+            return true;
         } catch (error) {
             set({ error: error.message, loading: false });
             throw error;

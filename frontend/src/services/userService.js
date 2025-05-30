@@ -134,7 +134,7 @@ export const userService = {
   // Cerrar sesión
   logout: async () => {
     try {
-      await axiosInstance.post(`${API_URL}/auth/logout`);
+      await axiosInstance.post(`${API_URL}/logout`);
       return true;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al cerrar sesión');

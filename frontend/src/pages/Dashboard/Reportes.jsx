@@ -148,12 +148,12 @@ const Reportes = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-bg p-4 rounded-lg border border-border">
             <h3 className="text-lg font-semibold text-text-secondary">Total Ventas</h3>
-            <p className="text-2xl font-bold text-success">${resumen.total_monto.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-success">€{resumen.total_monto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             <p className="text-sm text-text-tertiary">{resumen.total_ventas} ventas</p>
           </div>
           <div className="bg-bg p-4 rounded-lg border border-border">
             <h3 className="text-lg font-semibold text-text-secondary">Promedio por Venta</h3>
-            <p className="text-2xl font-bold text-solid-color">${resumen.promedio_venta.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-solid-color">€{resumen.promedio_venta.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
           </div>
           <div className="bg-bg p-4 rounded-lg border border-border">
             <h3 className="text-lg font-semibold text-text-secondary">Productos Vendidos</h3>
@@ -223,7 +223,7 @@ const Reportes = () => {
                       {producto.total_vendido}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-tertiary">
-                      ${producto.total_monto.toFixed(2)}
+                      €{producto.total_monto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </td>
                   </tr>
                 ))}
@@ -294,12 +294,12 @@ const Reportes = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-bg p-4 rounded-lg border border-border">
             <h3 className="text-lg font-semibold text-text-secondary">Total Compras</h3>
-            <p className="text-2xl font-bold text-error">${resumen.total_monto.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-error">€{resumen.total_monto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             <p className="text-sm text-text-tertiary">{resumen.total_compras} compras</p>
           </div>
           <div className="bg-bg p-4 rounded-lg border border-border">
             <h3 className="text-lg font-semibold text-text-secondary">Promedio por Compra</h3>
-            <p className="text-2xl font-bold text-solid-color">${resumen.promedio_compra.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-solid-color">€{resumen.promedio_compra.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
           </div>
           <div className="bg-bg p-4 rounded-lg border border-border">
             <h3 className="text-lg font-semibold text-text-secondary">Productos Comprados</h3>
@@ -369,7 +369,7 @@ const Reportes = () => {
                       {producto.total_comprado}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-tertiary">
-                      ${producto.total_monto.toFixed(2)}
+                      €{producto.total_monto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </td>
                   </tr>
                 ))}

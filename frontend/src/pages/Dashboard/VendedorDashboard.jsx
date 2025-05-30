@@ -155,7 +155,7 @@ const VendedorDashboard = () => {
                                 </div>
                                 <span className="text-sm font-medium text-success">
                                     {resumen?.total_monto > 0 ? 
-                                        `+${((resumen.promedio_venta / resumen.total_monto) * 100).toFixed(1)}%` : 
+                                        `+${((resumen.promedio_venta / resumen.total_monto) * 100).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%` : 
                                         '0%'}
                                 </span>
                             </div>
@@ -177,7 +177,7 @@ const VendedorDashboard = () => {
                                 </div>
                                 <span className="text-sm font-medium text-warning">
                                     {resumen?.total_ventas > 0 ? 
-                                        `+${((resumen.total_ventas / 100) * 10).toFixed(1)}%` : 
+                                        `+${((resumen.total_ventas / 100) * 10).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%` : 
                                         '0%'}
                                 </span>
                             </div>
@@ -199,7 +199,7 @@ const VendedorDashboard = () => {
                                 </div>
                                 <span className="text-sm font-medium text-info">
                                     {resumen?.promedio_venta > 0 ? 
-                                        `+${((resumen.promedio_venta / 1000) * 100).toFixed(1)}%` : 
+                                        `+${((resumen.promedio_venta / 1000) * 100).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%` : 
                                         '0%'}
                                 </span>
                             </div>
@@ -221,7 +221,7 @@ const VendedorDashboard = () => {
                                 </div>
                                 <span className="text-sm font-medium text-solid-color">
                                     {productosMasVendidos?.length > 0 ? 
-                                        `+${((productosMasVendidos[0].total_vendido / 100) * 15).toFixed(1)}%` : 
+                                        `+${((productosMasVendidos[0].total_vendido / 100) * 15).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%` : 
                                         '0%'}
                                 </span>
                             </div>
@@ -328,7 +328,7 @@ const VendedorDashboard = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-accessibility-text">
-                                            {item.total_vendido}
+                                            {item.total_vendido.toLocaleString('es-ES')}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-accessibility-text">
                                             {formatCurrency(item.total_monto)}

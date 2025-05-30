@@ -254,7 +254,7 @@ const Ventas = () => {
                                 </div>
                                 <span className="text-sm font-medium text-success">
                                     {resumen?.total_monto > 0 ? 
-                                        `+${((resumen.promedio_venta / resumen.total_monto) * 100).toFixed(1)}%` : 
+                                        `+${((resumen.promedio_venta / resumen.total_monto) * 100).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%` : 
                                         '0%'}
                                 </span>
                             </div>
@@ -276,13 +276,13 @@ const Ventas = () => {
                                 </div>
                                 <span className="text-sm font-medium text-warning">
                                     {resumen?.total_ventas > 0 ? 
-                                        `+${((resumen.total_ventas / 100) * 10).toFixed(1)}%` : 
+                                        `+${((resumen.total_ventas / 100) * 10).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%` : 
                                         '0%'}
                                 </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Ventas Realizadas</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {resumen?.total_ventas || 0}
+                                {resumen?.total_ventas ? resumen.total_ventas.toLocaleString('es-ES') : 0}
                             </p>
                         </_motion.div>
 
@@ -298,7 +298,7 @@ const Ventas = () => {
                                 </div>
                                 <span className="text-sm font-medium text-info">
                                     {resumen?.promedio_venta > 0 ? 
-                                        `+${((resumen.promedio_venta / 1000) * 100).toFixed(1)}%` : 
+                                        `+${((resumen.promedio_venta / 1000) * 100).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%` : 
                                         '0%'}
                                 </span>
                             </div>
@@ -320,13 +320,13 @@ const Ventas = () => {
                                 </div>
                                 <span className="text-sm font-medium text-solid-color">
                                     {productosMasVendidos?.length > 0 ? 
-                                        `+${((productosMasVendidos[0].total_vendido / 100) * 15).toFixed(1)}%` : 
+                                        `+${((productosMasVendidos[0].total_vendido / 100) * 15).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%` : 
                                         '0%'}
                                 </span>
                             </div>
                             <h3 className="mt-4 text-sm text-text-tertiary">Productos Vendidos</h3>
                             <p className="mt-1 text-2xl font-semibold text-accessibility-text">
-                                {productosMasVendidos?.reduce((acc, curr) => acc + (curr.total_vendido || 0), 0) || 0}
+                                {(productosMasVendidos?.reduce((acc, curr) => acc + (curr.total_vendido || 0), 0) || 0).toLocaleString('es-ES')}
                             </p>
                         </_motion.div>
                     </>
@@ -440,7 +440,7 @@ const Ventas = () => {
                                             {venta.usuario?.nombre || 'No especificado'}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-accessibility-text">
-                                            {venta.detalles?.length || 0} productos
+                                            {(venta.detalles?.length || 0).toLocaleString('es-ES')} productos
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-accessibility-text font-medium">
                                             {formatCurrency(venta.total)}

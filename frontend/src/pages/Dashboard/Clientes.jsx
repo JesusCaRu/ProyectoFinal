@@ -78,7 +78,7 @@ const Clientes = () => {
     },
     {
       title: 'Valor Promedio',
-      value: '$7,499.97',
+      value: '€7.499,97',
       change: '+8%',
       trend: 'up'
     }
@@ -202,7 +202,7 @@ const Clientes = () => {
                 <div className="flex flex-col items-center">
                   <DollarSign className="h-4 w-4 text-text-tertiary" />
                   <span className="text-sm font-medium text-accessibility-text mt-1">
-                    ${customer.totalSpent.toFixed(2)}
+                    €{customer.totalSpent.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </span>
                   <span className="text-xs text-text-tertiary">Total</span>
                 </div>

@@ -32,6 +32,8 @@ class ProductoController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:150',
             'descripcion' => 'nullable|string',
+            'sku' => 'required|string|max:20|unique:productos,sku',
+            'tipo_producto' => 'nullable|string|max:10',
             'categoria_id' => 'required|exists:categorias,id',
             'marca_id' => 'required|exists:marcas,id',
             'stock_minimo' => 'required|integer|min:0',
@@ -52,6 +54,8 @@ class ProductoController extends Controller
             $producto = Producto::create([
                 'nombre' => $request->nombre,
                 'descripcion' => $request->descripcion,
+                'sku' => $request->sku,
+                'tipo_producto' => $request->tipo_producto,
                 'categoria_id' => $request->categoria_id,
                 'marca_id' => $request->marca_id,
                 'stock_minimo' => $request->stock_minimo
@@ -97,6 +101,8 @@ class ProductoController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:150',
             'descripcion' => 'nullable|string',
+            'sku' => 'required|string|max:20|unique:productos,sku,'.$producto->id,
+            'tipo_producto' => 'nullable|string|max:10',
             'categoria_id' => 'required|exists:categorias,id',
             'marca_id' => 'required|exists:marcas,id',
             'stock_minimo' => 'required|integer|min:0',
@@ -117,6 +123,8 @@ class ProductoController extends Controller
             $producto->update([
                 'nombre' => $request->nombre,
                 'descripcion' => $request->descripcion,
+                'sku' => $request->sku,
+                'tipo_producto' => $request->tipo_producto,
                 'categoria_id' => $request->categoria_id,
                 'marca_id' => $request->marca_id,
                 'stock_minimo' => $request->stock_minimo

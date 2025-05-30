@@ -19,10 +19,14 @@ class DashboardController extends Controller
     /**
      * Obtener estadísticas generales
      */
-    public function getStats()
+    public function getStats(Request $request)
     {
         try {
             Log::info('Iniciando obtención de estadísticas del dashboard');
+
+            // Obtener sede_id del request o del usuario actual
+            $sedeId = $request->input('sede_id') ?? $request->user()->sede_id;
+            Log::info('Sede ID para estadísticas: ' . $sedeId);
 
             // Verificar conexión a la base de datos
             DB::connection()->getPdo();
@@ -30,32 +34,44 @@ class DashboardController extends Controller
 
             // Obtener totales con manejo de errores individual
             try {
-                $totalProductos = Producto::count();
-                Log::info('Total productos obtenido: ' . $totalProductos);
+                // Contar productos en esta sede
+                $totalProductos = DB::table('productos')
+                    ->join('producto_sede', 'productos.id', '=', 'producto_sede.producto_id')
+                    ->where('producto_sede.sede_id', $sedeId)
+                    ->count();
+                Log::info('Total productos en sede ' . $sedeId . ': ' . $totalProductos);
             } catch (\Exception $e) {
                 Log::error('Error al obtener total de productos: ' . $e->getMessage());
                 $totalProductos = 0;
             }
 
             try {
-                $totalVentas = Venta::where('estado', 'completada')->sum('total');
-                Log::info('Total ventas obtenido: ' . $totalVentas);
+                // Sumar ventas de esta sede
+                $totalVentas = Venta::where('estado', 'completada')
+                    ->where('sede_id', $sedeId)
+                    ->sum('total');
+                Log::info('Total ventas en sede ' . $sedeId . ': ' . $totalVentas);
             } catch (\Exception $e) {
                 Log::error('Error al obtener total de ventas: ' . $e->getMessage());
                 $totalVentas = 0;
             }
 
             try {
-                $totalCompras = Compra::where('estado', 'completada')->sum('total');
-                Log::info('Total compras obtenido: ' . $totalCompras);
+                // Sumar compras de esta sede
+                $totalCompras = Compra::where('estado', 'completada')
+                    ->where('sede_id', $sedeId)
+                    ->sum('total');
+                Log::info('Total compras en sede ' . $sedeId . ': ' . $totalCompras);
             } catch (\Exception $e) {
                 Log::error('Error al obtener total de compras: ' . $e->getMessage());
                 $totalCompras = 0;
             }
 
             try {
-                $totalUsuarios = Usuario::where('activo', 1)->count();
-                Log::info('Total usuarios obtenido: ' . $totalUsuarios);
+                $totalUsuarios = Usuario::where('activo', 1)
+                    ->where('sede_id', $sedeId)
+                    ->count();
+                Log::info('Total usuarios en sede ' . $sedeId . ': ' . $totalUsuarios);
             } catch (\Exception $e) {
                 Log::error('Error al obtener total de usuarios: ' . $e->getMessage());
                 $totalUsuarios = 0;
@@ -64,27 +80,37 @@ class DashboardController extends Controller
             // Calcular porcentajes de cambio con manejo de errores individual
             try {
                 $ventasMesActual = Venta::where('estado', 'completada')
+                    ->where('sede_id', $sedeId)
                     ->whereMonth('created_at', Carbon::now()->month)
                     ->sum('total');
                 $ventasMesAnterior = Venta::where('estado', 'completada')
+                    ->where('sede_id', $sedeId)
                     ->whereMonth('created_at', Carbon::now()->subMonth()->month)
                     ->sum('total');
                 $cambioVentas = $ventasMesAnterior > 0
                     ? (($ventasMesActual - $ventasMesAnterior) / $ventasMesAnterior) * 100
                     : 0;
-                Log::info('Cambio en ventas calculado: ' . $cambioVentas . '%');
+                Log::info('Cambio en ventas calculado para sede ' . $sedeId . ': ' . $cambioVentas . '%');
             } catch (\Exception $e) {
                 Log::error('Error al calcular cambio en ventas: ' . $e->getMessage());
                 $cambioVentas = 0;
             }
 
             try {
-                $productosMesActual = Producto::whereMonth('created_at', Carbon::now()->month)->count();
-                $productosMesAnterior = Producto::whereMonth('created_at', Carbon::now()->subMonth()->month)->count();
+                $productosMesActual = DB::table('productos')
+                    ->join('producto_sede', 'productos.id', '=', 'producto_sede.producto_id')
+                    ->where('producto_sede.sede_id', $sedeId)
+                    ->whereMonth('productos.created_at', Carbon::now()->month)
+                    ->count();
+                $productosMesAnterior = DB::table('productos')
+                    ->join('producto_sede', 'productos.id', '=', 'producto_sede.producto_id')
+                    ->where('producto_sede.sede_id', $sedeId)
+                    ->whereMonth('productos.created_at', Carbon::now()->subMonth()->month)
+                    ->count();
                 $cambioProductos = $productosMesAnterior > 0
                     ? (($productosMesActual - $productosMesAnterior) / $productosMesAnterior) * 100
                     : 0;
-                Log::info('Cambio en productos calculado: ' . $cambioProductos . '%');
+                Log::info('Cambio en productos calculado para sede ' . $sedeId . ': ' . $cambioProductos . '%');
             } catch (\Exception $e) {
                 Log::error('Error al calcular cambio en productos: ' . $e->getMessage());
                 $cambioProductos = 0;
@@ -92,15 +118,17 @@ class DashboardController extends Controller
 
             try {
                 $usuariosMesActual = Usuario::where('activo', 1)
+                    ->where('sede_id', $sedeId)
                     ->whereMonth('created_at', Carbon::now()->month)
                     ->count();
                 $usuariosMesAnterior = Usuario::where('activo', 1)
+                    ->where('sede_id', $sedeId)
                     ->whereMonth('created_at', Carbon::now()->subMonth()->month)
                     ->count();
                 $cambioUsuarios = $usuariosMesAnterior > 0
                     ? (($usuariosMesActual - $usuariosMesAnterior) / $usuariosMesAnterior) * 100
                     : 0;
-                Log::info('Cambio en usuarios calculado: ' . $cambioUsuarios . '%');
+                Log::info('Cambio en usuarios calculado para sede ' . $sedeId . ': ' . $cambioUsuarios . '%');
             } catch (\Exception $e) {
                 Log::error('Error al calcular cambio en usuarios: ' . $e->getMessage());
                 $cambioUsuarios = 0;
@@ -127,7 +155,7 @@ class DashboardController extends Controller
                 ]
             ];
 
-            Log::info('Estadísticas del dashboard obtenidas exitosamente', $response);
+            Log::info('Estadísticas del dashboard obtenidas exitosamente para sede ' . $sedeId, $response);
             return response()->json($response);
 
         } catch (\Exception $e) {
@@ -151,10 +179,14 @@ class DashboardController extends Controller
     /**
      * Obtener ventas por mes
      */
-    public function getVentasPorMes()
+    public function getVentasPorMes(Request $request)
     {
         try {
             Log::info('Iniciando obtención de ventas por mes');
+
+            // Obtener sede_id del request o del usuario actual
+            $sedeId = $request->input('sede_id') ?? $request->user()->sede_id;
+            Log::info('Sede ID para ventas por mes: ' . $sedeId);
 
             // Verificar si la tabla ventas existe
             if (!Schema::hasTable('ventas')) {
@@ -167,10 +199,11 @@ class DashboardController extends Controller
 
             // Obtener el año actual
             $añoActual = Carbon::now()->year;
-            Log::info('Obteniendo ventas para el año: ' . $añoActual);
+            Log::info('Obteniendo ventas para el año: ' . $añoActual . ' y sede: ' . $sedeId);
 
             // Obtener ventas por mes
             $ventasPorMes = Venta::whereYear('created_at', $añoActual)
+                ->where('sede_id', $sedeId)
                 ->select(
                     DB::raw('MONTH(created_at) as mes'),
                     DB::raw('COALESCE(SUM(total), 0) as total')
@@ -227,17 +260,21 @@ class DashboardController extends Controller
     /**
      * Obtener productos más vendidos
      */
-    public function getProductosMasVendidos()
+    public function getProductosMasVendidos(Request $request)
     {
         try {
             Log::info('Iniciando obtención de productos más vendidos');
 
+            // Obtener sede_id del request o del usuario actual
+            $sedeId = $request->input('sede_id') ?? $request->user()->sede_id;
+            Log::info('Sede ID para productos más vendidos: ' . $sedeId);
+
             // Verificar si hay ventas en la base de datos
-            $totalVentas = Venta::count();
-            Log::info('Total de ventas: ' . $totalVentas);
+            $totalVentas = Venta::where('sede_id', $sedeId)->count();
+            Log::info('Total de ventas en sede ' . $sedeId . ': ' . $totalVentas);
 
             if ($totalVentas === 0) {
-                Log::info('No hay ventas, retornando array vacío');
+                Log::info('No hay ventas en esta sede, retornando array vacío');
                 return response()->json([]);
             }
 
@@ -245,6 +282,7 @@ class DashboardController extends Controller
                 $productosMasVendidos = DB::table('venta_detalles')
                     ->join('ventas', 'venta_detalles.venta_id', '=', 'ventas.id')
                     ->join('productos', 'venta_detalles.producto_id', '=', 'productos.id')
+                    ->where('ventas.sede_id', $sedeId)
                     ->select(
                         'productos.id',
                         'productos.nombre',
@@ -256,7 +294,7 @@ class DashboardController extends Controller
                     ->limit(5)
                     ->get();
 
-                Log::info('Productos más vendidos obtenidos: ' . $productosMasVendidos->count() . ' registros');
+                Log::info('Productos más vendidos obtenidos para sede ' . $sedeId . ': ' . $productosMasVendidos->count() . ' registros');
                 return response()->json($productosMasVendidos);
 
             } catch (\Exception $e) {
@@ -291,29 +329,51 @@ class DashboardController extends Controller
     public function getProductosStockBajo(Request $request)
     {
         try {
-            $sedeId = $request->user()->sede_id;
+            // Obtener sede_id del request o del usuario actual
+            $sedeId = $request->input('sede_id') ?? $request->user()->sede_id;
+            Log::info('Sede ID para productos con stock bajo: ' . $sedeId);
 
-            $productos = Producto::select('productos.id', 'productos.nombre', 'productos.stock_minimo')
+            // Obtener productos con stock bajo
+            $productosStockBajo = DB::table('productos')
                 ->join('producto_sede', 'productos.id', '=', 'producto_sede.producto_id')
                 ->where('producto_sede.sede_id', $sedeId)
                 ->whereRaw('producto_sede.stock < productos.stock_minimo')
+                ->select(
+                    'productos.id',
+                    'productos.nombre',
+                    'producto_sede.stock',
+                    'productos.stock_minimo'
+                )
                 ->orderByRaw('productos.stock_minimo - producto_sede.stock DESC')
                 ->limit(5)
-                ->get()
-                ->map(function ($producto) {
-                    return [
-                        'id' => $producto->id,
-                        'nombre' => $producto->nombre,
-                        'stock' => $producto->sedes->first()->pivot->stock,
-                        'stock_minimo' => $producto->stock_minimo
-                    ];
-                });
+                ->get();
 
+            // Mapear los resultados a un formato consistente
+            $productos = $productosStockBajo->map(function ($producto) {
+                return [
+                    'id' => $producto->id,
+                    'nombre' => $producto->nombre,
+                    'stock' => $producto->stock,
+                    'stock_minimo' => $producto->stock_minimo
+                ];
+            });
+
+            Log::info('Productos con stock bajo obtenidos para sede ' . $sedeId . ': ' . $productos->count() . ' registros');
             return response()->json(['data' => $productos]);
         } catch (\Exception $e) {
+            Log::error('Error al obtener productos con stock bajo: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'message' => 'Error al obtener productos con stock bajo',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'details' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ] : null
             ], 500);
         }
     }
@@ -321,10 +381,15 @@ class DashboardController extends Controller
     /**
      * Obtener últimas ventas
      */
-    public function getUltimasVentas()
+    public function getUltimasVentas(Request $request)
     {
         try {
+            // Obtener sede_id del request o del usuario actual
+            $sedeId = $request->input('sede_id') ?? $request->user()->sede_id;
+            Log::info('Sede ID para últimas ventas: ' . $sedeId);
+
             $ultimasVentas = Venta::with(['usuario'])
+                ->where('sede_id', $sedeId)
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()
@@ -349,10 +414,15 @@ class DashboardController extends Controller
     /**
      * Obtener últimas compras
      */
-    public function getUltimasCompras()
+    public function getUltimasCompras(Request $request)
     {
         try {
+            // Obtener sede_id del request o del usuario actual
+            $sedeId = $request->input('sede_id') ?? $request->user()->sede_id;
+            Log::info('Sede ID para últimas compras: ' . $sedeId);
+
             $ultimasCompras = Compra::with(['usuario', 'proveedor'])
+                ->where('sede_id', $sedeId)
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()
@@ -382,7 +452,9 @@ class DashboardController extends Controller
     public function getUltimosMovimientos(Request $request)
     {
         try {
-            $sedeId = $request->user()->sede_id;
+            // Obtener sede_id del request o del usuario actual
+            $sedeId = $request->input('sede_id') ?? $request->user()->sede_id;
+            Log::info('Sede ID para últimos movimientos: ' . $sedeId);
 
             $ultimosMovimientos = Movimiento::with(['usuario', 'producto'])
                 ->whereHas('producto.sedes', function($query) use ($sedeId) {
@@ -402,11 +474,22 @@ class DashboardController extends Controller
                     ];
                 });
 
+            Log::info('Últimos movimientos obtenidos para sede ' . $sedeId . ': ' . $ultimosMovimientos->count() . ' registros');
             return response()->json(['data' => $ultimosMovimientos]);
         } catch (\Exception $e) {
+            Log::error('Error al obtener últimos movimientos: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'message' => 'Error al obtener últimos movimientos',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'details' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ] : null
             ], 500);
         }
     }
