@@ -17,11 +17,20 @@ export const useProveedorStore = create((set) => ({
     fetchProveedores: async () => {
         set({ loading: true, error: null });
         try {
-            const response = await proveedorService.getProveedores();
-            const proveedores = Array.isArray(response) ? response : 
-                              Array.isArray(response.data) ? response.data : [];
+            // Añadir un parámetro timestamp para evitar la caché
+            const timestamp = new Date().getTime();
+            const response = await proveedorService.getProveedores(timestamp);
+            console.log("Respuesta API proveedores:", response);
+            
+            // Comprobar si la respuesta es un objeto con una propiedad 'data'
+            const proveedores = response?.data ? response.data : 
+                              Array.isArray(response) ? response : [];
+            
+            console.log("Proveedores procesados:", proveedores);
             set({ proveedores, loading: false });
+            return proveedores; // Devolver los proveedores para uso en componentes
         } catch (error) {
+            console.error("Error al cargar proveedores:", error);
             set({ 
                 error: error.message, 
                 loading: false,
@@ -87,13 +96,23 @@ export const useProveedorStore = create((set) => ({
         set({ loading: true, error: null });
         try {
             await proveedorService.deleteProveedor(id);
-            set(state => ({
-                proveedores: (Array.isArray(state.proveedores) ? state.proveedores : []).filter(proveedor => proveedor.id !== id),
-                proveedorActual: state.proveedorActual?.id === id ? null : state.proveedorActual,
-                loading: false
-            }));
+            
+            // Eliminar explícitamente el proveedor del estado actual
+            set(state => {
+                // Filtrar el proveedor eliminado
+                const updatedProveedores = state.proveedores.filter(proveedor => proveedor.id !== id);
+                console.log(`Proveedor ${id} eliminado. Proveedores restantes: ${updatedProveedores.length}`);
+                
+                return {
+                    proveedores: updatedProveedores,
+                    proveedorActual: state.proveedorActual?.id === id ? null : state.proveedorActual,
+                    loading: false
+                };
+            });
+            
             return true;
         } catch (error) {
+            console.error("Error completo al eliminar proveedor:", error);
             set({ error: error.message, loading: false });
             throw error;
         }

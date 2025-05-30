@@ -148,6 +148,36 @@ const Gestiones = () => {
     setDeleteModalOpen(true);
   };
 
+  // Función para recargar los datos después de operaciones CRUD
+  const reloadData = async (type, item = null) => {
+    let loadedData;
+    switch (type) {
+      case 'productos':
+        await loadProducts();
+        break;
+      case 'proveedores':
+        console.log("Recargando lista de proveedores...");
+        loadedData = await fetchProveedores();
+        console.log("Proveedores recargados:", loadedData);
+        if (item && loadedData.some(p => p.id === item.id)) {
+          console.warn(`¡Advertencia! El proveedor ${item.id} sigue apareciendo en la lista`);
+        }
+        break;
+      case 'marcas':
+        await fetchBrands();
+        break;
+      case 'sedes':
+        await fetchSedes();
+        break;
+      case 'categorias':
+        await fetchCategories();
+        break;
+      default:
+        break;
+    }
+    return loadedData;
+  };
+
   const handleConfirmDelete = async () => {
     setIsSubmitting(true);
     try {
@@ -159,7 +189,9 @@ const Gestiones = () => {
           success = await deleteProduct(selectedItem.id);
           break;
         case 'proveedores':
+          console.log("Intentando eliminar proveedor con ID:", selectedItem.id);
           success = await deleteProvider(selectedItem.id);
+          console.log("Resultado de eliminar proveedor:", success);
           break;
         case 'marcas':
           success = await deleteBrand(selectedItem.id);
@@ -179,31 +211,27 @@ const Gestiones = () => {
         setDeleteModalOpen(false);
         
         // Recargar los datos correspondientes
-        switch (modalType) {
-          case 'productos':
-            loadProducts();
-            break;
-          case 'proveedores':
-            fetchProveedores();
-            break;
-          case 'marcas':
-            fetchBrands();
-            break;
-          case 'sedes':
-            fetchSedes();
-            break;
-          case 'categorias':
-            fetchCategories();
-            break;
-          default:
-            break;
-        }
+        await reloadData(modalType, selectedItem);
       } else {
         toast.error(`Error al eliminar "${itemName}"`);
       }
     } catch (error) {
-      console.error('Error al eliminar:', error);
-      const errorMessage = error.response?.data?.message || error.message || `Error al eliminar el elemento`;
+      console.error('Error detallado al eliminar:', error);
+      
+      // Intentar extraer el mensaje más específico posible
+      let errorMessage;
+      
+      if (error.response?.data?.message) {
+        // Error de API con mensaje específico
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        // Error con mensaje genérico
+        errorMessage = error.message;
+      } else {
+        // Mensaje fallback
+        errorMessage = `Error al eliminar el elemento`;
+      }
+      
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -305,25 +333,7 @@ const Gestiones = () => {
         setModalOpen(false);
         
         // Recargar los datos correspondientes
-        switch (modalType) {
-          case 'productos':
-            loadProducts();
-            break;
-          case 'proveedores':
-            fetchProveedores();
-            break;
-          case 'marcas':
-            fetchBrands();
-            break;
-          case 'sedes':
-            fetchSedes();
-            break;
-          case 'categorias':
-            fetchCategories();
-            break;
-          default:
-            break;
-        }
+        await reloadData(modalType, selectedItem);
       } else {
         toast.error(`Error al ${action} "${itemName}"`);
       }
