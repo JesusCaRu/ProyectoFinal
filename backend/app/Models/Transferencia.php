@@ -17,7 +17,8 @@ class Transferencia extends Model
         'sede_origen_id',
         'sede_destino_id',
         'estado',
-        'fecha'
+        'fecha',
+        'usuario_id'
     ];
 
     public $timestamps = false;
@@ -35,5 +36,10 @@ class Transferencia extends Model
     public function sedeDestino()
     {
         return $this->belongsTo(Sede::class, 'sede_destino_id');
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id');
     }
 }

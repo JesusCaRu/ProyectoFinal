@@ -57,8 +57,10 @@ class NotificationHelper
             // Usuarios a notificar según el tipo de acción
             $users = new Collection();
 
-            // Siempre notificar al creador de la transferencia
-            $users->push($transferencia->usuario);
+            // Notificar al creador de la transferencia si existe
+            if ($transferencia->usuario_id && $transferencia->usuario) {
+                $users->push($transferencia->usuario);
+            }
 
             // Si es una nueva transferencia, notificar a los administradores y almacenistas de la sede destino
             if ($action === 'created') {
@@ -83,7 +85,9 @@ class NotificationHelper
             $users = $users->unique('id');
 
             foreach ($users as $user) {
-                $user->notify(new TransferNotification($transferencia, $action));
+                if ($user) {
+                    $user->notify(new TransferNotification($transferencia, $action));
+                }
             }
 
             Log::info("Notificación de transferencia ({$action}) enviada para la transferencia #{$transferencia->id}");

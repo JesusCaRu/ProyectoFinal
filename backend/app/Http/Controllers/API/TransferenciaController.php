@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\NotificationHelper;
+use Illuminate\Support\Facades\Auth;
 
 class TransferenciaController extends Controller
 {
@@ -75,17 +77,22 @@ class TransferenciaController extends Controller
                 return response()->json(['message' => 'Stock insuficiente en la sede origen'], 422);
             }
 
-            // Crear la transferencia con el estado como string
+            // Crear la transferencia con el estado como string y el usuario autenticado
             $transferencia = Transferencia::create([
                 'producto_id' => $request->producto_id,
                 'cantidad' => $request->cantidad,
                 'sede_origen_id' => $request->sede_origen_id,
                 'sede_destino_id' => $request->sede_destino_id,
                 'estado' => 'pendiente',
-                'fecha' => $request->fecha
+                'fecha' => $request->fecha,
+                'usuario_id' => Auth::check() ? Auth::user()->id : null // Guardar el ID del usuario autenticado si existe
             ]);
 
             Log::info('Transferencia creada:', $transferencia->toArray());
+
+            // Enviar notificación de transferencia creada
+            NotificationHelper::sendTransferNotification($transferencia, 'created');
+            Log::info('Notificación de transferencia enviada');
 
             if ($request->estado === 'recibido') {
                 // Descontar stock de la sede origen
@@ -209,6 +216,16 @@ class TransferenciaController extends Controller
             // Actualizar el estado de la transferencia
             $transferencia->estado = $request->estado;
             $transferencia->save();
+
+            // Enviar notificación según el estado actualizado
+            $action = 'created';
+            if ($request->estado === 'recibido') {
+                $action = 'approved';
+            } elseif ($request->estado === 'cancelado') {
+                $action = 'rejected';
+            }
+            NotificationHelper::sendTransferNotification($transferencia, $action);
+            Log::info('Notificación de transferencia enviada con acción: ' . $action);
 
             DB::commit();
             return response()->json(['data' => $transferencia]);
