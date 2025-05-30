@@ -91,34 +91,34 @@ const CatalogoProductos = () => {
                         const precioVenta = selectedSede ? getPrecioVentaInSede(product, selectedSede) : Number(product.precio_venta) || 0;
 
                         return (
-                            <_motion.div
-                                key={product.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-bg-secondary rounded-lg shadow-md overflow-hidden border border-border hover:shadow-lg transition-shadow duration-200"
-                            >
-                                <div className="p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="p-3 bg-interactive-component rounded-lg">
-                                            <Package className="h-6 w-6 text-solid-color" />
-                                        </div>
-                                        <span className="text-sm font-medium text-text-tertiary">
-                                            SKU: {product.sku || 'N/A'}
-                                        </span>
+                        <_motion.div
+                            key={product.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-bg-secondary rounded-lg shadow-md overflow-hidden border border-border hover:shadow-lg transition-shadow duration-200"
+                        >
+                            <div className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="p-3 bg-interactive-component rounded-lg">
+                                        <Package className="h-6 w-6 text-solid-color" />
                                     </div>
+                                    <span className="text-sm font-medium text-text-tertiary">
+                                        SKU: {product.sku || 'N/A'}
+                                    </span>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    <h3 className="text-lg font-semibold text-accessibility-text line-clamp-1">
+                                        {product.nombre}
+                                    </h3>
+                                    <p className="text-text-tertiary text-sm line-clamp-2">
+                                        {product.descripcion}
+                                    </p>
                                     
-                                    <div className="space-y-3">
-                                        <h3 className="text-lg font-semibold text-accessibility-text line-clamp-1">
-                                            {product.nombre}
-                                        </h3>
-                                        <p className="text-text-tertiary text-sm line-clamp-2">
-                                            {product.descripcion}
-                                        </p>
-                                        
-                                        <div className="flex items-center gap-2 text-sm text-text-tertiary">
-                                            <Tag className="h-4 w-4" />
-                                            <span>{product.categoria?.nombre || 'Sin categoría'}</span>
-                                        </div>
+                                    <div className="flex items-center gap-2 text-sm text-text-tertiary">
+                                        <Tag className="h-4 w-4" />
+                                        <span>{product.categoria?.nombre || 'Sin categoría'}</span>
+                                    </div>
 
                                         {selectedSede && (
                                             <div className="flex items-center gap-2 text-sm text-text-tertiary">
@@ -127,29 +127,29 @@ const CatalogoProductos = () => {
                                             </div>
                                         )}
 
-                                        <div className="pt-4 border-t border-border">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-xl font-bold text-solid-color">
+                                    <div className="pt-4 border-t border-border">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xl font-bold text-solid-color">
                                                     ${precioVenta.toFixed(2)}
-                                                </span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-sm font-medium ${
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-sm font-medium ${
                                                         stock > 5 
-                                                            ? 'text-success' 
+                                                        ? 'text-success' 
                                                             : stock > 0 
-                                                                ? 'text-warning' 
-                                                                : 'text-error'
-                                                    }`}>
+                                                            ? 'text-warning' 
+                                                            : 'text-error'
+                                                }`}>
                                                         {stock > 0 
                                                             ? `${stock} unidades disponibles`
-                                                            : 'Sin stock'}
-                                                    </span>
-                                                </div>
+                                                        : 'Sin stock'}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </_motion.div>
+                            </div>
+                        </_motion.div>
                         );
                     })}
                 </div>

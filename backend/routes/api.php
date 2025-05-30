@@ -65,6 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('sedes', SedeController::class);
     Route::get('/sedes/mensajes', [MensajeSedeController::class, 'index']);
     Route::post('/sedes/mensajes', [MensajeSedeController::class, 'store']);
+    Route::put('/sedes/mensajes/marcar-todos-leidos', [MensajeSedeController::class, 'marcarTodosLeidos']);
     Route::put('/sedes/mensajes/{id}/leido', [MensajeSedeController::class, 'marcarLeido']);
     Route::delete('/sedes/mensajes/{id}', [MensajeSedeController::class, 'destroy']);
 

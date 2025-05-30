@@ -12,7 +12,8 @@ import {
   Download,
   Printer,
   Check,
-  AlertCircle
+  AlertCircle,
+  Bell
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Modal from '../../components/Modal';
@@ -20,6 +21,7 @@ import { useSedeStore } from '../../store/sedeStore';
 import { useProductStore } from '../../store/productStore';
 import { useTransferenciaStore } from '../../store/transferenciaStore';
 import { useMensajeStore } from '../../store/mensajeStore';
+import { useAuthStore } from '../../store/authStore';
 
 const Sedes = () => {
   const { sedes, isLoading, error, fetchSedes } = useSedeStore();
@@ -32,7 +34,13 @@ const Sedes = () => {
     isLoading: isTransferLoading,
     error: transferError 
   } = useTransferenciaStore();
-  const { createMensaje, isLoading: isMensajeLoading, error: mensajeError } = useMensajeStore();
+  const { 
+    createMensaje, 
+    fetchMensajes,
+    isLoading: isMensajeLoading, 
+    error: mensajeError 
+  } = useMensajeStore();
+  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
@@ -43,6 +51,9 @@ const Sedes = () => {
     producto: '',
     cantidad: ''
   });
+
+  // Obtener la sede del usuario actual
+  const currentUserSedeId = user?.data?.sede_id;
 
   useEffect(() => {
     fetchSedes();
@@ -89,6 +100,7 @@ const Sedes = () => {
   // Obtener transferencias pendientes para una sede
   const getTransferenciasPendientes = (sedeId) => {
     return transferencias.filter(t => 
+      // Solo mostrar transferencias donde esta sede es el destino
       t.sede_destino_id === sedeId && t.estado === 'pendiente'
     );
   };
@@ -96,6 +108,19 @@ const Sedes = () => {
   // Manejar aceptación de transferencia
   const handleAceptarTransferencia = async (transferenciaId) => {
     try {
+      // Verificar que el usuario pertenece a la sede destino
+      const transferencia = transferencias.find(t => t.id === transferenciaId);
+      
+      if (!transferencia) {
+        toast.error('Transferencia no encontrada');
+        return;
+      }
+      
+      if (currentUserSedeId !== transferencia.sede_destino_id) {
+        toast.error('Solo la sede destino puede aceptar transferencias');
+        return;
+      }
+      
       await updateTransferencia(transferenciaId, { estado: 'recibido' });
       toast.success('Transferencia aceptada correctamente');
       fetchTransferencias(); // Recargar transferencias
@@ -153,13 +178,53 @@ const Sedes = () => {
       toast.error('El mensaje no puede estar vacío');
       return;
     }
-    const ok = await createMensaje(message);
-    if (ok) {
+    
+    try {
+      // Enviar mensaje a todas las sedes disponibles
+      const promises = sedes.map(sede => 
+        createMensaje(message, sede.id)
+      );
+      
+      await Promise.all(promises);
       toast.success('Mensaje enviado a todas las sedes');
       setIsMessageModalOpen(false);
       setMessage('');
-    } else {
+    } catch (error) {
+      console.error('Error al enviar mensaje:', error);
       toast.error('Error al enviar el mensaje');
+    }
+  };
+
+  // Función para enviar un mensaje de prueba
+  const handleSendTestMessage = async () => {
+    try {
+      console.log('Enviando mensaje de prueba...');
+      const testMessage = `Mensaje de prueba: ${new Date().toLocaleTimeString()}`;
+      
+      // Obtener la sede del usuario actual
+      const targetSedeId = user?.data?.sede_id;
+      
+      if (!targetSedeId) {
+        toast.error('No se pudo determinar la sede del usuario');
+        return;
+      }
+      
+      console.log('Enviando mensaje a sede:', targetSedeId);
+      
+      // Enviar el mensaje
+      const result = await createMensaje(testMessage, targetSedeId);
+      console.log('Resultado de envío de prueba:', result);
+      
+      if (result) {
+        toast.success('Mensaje de prueba enviado correctamente');
+        // Forzar actualización de mensajes
+        await fetchMensajes(targetSedeId);
+      } else {
+        toast.error('Error al enviar mensaje de prueba');
+      }
+    } catch (error) {
+      console.error('Error al enviar mensaje de prueba:', error);
+      toast.error('Error al enviar mensaje de prueba: ' + error.message);
     }
   };
 
@@ -177,6 +242,13 @@ const Sedes = () => {
           <h1 className="text-2xl font-bold text-accessibility-text">Gestión de Sedes</h1>
         </div>
         <div className="flex space-x-4">
+          <button
+            onClick={handleSendTestMessage}
+            className="px-4 py-2 bg-warning hover:bg-warning/80 text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+          >
+            <Bell className="h-5 w-5" />
+            <span>Enviar Notificación Prueba</span>
+          </button>
           <button
             onClick={() => setIsTransferModalOpen(true)}
             className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
@@ -331,14 +403,25 @@ const Sedes = () => {
                             <span className="text-warning">{transferenciasPendientes.length} pendientes</span>
                             <div className="flex space-x-2">
                               {transferenciasPendientes.map(t => (
-                                <button
-                                  key={t.id}
-                                  onClick={() => handleAceptarTransferencia(t.id)}
-                                  className="p-1 rounded-full hover:bg-success/20 text-success"
-                                  title="Aceptar transferencia"
-                                >
-                                  <Check className="h-4 w-4" />
-                                </button>
+                                <div key={t.id}>
+                                  {/* Solo mostrar el botón de aceptar si el usuario pertenece a esta sede */}
+                                  {currentUserSedeId === sede.id ? (
+                                    <button
+                                      onClick={() => handleAceptarTransferencia(t.id)}
+                                      className="p-1 rounded-full hover:bg-success/20 text-success"
+                                      title={`Aceptar transferencia #${t.id} - ${t.cantidad} unidades`}
+                                    >
+                                      <Check className="h-4 w-4" />
+                                    </button>
+                                  ) : (
+                                    <span 
+                                      className="text-xs text-text-tertiary italic" 
+                                      title="Solo la sede destino puede aceptar transferencias"
+                                    >
+                                      Pendiente
+                                    </span>
+                                  )}
+                                </div>
                               ))}
                             </div>
                           </div>
