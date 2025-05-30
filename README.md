@@ -164,11 +164,22 @@ npm run dev
 ### Autenticación
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/api/auth/login` | Iniciar sesión |
-| POST | `/api/auth/register` | Registrar usuario |
-| POST | `/api/auth/logout` | Cerrar sesión |
-| GET | `/api/auth/user` | Obtener usuario actual |
-| POST | `/api/auth/refresh` | Refrescar token |
+| POST | `/api/login` | Iniciar sesión |
+| POST | `/api/register` | Registrar usuario |
+| POST | `/api/logout` | Cerrar sesión |
+| GET | `/api/me` | Obtener usuario actual |
+
+### Usuarios
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/usuarios` | Listar todos los usuarios |
+| GET | `/api/usuarios/{id}` | Obtener usuario específico |
+| POST | `/api/usuarios` | Crear nuevo usuario |
+| PUT | `/api/usuarios/{id}` | Actualizar usuario |
+| DELETE | `/api/usuarios/{id}` | Eliminar usuario |
+| GET | `/api/usuarios/trashed` | Obtener usuarios eliminados |
+| POST | `/api/usuarios/{id}/restore` | Restaurar usuario eliminado |
+| PATCH | `/api/usuarios/{usuario}/estado` | Cambiar estado del usuario |
 
 ### Productos
 | Método | Endpoint | Descripción |
@@ -179,14 +190,81 @@ npm run dev
 | PUT | `/api/productos/{id}` | Actualizar producto |
 | DELETE | `/api/productos/{id}` | Eliminar producto |
 | GET | `/api/productos/stock-bajo` | Productos con stock bajo |
+| GET | `/api/productos/por-sede/{sedeId}` | Productos por sede |
 
-### Transacciones
+### Ventas
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
+| GET | `/api/ventas` | Listar todas las ventas |
 | POST | `/api/ventas` | Registrar venta |
+| GET | `/api/ventas/{venta}` | Obtener venta específica |
+| PATCH | `/api/ventas/{venta}` | Actualizar venta |
+| DELETE | `/api/ventas/{venta}` | Eliminar venta |
+| GET | `/api/ventas/por-fechas` | Ventas por rango de fechas |
+| GET | `/api/ventas/resumen` | Resumen de ventas |
+
+### Compras
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/compras` | Listar todas las compras |
 | POST | `/api/compras` | Registrar compra |
+| GET | `/api/compras/{compra}` | Obtener compra específica |
+| PATCH | `/api/compras/{compra}` | Actualizar compra |
+| DELETE | `/api/compras/{compra}` | Eliminar compra |
+| GET | `/api/compras/por-fechas` | Compras por rango de fechas |
+| GET | `/api/compras/resumen` | Resumen de compras |
+
+### Transferencias
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/transferencias` | Listar todas las transferencias |
 | POST | `/api/transferencias` | Crear transferencia |
-| GET | `/api/reportes/ventas` | Reporte de ventas |
+| GET | `/api/transferencias/{transferencia}` | Obtener transferencia específica |
+| PUT | `/api/transferencias/{transferencia}` | Actualizar transferencia |
+| DELETE | `/api/transferencias/{transferencia}` | Eliminar transferencia |
+
+### Auditoría
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/auditoria` | Listar registros de auditoría |
+| GET | `/api/auditoria/{id}` | Obtener registro de auditoría específico |
+| GET | `/api/auditoria/acciones` | Obtener acciones registradas |
+| GET | `/api/auditoria/tablas` | Obtener tablas auditadas |
+
+### Notificaciones
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/notifications` | Listar notificaciones |
+| PUT | `/api/notifications/{id}/mark-as-read` | Marcar notificación como leída |
+| PUT | `/api/notifications/mark-all-as-read` | Marcar todas como leídas |
+| DELETE | `/api/notifications/{id}` | Eliminar notificación |
+| DELETE | `/api/notifications` | Eliminar todas las notificaciones |
+
+### Mensajes
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/messages/user` | Enviar mensaje a usuario |
+| POST | `/api/messages/sede` | Enviar mensaje a sede |
+| POST | `/api/messages/all` | Enviar mensaje a todos |
+
+### Dashboard
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/dashboard/stats` | Estadísticas generales |
+| GET | `/api/dashboard/ventas-por-mes` | Ventas por mes |
+| GET | `/api/dashboard/productos-mas-vendidos` | Productos más vendidos |
+| GET | `/api/dashboard/productos-stock-bajo` | Productos con stock bajo |
+| GET | `/api/dashboard/ultimas-ventas` | Últimas ventas |
+| GET | `/api/dashboard/ultimas-compras` | Últimas compras |
+| GET | `/api/dashboard/ultimos-movimientos` | Últimos movimientos |
+
+### Facturas
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/facturas` | Listar facturas |
+| GET | `/api/facturas/venta/{id}` | Generar factura de venta |
+| GET | `/api/facturas/compra/{id}` | Generar factura de compra |
+| GET | `/api/facturas/descargar/{tipo}/{id}` | Descargar factura |
 
 [Ver documentación completa de la API](docs/api.md)
 
@@ -231,7 +309,7 @@ stockflow/
 - **Sedes**: Ubicaciones físicas de la empresa
 - **Ventas/Compras**: Transacciones con clientes/proveedores
 - **Transferencias**: Movimientos entre sedes
-- **Auditoría**: Registro de cambios en el sistema
+- **Auditoría**: Sistema completo de registro de cambios y actividades que permite seguimiento detallado de todas las operaciones en el sistema, incluyendo modificaciones de datos, acciones de usuarios, y transacciones comerciales. Implementado con Spatie Activity Log y personalizado para registrar información contextual relevante para el negocio.
 
 ## 👥 Roles y Permisos
 
