@@ -326,9 +326,9 @@ stockflow/
 
 ## 👥 Equipo
 
-- 👨‍💻 **Desarrollador Frontend** - [Nombre](https://github.com/username)
-- 👨‍💻 **Desarrollador Backend** - [Nombre](https://github.com/username)
-- 👨‍🎨 **Diseñador UI/UX** - [Nombre](https://github.com/username)
+- 👨‍💻 **Desarrollador Frontend** - [Jesús Canicio Ruiz](https://github.com/username)
+- 👨‍💻 **Desarrollador Backend** - [Jesús Canicio Ruiz](https://github.com/username)
+- 👨‍🎨 **Diseñador UI/UX** - [Jesús Canicio Ruiz](https://github.com/username)
 
 ## 🤝 Contribución
 
