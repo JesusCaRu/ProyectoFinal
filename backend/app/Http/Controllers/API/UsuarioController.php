@@ -145,8 +145,6 @@ class UsuarioController extends Controller
                 'nombre' => 'required|string|max:100',
                 'email' => 'required|email|unique:usuarios',
                 'password' => 'required|string|min:6',
-                'rol_id' => 'required|exists:roles,id',
-                'sede_id' => 'required|exists:sedes,id',
                 'activo' => 'boolean|in:0,1,true,false'
             ]);
 
@@ -161,15 +159,24 @@ class UsuarioController extends Controller
                 'nombre' => $request->nombre,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'rol_id' => $request->rol_id,
-                'sede_id' => $request->sede_id,
-                'activo' => (bool)$request->activo
+                'activo' => $request->has('activo') ? (bool)$request->activo : true
             ]);
 
             $token = $usuario->createToken('auth_token')->plainTextToken;
 
+            // Registrar actividad de registro
+            ActivityHelper::log(
+                "Usuario {$usuario->nombre} registrado",
+                'usuarios',
+                [
+                    'usuario_id' => $usuario->id,
+                    'email' => $usuario->email,
+                    'tipo' => 'registro_usuario'
+                ]
+            );
+
             return response()->json([
-                'message' => 'Usuario registrado exitosamente',
+                'message' => 'Usuario registrado exitosamente. Un administrador debe asignarte un rol y sede.',
                 'data' => $usuario->load(['rol', 'sede']),
                 'token' => $token
             ], 201);

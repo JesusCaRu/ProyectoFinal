@@ -23,6 +23,7 @@ import HistorialVentas from '../pages/dashboard/HistorialVentas';
 import { useAuthStore } from '../store/authStore';
 import HistorialMovimientos from '../pages/dashboard/HistorialMovimientos';
 import NotificationsPage from '../pages/dashboard/NotificationsPage';
+import VerificacionPendiente from '../pages/dashboard/VerificacionPendiente';
 
 const DashboardRouter = () => {
   const { user } = useAuthStore();
@@ -37,6 +38,17 @@ const DashboardRouter = () => {
   }
   
   return <Dashboard />;
+};
+
+// Componente para verificar si el usuario tiene rol
+const RequireRol = ({ children }) => {
+  const { user } = useAuthStore();
+  
+  if (!user?.data?.rol?.nombre) {
+    return <Navigate to="/dashboard/verificacion-pendiente" replace />;
+  }
+  
+  return children;
 };
 
 const AppRoutes = () => {
@@ -56,87 +68,120 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <DashboardLayout>
             <Routes>
-              {/* Rutas accesibles para todos los roles */}
+              {/* Ruta para usuarios pendientes de verificación */}
+              <Route path="verificacion-pendiente" element={<VerificacionPendiente />} />
+              
+              {/* Rutas que requieren rol */}
               <Route index element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista', 'Vendedor']}>
-                  <DashboardRouter />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista', 'Vendedor']}>
+                    <DashboardRouter />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="historial" element={
-                <RoleProtectedRoute allowedRoles={['Almacenista']}>
-                  <HistorialMovimientos />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Almacenista']}>
+                    <HistorialMovimientos />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               
               {/* Rutas para administradores */}
               <Route path="inventario" element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista']}>
-                  <Inventario />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista']}>
+                    <Inventario />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="usuarios" element={
-                <RoleProtectedRoute allowedRoles={['Administrador']}>
-                  <Usuarios />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador']}>
+                    <Usuarios />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="configuracion" element={
-                <RoleProtectedRoute allowedRoles={['Administrador']}>
-                  <Configuracion />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador']}>
+                    <Configuracion />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="facturas" element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
-                  <Facturas />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                    <Facturas />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="gestiones" element={
-                <RoleProtectedRoute allowedRoles={['Administrador']}>
-                  <Gestiones />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador']}>
+                    <Gestiones />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="auditoria" element={
-                <RoleProtectedRoute allowedRoles={['Administrador']}>
-                  <Auditoria />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador']}>
+                    <Auditoria />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="sedes" element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista']}>
-                  <Sedes />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Almacenista']}>
+                    <Sedes />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
 
               {/* Rutas para vendedores y administradores */}
               <Route path="ventas" element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
-                  <Ventas />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                    <Ventas />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="compras" element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
-                  <Compras />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                    <Compras />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="reportes" element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
-                  <Reportes />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                    <Reportes />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="catalogo" element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
-                  <CatalogoProductos />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                    <CatalogoProductos />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
               <Route path="historial-ventas" element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
-                  <HistorialVentas />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor']}>
+                    <HistorialVentas />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
 
               {/* Ruta de notificaciones (accesible para todos los roles) */}
               <Route path="notificaciones" element={
-                <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor', 'Almacenista']}>
-                  <NotificationsPage />
-                </RoleProtectedRoute>
+                <RequireRol>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor', 'Almacenista']}>
+                    <NotificationsPage />
+                  </RoleProtectedRoute>
+                </RequireRol>
               } />
             </Routes>
           </DashboardLayout>

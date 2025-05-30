@@ -51,23 +51,17 @@ const Register = () => {
       console.log('Enviando datos de registro:', {
         nombre: formData.name,
         email: formData.email,
-        password: formData.password,
-        rol_id: 2,
-        sede_id: 1,
-        activo: 1
+        password: formData.password
       });
 
       const success = await register({
         nombre: formData.name,
         email: formData.email,
-        password: formData.password,
-        rol_id: 2, // Siempre empleado por defecto
-        sede_id: 1, // Sede por defecto (No asignada)
-        activo: 1 // Usuario activo por defecto
+        password: formData.password
       });
       
       if (success) {
-        navigate('/dashboard');
+        navigate('/dashboard/verificacion-pendiente');
       }
     } catch (error) {
       console.error('Error en el registro:', error);
@@ -96,7 +90,15 @@ const Register = () => {
       >
         <AuthHeader
           title="Crear una cuenta"
-          subtitle="Regístrate para gestionar el inventario de robots"
+          subtitle={
+            <>
+              Regístrate para gestionar el inventario
+              <div className="mt-2 text-xs text-warning">
+                <AlertCircle className="h-3 w-3 inline mr-1" />
+                Un administrador deberá aprobar tu cuenta y asignarte un rol
+              </div>
+            </>
+          }
           icon={<UserPlus className="h-8 w-8 text-solid-color" />}
         />
 

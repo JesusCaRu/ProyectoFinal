@@ -35,6 +35,9 @@ const DashboardLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loadUser, logout } = useAuthStore();
+  
+  // Verificar si estamos en la página de verificación pendiente
+  const isVerificationPage = location.pathname === '/dashboard/verificacion-pendiente';
 
   useEffect(() => {
     loadUser();
@@ -44,6 +47,11 @@ const DashboardLayout = ({ children }) => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
+
+  // Si estamos en la página de verificación pendiente, solo mostrar el contenido
+  if (isVerificationPage) {
+    return <>{children}</>;
+  }
 
   // Definir las opciones de navegación según el rol
   const getNavigationByRole = () => {
