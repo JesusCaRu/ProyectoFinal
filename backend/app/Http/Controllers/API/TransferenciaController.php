@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\NotificationHelper;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\ActivityHelper;
 
 class TransferenciaController extends Controller
 {
@@ -93,6 +94,14 @@ class TransferenciaController extends Controller
             // Enviar notificación de transferencia creada
             NotificationHelper::sendTransferNotification($transferencia, 'created');
             Log::info('Notificación de transferencia enviada');
+
+            // Registrar actividad de creación de transferencia
+            ActivityHelper::logTransferencia($transferencia->id, 'created', [
+                'producto_nombre' => $producto->nombre,
+                'cantidad' => $transferencia->cantidad,
+                'sede_origen' => $transferencia->sedeOrigen->nombre,
+                'sede_destino' => $transferencia->sedeDestino->nombre
+            ]);
 
             if ($request->estado === 'recibido') {
                 // Descontar stock de la sede origen
@@ -227,6 +236,15 @@ class TransferenciaController extends Controller
             NotificationHelper::sendTransferNotification($transferencia, $action);
             Log::info('Notificación de transferencia enviada con acción: ' . $action);
 
+            // Registrar actividad de actualización de transferencia
+            ActivityHelper::logTransferencia($transferencia->id, $action, [
+                'producto_nombre' => $transferencia->producto->nombre,
+                'cantidad' => $transferencia->cantidad,
+                'sede_origen' => $transferencia->sedeOrigen->nombre,
+                'sede_destino' => $transferencia->sedeDestino->nombre,
+                'estado' => $request->estado
+            ]);
+
             DB::commit();
             return response()->json(['data' => $transferencia]);
 
@@ -244,6 +262,14 @@ class TransferenciaController extends Controller
         if ($transferencia->estado === 'completed') {
             return response()->json(['message' => 'No se puede eliminar una transferencia completada'], 422);
         }
+
+        // Registrar actividad de eliminación de transferencia
+        ActivityHelper::logTransferencia($transferencia->id, 'deleted', [
+            'producto_nombre' => $transferencia->producto->nombre,
+            'cantidad' => $transferencia->cantidad,
+            'sede_origen' => $transferencia->sedeOrigen->nombre,
+            'sede_destino' => $transferencia->sedeDestino->nombre
+        ]);
 
         $transferencia->delete();
         return response()->json(null, 204);

@@ -7,6 +7,7 @@ use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\ActivityHelper;
 
 class UsuarioController extends Controller
 {
@@ -222,6 +223,9 @@ class UsuarioController extends Controller
             // Crear nuevo token
             $token = $usuario->createToken('auth_token')->plainTextToken;
 
+            // Registrar actividad de login
+            ActivityHelper::logLogin($usuario->id, $usuario->email, $request->ip());
+
             return response()->json([
                 'message' => 'Login exitoso',
                 'data' => $usuario->load(['rol', 'sede']),
@@ -239,6 +243,13 @@ class UsuarioController extends Controller
 
     public function logout(Request $request)
     {
+        $user = $request->user();
+
+        // Registrar actividad de logout antes de eliminar el token
+        if ($user) {
+            ActivityHelper::logLogout($user->id, $user->email);
+        }
+
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Sesión cerrada']);
     }

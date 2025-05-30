@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\ActivityHelper;
 
 class CompraController extends Controller
 {
@@ -127,6 +128,21 @@ class CompraController extends Controller
                 DB::commit();
                 Log::info('Compra completada exitosamente');
 
+                // Registrar actividad de compra
+                ActivityHelper::log(
+                    "Compra #{$compra->id} registrada por " . $request->user()->nombre,
+                    'compras',
+                    [
+                        'compra_id' => $compra->id,
+                        'total' => $total,
+                        'sede_id' => $request->sede_id,
+                        'usuario_id' => $request->user()->id,
+                        'proveedor_id' => $request->proveedor_id,
+                        'productos' => $productos,
+                        'tipo' => 'compra_creada'
+                    ]
+                );
+
                 return response()->json([
                     'data' => $compra->load(['proveedor', 'detalles.producto']),
                     'message' => 'Compra registrada correctamente'
@@ -233,6 +249,20 @@ class CompraController extends Controller
             }
 
             DB::commit();
+
+            // Registrar actividad de actualización de estado de compra
+            ActivityHelper::log(
+                "Estado de compra #{$compra->id} actualizado a '{$request->estado}' por " . $request->user()->nombre,
+                'compras',
+                [
+                    'compra_id' => $compra->id,
+                    'estado_anterior' => $compra->getOriginal('estado'),
+                    'estado_nuevo' => $request->estado,
+                    'usuario_id' => $request->user()->id,
+                    'tipo' => 'compra_estado_actualizado'
+                ]
+            );
+
             return response()->json([
                 'data' => $compra->load(['proveedor', 'detalles.producto']),
                 'message' => 'Estado de la compra actualizado correctamente'

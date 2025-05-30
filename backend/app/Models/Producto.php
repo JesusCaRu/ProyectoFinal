@@ -25,7 +25,7 @@ class Producto extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['nombre', 'descripcion', 'stock_minimo'])
+            ->logAll()
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

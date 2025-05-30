@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\NotificationHelper;
 use App\Models\Sede;
+use App\Helpers\ActivityHelper;
 
 class VentaController extends Controller
 {
@@ -167,6 +168,20 @@ class VentaController extends Controller
 
                 DB::commit();
                 Log::info('Venta completada exitosamente');
+
+                // Registrar actividad de venta
+                ActivityHelper::log(
+                    "Venta #{$venta->id} registrada por " . $request->user()->nombre,
+                    'ventas',
+                    [
+                        'venta_id' => $venta->id,
+                        'total' => $total,
+                        'sede_id' => $sedeId,
+                        'usuario_id' => $request->user()->id,
+                        'productos' => $productos,
+                        'tipo' => 'venta_creada'
+                    ]
+                );
 
                 return response()->json([
                     'data' => $venta->load(['usuario', 'detalles.producto']),

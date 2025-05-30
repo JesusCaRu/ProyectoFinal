@@ -64,7 +64,7 @@ class Usuario extends Authenticatable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['nombre', 'email', 'telefono', 'rol_id', 'sede_id', 'activo'])
+            ->logExcept(['password', 'remember_token'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
