@@ -1,19 +1,33 @@
-# Etapa 1: Construcción de la app con Node
+# Etapa 1: Construcción
 FROM node:20-alpine AS build
 
-# Establecer el directorio de trabajo
+# Establece el directorio de trabajo
 WORKDIR /
 
-# Copiar los archivos necesarios para instalar dependencias
+# Copia los archivos necesarios para instalar dependencias
 COPY package*.json ./
 
-# Instalar las dependencias
+# Instala las dependencias
 RUN npm install
 
-# Copiar el resto del código
+# Copia todo el proyecto y construye la aplicación
 COPY . .
-
-# Compilar la app para producción
 RUN npm run build
 
+# Etapa 2: Producción con Nginx
+FROM nginx:stable-alpine
 
+# Elimina la configuración por defecto de NGINX
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copia tu configuración personalizada de NGINX
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copia los archivos construidos al directorio que NGINX sirve
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Expone el puerto que usará Coolify (80 por defecto)
+EXPOSE 80
+
+# Inicia NGINX
+CMD ["nginx", "-g", "daemon off;"]
