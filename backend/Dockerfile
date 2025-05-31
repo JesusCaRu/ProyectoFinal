@@ -31,7 +31,7 @@ RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage
 
 # Expone el puerto para PHP-FPM
-EXPOSE 8000
+EXPOSE 9000
 
 # Comando de arranque del contenedor
 CMD ["php-fpm"]
