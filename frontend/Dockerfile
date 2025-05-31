@@ -2,7 +2,7 @@
 FROM nginx:alpine
 
 # Copiar archivos de construcción desde la etapa anterior
-COPY --from=builder /dist /usr/share/nginx/html
+COPY /dist /usr/share/nginx/html
 
 # Copiar configuración personalizada de Nginx (opcional)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
