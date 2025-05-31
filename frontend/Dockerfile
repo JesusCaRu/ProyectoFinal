@@ -1,30 +1,32 @@
-# 1. Imagen base con Node.js (ajusta la versión si es necesario)
+# Etapa 1: Construcción de la app con Node
 FROM node:20-alpine AS build
 
-# 2. Establece el directorio de trabajo
-WORKDIR /app
+# Establecer el directorio de trabajo
+WORKDIR /
 
-# 3. Copia los archivos del proyecto
+# Copiar los archivos necesarios para instalar dependencias
 COPY package*.json ./
-COPY . .
 
-# 4. Instala dependencias
+# Instalar las dependencias
 RUN npm install
 
-# 5. Compila el proyecto para producción
+# Copiar el resto del código
+COPY . .
+
+# Compilar la app para producción
 RUN npm run build
 
-# 6. Servidor web ligero para servir la app (usamos nginx)
+# Etapa 2: Servir la app con Nginx
 FROM nginx:stable-alpine
 
-# 7. Copia la app compilada al directorio de NGINX
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copiar los archivos compilados desde la etapa anterior
+COPY --from=build /dist /usr/share/nginx/html
 
-# 8. Copia configuración de NGINX (opcional si necesitas configurar rutas SPA)
+# Copiar configuración personalizada de Nginx si existe
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 9. Expone el puerto 80
+# Exponer el puerto estándar de Nginx
 EXPOSE 80
 
-# 10. Comando para ejecutar nginx
+# Comando por defecto para ejecutar Nginx
 CMD ["nginx", "-g", "daemon off;"]
