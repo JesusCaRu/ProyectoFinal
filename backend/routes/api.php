@@ -153,6 +153,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('usuarios/trashed', [UsuarioController::class, 'trashed']);
     Route::post('usuarios/{id}/restore', [UsuarioController::class, 'restore']);
     Route::patch('usuarios/{usuario}/estado', [UsuarioController::class, 'cambiarEstado']);
+    Route::put('usuarios/me/password', [UsuarioController::class, 'updatePassword']);
 
     // Auditorias
     Route::get('/auditoria/acciones', [AuditoriaController::class, 'getAcciones']);

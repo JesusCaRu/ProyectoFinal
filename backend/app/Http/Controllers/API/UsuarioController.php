@@ -309,4 +309,58 @@ class UsuarioController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Actualizar la contraseña del usuario autenticado
+     */
+    public function updatePassword(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'current_password' => 'required|string',
+                'password' => 'required|string|min:6',
+                'password_confirmation' => 'required|same:password'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $usuario = $request->user();
+
+            // Verificar contraseña actual
+            if (!Hash::check($request->current_password, $usuario->password)) {
+                return response()->json([
+                    'message' => 'La contraseña actual es incorrecta'
+                ], 422);
+            }
+
+            // Actualizar contraseña
+            $usuario->password = Hash::make($request->password);
+            $usuario->save();
+
+            // Registrar actividad
+            ActivityHelper::log(
+                "Contraseña actualizada",
+                'usuarios',
+                [
+                    'usuario_id' => $usuario->id,
+                    'tipo' => 'cambio_contraseña'
+                ]
+            );
+
+            return response()->json([
+                'message' => 'Contraseña actualizada correctamente'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al actualizar la contraseña',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -4,69 +4,69 @@ import {
   Save, 
   User, 
   Lock,
-  Bell,
-  CreditCard,
-  Globe,
-  Palette,
   Database,
   Shield,
   HelpCircle,
-  LogOut
+  LogOut,
+  BookOpen,
+  FileText,
+  Mail,
+  Phone,
+  Monitor,
+  Coffee,
+  Star,
+  Download,
+  CheckCircle
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import useConfigStore from '../../store/configStore';
+import { userService } from '../../services/userService';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from 'react-hot-toast';
 
 const Configuracion = () => {
-  const { config, fetchConfig, updateConfig, updatePassword, isLoading, error } = useConfigStore();
-  const { logout } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const { userData, logout } = useAuthStore();
   const [formData, setFormData] = useState({
     perfil: {
       nombre: '',
-      email: '',
-      telefono: ''
+      email: ''
     },
     seguridad: {
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
-    },
-    notificaciones: {
-      notificaciones_email: true,
-      notificaciones_push: true,
-      recordatorios_stock: true
-    },
-    pago: {
-      metodo_pago: 'Tarjeta de Crédito',
-      moneda: 'MXN'
-    },
-    idioma: {
-      idioma: 'Español',
-      zona_horaria: 'UTC-6'
-    },
-    apariencia: {
-      tema: 'Claro',
-      densidad: 'Normal'
     }
   });
 
   useEffect(() => {
-    fetchConfig();
-  }, [fetchConfig]);
+    loadUserProfile();
+  }, []);
 
-  useEffect(() => {
-    if (config) {
-      setFormData(prev => ({
-        ...prev,
-        perfil: config.perfil || prev.perfil,
-        notificaciones: config.seguridad || prev.notificaciones,
-        pago: config.pago || prev.pago,
-        idioma: config.idioma || prev.idioma,
-        apariencia: config.apariencia || prev.apariencia
-      }));
+  // Cargar el perfil del usuario actual
+  const loadUserProfile = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Usar userData del store de autenticación en lugar de hacer una llamada API
+      if (userData) {
+        setFormData(prev => ({
+          ...prev,
+          perfil: {
+            nombre: userData.nombre || '',
+            email: userData.email || ''
+          }
+        }));
+      }
+    } catch (error) {
+      setError(error.message || 'Error al cargar el perfil');
+      toast.error('Error al cargar el perfil');
+    } finally {
+      setIsLoading(false);
     }
-  }, [config]);
+  };
 
   const handleChange = (section, field, value) => {
     setFormData(prev => ({
@@ -77,37 +77,74 @@ const Configuracion = () => {
       }
     }));
   };
+  
+  // Mostrar mensaje de éxito con efecto de desaparición
+  const showSuccessMessage = (message) => {
+    setSuccess(message);
+    toast.success(message);
+    
+    // Limpiar el mensaje después de 4 segundos
+    setTimeout(() => {
+      setSuccess(null);
+    }, 4000);
+  };
 
   const handleSubmit = async (section) => {
     try {
+      setIsLoading(true);
+      setError(null);
+      setSuccess(null);
+      
       if (section === 'seguridad') {
         if (formData.seguridad.newPassword !== formData.seguridad.confirmPassword) {
           toast.error('Las contraseñas no coinciden');
           return;
         }
-        const success = await updatePassword(
-          formData.seguridad.currentPassword,
-          formData.seguridad.newPassword
-        );
-        if (success) {
-          toast.success('Contraseña actualizada correctamente');
-          setFormData(prev => ({
-            ...prev,
-            seguridad: {
-              currentPassword: '',
-              newPassword: '',
-              confirmPassword: ''
-            }
-          }));
+        
+        if (formData.seguridad.newPassword.length < 6) {
+          toast.error('La contraseña debe tener al menos 6 caracteres');
+          return;
         }
-      } else {
-        const success = await updateConfig(section, formData[section]);
-        if (success) {
-          toast.success('Configuración actualizada correctamente');
+        
+        // Usar el servicio userService para actualizar la contraseña
+        await userService.updatePassword({
+          current_password: formData.seguridad.currentPassword,
+          password: formData.seguridad.newPassword,
+          password_confirmation: formData.seguridad.confirmPassword
+        });
+        
+        // Mostrar mensaje de éxito
+        showSuccessMessage('Contraseña actualizada correctamente');
+        
+        // Limpiar campos
+        setFormData(prev => ({
+          ...prev,
+          seguridad: {
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          }
+        }));
+      } else if (section === 'perfil') {
+        if (!formData.perfil.nombre || !formData.perfil.email) {
+          toast.error('El nombre y el correo electrónico son obligatorios');
+          return;
         }
+        
+        // Usar el servicio userService para actualizar el perfil
+        await userService.updateProfile({
+          nombre: formData.perfil.nombre,
+          email: formData.perfil.email
+        });
+        
+        // Mostrar mensaje de éxito
+        showSuccessMessage('Perfil actualizado correctamente');
       }
     } catch (error) {
+      setError(error.message || 'Error al actualizar la configuración');
       toast.error(error.message || 'Error al actualizar la configuración');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -122,21 +159,19 @@ const Configuracion = () => {
       items: [
         {
           label: 'Nombre',
-          value: formData.perfil.nombre,
+          value: formData.perfil.nombre || '',
           type: 'text',
+          placeholder: 'Tu nombre completo',
+          required: true,
           onChange: (e) => handleChange('perfil', 'nombre', e.target.value)
         },
         {
           label: 'Correo Electrónico',
-          value: formData.perfil.email,
+          value: formData.perfil.email || '',
           type: 'email',
+          placeholder: 'correo@ejemplo.com',
+          required: true,
           onChange: (e) => handleChange('perfil', 'email', e.target.value)
-        },
-        {
-          label: 'Teléfono',
-          value: formData.perfil.telefono,
-          type: 'tel',
-          onChange: (e) => handleChange('perfil', 'telefono', e.target.value)
         }
       ],
       onSubmit: () => handleSubmit('perfil')
@@ -149,110 +184,28 @@ const Configuracion = () => {
           label: 'Contraseña Actual',
           value: formData.seguridad.currentPassword,
           type: 'password',
+          placeholder: 'Ingresa tu contraseña actual',
+          required: true,
           onChange: (e) => handleChange('seguridad', 'currentPassword', e.target.value)
         },
         {
           label: 'Nueva Contraseña',
           value: formData.seguridad.newPassword,
           type: 'password',
+          placeholder: 'Mínimo 6 caracteres',
+          required: true,
           onChange: (e) => handleChange('seguridad', 'newPassword', e.target.value)
         },
         {
           label: 'Confirmar Contraseña',
           value: formData.seguridad.confirmPassword,
           type: 'password',
+          placeholder: 'Confirma tu nueva contraseña',
+          required: true,
           onChange: (e) => handleChange('seguridad', 'confirmPassword', e.target.value)
         }
       ],
       onSubmit: () => handleSubmit('seguridad')
-    },
-    {
-      title: 'Notificaciones',
-      icon: <Bell className="h-5 w-5 text-solid-color" />,
-      items: [
-        {
-          label: 'Notificaciones por Email',
-          value: formData.notificaciones.notificaciones_email,
-          type: 'toggle',
-          onChange: (value) => handleChange('notificaciones', 'notificaciones_email', value)
-        },
-        {
-          label: 'Notificaciones Push',
-          value: formData.notificaciones.notificaciones_push,
-          type: 'toggle',
-          onChange: (value) => handleChange('notificaciones', 'notificaciones_push', value)
-        },
-        {
-          label: 'Recordatorios de Stock',
-          value: formData.notificaciones.recordatorios_stock,
-          type: 'toggle',
-          onChange: (value) => handleChange('notificaciones', 'recordatorios_stock', value)
-        }
-      ],
-      onSubmit: () => handleSubmit('seguridad')
-    },
-    {
-      title: 'Pago',
-      icon: <CreditCard className="h-5 w-5 text-solid-color" />,
-      items: [
-        {
-          label: 'Método de Pago',
-          value: formData.pago.metodo_pago,
-          type: 'select',
-          options: ['Tarjeta de Crédito', 'PayPal', 'Transferencia Bancaria'],
-          onChange: (e) => handleChange('pago', 'metodo_pago', e.target.value)
-        },
-        {
-          label: 'Moneda',
-          value: formData.pago.moneda,
-          type: 'select',
-          options: ['MXN', 'USD', 'EUR'],
-          onChange: (e) => handleChange('pago', 'moneda', e.target.value)
-        }
-      ],
-      onSubmit: () => handleSubmit('pago')
-    },
-    {
-      title: 'Idioma y Región',
-      icon: <Globe className="h-5 w-5 text-solid-color" />,
-      items: [
-        {
-          label: 'Idioma',
-          value: formData.idioma.idioma,
-          type: 'select',
-          options: ['Español', 'English', 'Français'],
-          onChange: (e) => handleChange('idioma', 'idioma', e.target.value)
-        },
-        {
-          label: 'Zona Horaria',
-          value: formData.idioma.zona_horaria,
-          type: 'select',
-          options: ['UTC-6', 'UTC-5', 'UTC-4'],
-          onChange: (e) => handleChange('idioma', 'zona_horaria', e.target.value)
-        }
-      ],
-      onSubmit: () => handleSubmit('idioma')
-    },
-    {
-      title: 'Apariencia',
-      icon: <Palette className="h-5 w-5 text-solid-color" />,
-      items: [
-        {
-          label: 'Tema',
-          value: formData.apariencia.tema,
-          type: 'select',
-          options: ['Claro', 'Oscuro', 'Sistema'],
-          onChange: (e) => handleChange('apariencia', 'tema', e.target.value)
-        },
-        {
-          label: 'Densidad',
-          value: formData.apariencia.densidad,
-          type: 'select',
-          options: ['Compacto', 'Normal', 'Espacioso'],
-          onChange: (e) => handleChange('apariencia', 'densidad', e.target.value)
-        }
-      ],
-      onSubmit: () => handleSubmit('apariencia')
     }
   ];
 
@@ -263,173 +216,259 @@ const Configuracion = () => {
     },
     {
       label: 'Última Actualización',
-      value: '2024-05-01'
+      value: new Date().toLocaleDateString()
     },
     {
       label: 'Base de Datos',
-      value: 'PostgreSQL 14'
+      value: 'MySQL 8.0'
+    }
+  ];
+  
+  const helpArticles = [
+    {
+      title: 'Primeros pasos con StockFlow',
+      icon: <BookOpen className="h-5 w-5" />,
+      description: 'Aprende lo básico para comenzar a utilizar la plataforma de manera efectiva.'
+    },
+    {
+      title: 'Gestión de inventario',
+      icon: <Database className="h-5 w-5" />,
+      description: 'Cómo realizar un seguimiento eficiente de tus productos y existencias.'
+    },
+    {
+      title: 'Transferencias entre sedes',
+      icon: <FileText className="h-5 w-5" />,
+      description: 'Guía para gestionar movimientos de inventario entre diferentes ubicaciones.'
+    },
+    {
+      title: 'Gestión de compras y ventas',
+      icon: <Star className="h-5 w-5" />,
+      description: 'Procedimientos para registrar y dar seguimiento a transacciones comerciales.'
+    }
+  ];
+  
+  const quickLinks = [
+    {
+      title: 'Contactar Soporte',
+      icon: <Mail className="h-5 w-5" />,
+      description: 'Envía un correo a nuestro equipo de soporte para resolver dudas.'
+    },
+    {
+      title: 'Ayuda telefónica',
+      icon: <Phone className="h-5 w-5" />,
+      description: 'Llama a nuestro centro de atención al cliente: 01-800-123-4567'
+    },
+    {
+      title: 'Tutoriales en video',
+      icon: <Monitor className="h-5 w-5" />,
+      description: 'Visualiza guías paso a paso para sacar el máximo provecho.'
+    },
+    {
+      title: 'Actualizaciones',
+      icon: <Download className="h-5 w-5" />,
+      description: 'Revisa las novedades y mejoras más recientes del sistema.'
     }
   ];
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="h-screen overflow-auto p-6">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4">
-          <Settings className="h-8 w-8 text-solid-color" />
+          <div className="p-3 bg-solid-color/10 rounded-full">
+            <Settings className="h-7 w-7 text-solid-color" />
+          </div>
           <h1 className="text-2xl font-bold text-accessibility-text">Configuración</h1>
         </div>
       </div>
 
       {error && (
-        <div className="bg-error/10 border border-error text-error px-4 py-3 rounded-lg">
+        <div className="mb-8 bg-error/10 border border-error text-error px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
+      
+      {success && (
+        <_motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="mb-8 bg-green-100 border border-green-600 text-green-700 px-4 py-3 rounded-lg flex items-center"
+        >
+          <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+          <span>{success}</span>
+        </_motion.div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {sections.map((section, index) => (
+      <div className="grid grid-cols-12 gap-6 min-h-[calc(100vh-10rem)]">
+        {/* Sección principal - 2/3 del ancho */}
+        <div className="col-span-12 xl:col-span-8 space-y-6">
+          {/* Tarjetas de configuración */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {sections.map((section, index) => (
+              <_motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className="bg-bg rounded-xl shadow-md p-6 border border-border hover:border-solid-color/40 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-solid-color/10 rounded-lg">
+                      {section.icon}
+                    </div>
+                    <h2 className="text-lg font-semibold text-accessibility-text">
+                      {section.title}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={section.onSubmit}
+                    disabled={isLoading}
+                    className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        <span>Guardando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        <span>Guardar</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="space-y-5">
+                  {section.items.map((item, itemIndex) => (
+                    <div key={itemIndex} className="space-y-2">
+                      <label className="text-sm font-medium text-text-tertiary flex items-center">
+                        {item.label}
+                        {item.required && <span className="text-error ml-1">*</span>}
+                      </label>
+                      <input
+                        type={item.type}
+                        value={item.value}
+                        onChange={item.onChange}
+                        placeholder={item.placeholder}
+                        className="w-full px-4 py-2.5 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent transition-all"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </_motion.div>
+            ))}
+          </div>
+          
+          {/* Sección de ayuda y soporte */}
           <_motion.div
-            key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="bg-bg rounded-xl shadow-md p-6 border border-border"
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className="bg-bg rounded-xl shadow-md p-6 border border-border hover:border-solid-color/40 transition-colors"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                {section.icon}
-                <h2 className="text-lg font-semibold text-accessibility-text">
-                  {section.title}
-                </h2>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-solid-color/10 rounded-lg">
+                <HelpCircle className="h-5 w-5 text-solid-color" />
               </div>
-              <button
-                onClick={section.onSubmit}
-                disabled={isLoading}
-                className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200 disabled:opacity-50"
-              >
-                <Save className="h-5 w-5" />
-                <span>Guardar</span>
-              </button>
+              <h2 className="text-lg font-semibold text-accessibility-text">
+                Centro de Ayuda
+              </h2>
             </div>
-            <div className="space-y-4">
-              {section.items.map((item, itemIndex) => (
-                <div key={itemIndex} className="space-y-2">
-                  <label className="text-sm font-medium text-text-tertiary">
-                    {item.label}
-                  </label>
-                  {item.type === 'toggle' ? (
-                    <div className="flex items-center">
-                      <button
-                        onClick={() => item.onChange(!item.value)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                          item.value ? 'bg-success' : 'bg-text-tertiary'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                            item.value ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {helpArticles.map((article, index) => (
+                <div 
+                  key={index}
+                  className="p-4 border border-border rounded-lg hover:bg-bg-secondary transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="p-2 bg-solid-color/10 rounded-lg text-solid-color shrink-0">
+                      {article.icon}
                     </div>
-                  ) : item.type === 'select' ? (
-                    <select
-                      value={item.value}
-                      onChange={item.onChange}
-                      className="w-full px-3 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
-                    >
-                      {item.options.map((option, optionIndex) => (
-                        <option key={optionIndex} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type={item.type}
-                      value={item.value}
-                      onChange={item.onChange}
-                      className="w-full px-3 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
-                    />
-                  )}
+                    <div>
+                      <h3 className="font-medium text-accessibility-text mb-1">{article.title}</h3>
+                      <p className="text-sm text-text-tertiary">{article.description}</p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </_motion.div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <_motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-          className="bg-bg rounded-xl shadow-md p-6 border border-border"
-        >
-          <div className="flex items-center space-x-3 mb-4">
-            <Database className="h-5 w-5 text-solid-color" />
-            <h2 className="text-lg font-semibold text-accessibility-text">
-              Sistema
-            </h2>
-          </div>
-          <div className="space-y-4">
-            {systemInfo.map((info, index) => (
-              <div key={index} className="flex justify-between">
-                <span className="text-sm text-text-tertiary">{info.label}</span>
-                <span className="text-sm font-medium text-accessibility-text">
-                  {info.value}
-                </span>
+        </div>
+        
+        {/* Sidebar - 1/3 del ancho */}
+        <div className="col-span-12 xl:col-span-4 space-y-6">
+          {/* Panel de información del sistema */}
+          <_motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="bg-bg rounded-xl shadow-md p-6 border border-border hover:border-solid-color/40 transition-colors"
+          >
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-solid-color/10 rounded-lg">
+                <Database className="h-5 w-5 text-solid-color" />
               </div>
-            ))}
-          </div>
-        </_motion.div>
-
-        <_motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="bg-bg rounded-xl shadow-md p-6 border border-border"
-        >
-          <div className="flex items-center space-x-3 mb-4">
-            <Shield className="h-5 w-5 text-solid-color" />
-            <h2 className="text-lg font-semibold text-accessibility-text">
-              Privacidad
-            </h2>
-          </div>
-          <div className="space-y-4">
-            <button className="w-full px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200">
-              <Shield className="h-5 w-5" />
-              <span>Política de Privacidad</span>
-            </button>
-            <button className="w-full px-4 py-2 bg-interactive-component hover:bg-interactive-component-secondary text-accessibility-text rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200">
-              <HelpCircle className="h-5 w-5" />
-              <span>Centro de Ayuda</span>
-            </button>
-          </div>
-        </_motion.div>
-
-        <_motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.5 }}
-          className="bg-bg rounded-xl shadow-md p-6 border border-border"
-        >
-          <div className="flex items-center space-x-3 mb-4">
-            <LogOut className="h-5 w-5 text-solid-color" />
-            <h2 className="text-lg font-semibold text-accessibility-text">
-              Sesión
-            </h2>
-          </div>
-          <div className="space-y-4">
-            <button
-              onClick={handleLogout}
-              className="w-full px-4 py-2 bg-error hover:bg-error-hover text-white rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200"
-            >
-              <LogOut className="h-5 w-5" />
-              <span>Cerrar Sesión</span>
-            </button>
-          </div>
-        </_motion.div>
+              <h2 className="text-lg font-semibold text-accessibility-text">
+                Información del Sistema
+              </h2>
+            </div>
+            <div className="space-y-4">
+              {systemInfo.map((info, index) => (
+                <div key={index} className="flex justify-between py-2 border-b border-border last:border-0">
+                  <span className="text-sm text-text-tertiary">{info.label}</span>
+                  <span className="text-sm font-medium text-accessibility-text">
+                    {info.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </_motion.div>
+          
+          {/* Enlaces rápidos */}
+          <_motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="bg-bg rounded-xl shadow-md p-6 border border-border hover:border-solid-color/40 transition-colors"
+          >
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-solid-color/10 rounded-lg">
+                <Coffee className="h-5 w-5 text-solid-color" />
+              </div>
+              <h2 className="text-lg font-semibold text-accessibility-text">
+                Enlaces Rápidos
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {quickLinks.map((link, index) => (
+                <div 
+                  key={index} 
+                  className="p-3 border border-border rounded-lg hover:bg-bg-secondary transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="p-1.5 bg-solid-color/10 rounded-lg text-solid-color shrink-0">
+                      {link.icon}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-accessibility-text text-sm">{link.title}</h3>
+                      <p className="text-xs text-text-tertiary mt-0.5">{link.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              <button
+                onClick={handleLogout}
+                className="w-full mt-3 px-4 py-3 bg-error/10 hover:bg-error/20 text-error rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Cerrar Sesión</span>
+              </button>
+            </div>
+          </_motion.div>
+        </div>
       </div>
     </div>
   );

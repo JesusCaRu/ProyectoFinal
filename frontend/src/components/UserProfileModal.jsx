@@ -10,9 +10,9 @@ import {
     LogOut,
     Settings,
     Key,
-    Pencil,
     Store,
-    AlertCircle
+    AlertCircle,
+    CheckCircle
 } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 const UserProfileModal = ({ isOpen, onClose, user }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
     const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [passwordData, setPasswordData] = useState({
         current_password: '',
@@ -76,8 +77,8 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
         }
         if (!passwordData.password) {
             errors.password = 'La nueva contraseña es requerida';
-        } else if (passwordData.password.length < 8) {
-            errors.password = 'La contraseña debe tener al menos 8 caracteres';
+        } else if (passwordData.password.length < 6) {
+            errors.password = 'La contraseña debe tener al menos 6 caracteres';
         }
         if (passwordData.password !== passwordData.password_confirmation) {
             errors.password_confirmation = 'Las contraseñas no coinciden';
@@ -91,6 +92,7 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
         try {
             setIsLoading(true);
             setError(null);
+            setSuccess(null);
             setPasswordErrors({});
             
             await userService.updatePassword(passwordData);
@@ -102,34 +104,20 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
                 password_confirmation: '',
             });
             
-            setShowPasswordForm(false);
-            alert('Contraseña actualizada correctamente');
+            // Mostrar mensaje de éxito
+            setSuccess('Contraseña actualizada correctamente');
+            
+            // Cerrar el formulario después de un tiempo
+            setTimeout(() => {
+                setShowPasswordForm(false);
+                // Limpiamos el mensaje de éxito después de cerrar el formulario
+                setTimeout(() => setSuccess(null), 500);
+            }, 2000);
+            
         } catch (error) {
             setError(error.message || 'Error al cambiar la contraseña');
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    const handleAvatarChange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-                setError('El archivo no debe superar los 2MB');
-                return;
-            }
-            
-            try {
-                setIsLoading(true);
-                setError(null);
-                await userService.uploadAvatar(file);
-                // Recargar la página para mostrar el nuevo avatar
-                window.location.reload();
-            } catch (error) {
-                setError(error.message || 'Error al subir el avatar');
-            } finally {
-                setIsLoading(false);
-            }
         }
     };
 
@@ -174,20 +162,6 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
                                     </div>
                                 )}
                             </div>
-                            <label 
-                                htmlFor="avatar-upload"
-                                className="absolute bottom-0 right-0 bg-solid-color text-white p-2 rounded-full hover:bg-solid-color-hover transition-colors cursor-pointer"
-                            >
-                                <Pencil className="w-4 h-4" />
-                                <input
-                                    id="avatar-upload"
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleAvatarChange}
-                                    disabled={isLoading}
-                                />
-                            </label>
                         </div>
                     </div>
                 </div>
@@ -214,6 +188,17 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
                             <AlertCircle className="w-4 h-4" />
                             {error}
                         </div>
+                    )}
+                    
+                    {success && (
+                        <_motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm flex items-center gap-2"
+                        >
+                            <CheckCircle className="w-4 h-4" />
+                            {success}
+                        </_motion.div>
                     )}
 
                     {/* Información del usuario */}
@@ -256,7 +241,12 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
 
                     {/* Formulario de cambio de contraseña */}
                     {showPasswordForm && (
-                        <div className="mt-8 p-4 bg-bg-secondary rounded-lg">
+                        <_motion.div 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-8 p-4 bg-bg-secondary rounded-lg"
+                        >
                             <h3 className="text-lg font-semibold mb-4 text-accessibility-text">Cambiar contraseña</h3>
                             <form onSubmit={handleChangePassword} className="space-y-4">
                                 <div>
@@ -321,7 +311,7 @@ const UserProfileModal = ({ isOpen, onClose, user }) => {
                                     </button>
                                 </div>
                             </form>
-                        </div>
+                        </_motion.div>
                     )}
 
                     {/* Acciones rápidas */}

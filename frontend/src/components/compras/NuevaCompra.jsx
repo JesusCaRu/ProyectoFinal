@@ -37,7 +37,7 @@ const NuevaCompra = ({ isOpen, onClose }) => {
             setIsLoading(true);
             try {
                 await Promise.all([
-                    loadProducts(),
+                    loadProducts(sedeId),
                     fetchProveedores()
                 ]);
                 setError(null);
@@ -52,7 +52,7 @@ const NuevaCompra = ({ isOpen, onClose }) => {
         if (isOpen) {
             loadData();
         }
-    }, [isOpen]);
+    }, [isOpen, sedeId]);
 
     const handleAddProducto = () => {
         setDetalles([...detalles, { producto_id: '', cantidad: 1, precio_unitario: 0 }]);
@@ -64,11 +64,21 @@ const NuevaCompra = ({ isOpen, onClose }) => {
 
     const handleProductoChange = (index, productoId) => {
         const producto = products.find(p => p.id === parseInt(productoId));
+        
+        // Obtener el precio_compra de la relación producto-sede
+        const sede = producto?.sedes?.find(s => s.id === sedeId);
+        const precioCompra = sede?.pivot?.precio_compra || 0;
+        
+        console.log('Producto seleccionado:', producto);
+        console.log('Sede ID:', sedeId);
+        console.log('Relación sede:', sede);
+        console.log('Precio compra:', precioCompra);
+        
         const newDetalles = [...detalles];
         newDetalles[index] = {
             ...newDetalles[index],
             producto_id: productoId,
-            precio_unitario: producto?.precio_compra || 0
+            precio_unitario: precioCompra
         };
         setDetalles(newDetalles);
     };
@@ -82,7 +92,8 @@ const NuevaCompra = ({ isOpen, onClose }) => {
         setDetalles(newDetalles);
     };
 
-    const handlePrecioChange = (index, precio) => {
+    // This function is kept for reference but is no longer used since the price field is now read-only
+    const _handlePrecioChange = (index, precio) => {
         const newDetalles = [...detalles];
         newDetalles[index] = {
             ...newDetalles[index],
@@ -258,11 +269,17 @@ const NuevaCompra = ({ isOpen, onClose }) => {
                                                             required
                                                         >
                                                             <option value="">Seleccione un producto</option>
-                                                            {filteredProducts.map(producto => (
-                                                                <option key={producto.id} value={producto.id}>
-                                                                    {producto.nombre} ({producto.codigo})
-                                                                </option>
-                                                            ))}
+                                                            {filteredProducts.map(producto => {
+                                                                // Obtener el precio de compra de la sede
+                                                                const sede = producto.sedes?.find(s => s.id === sedeId);
+                                                                const precioCompra = sede?.pivot?.precio_compra || 0;
+                                                                
+                                                                return (
+                                                                    <option key={producto.id} value={producto.id}>
+                                                                        {producto.nombre} ({producto.codigo}) - {formatCurrency(precioCompra)}
+                                                                    </option>
+                                                                );
+                                                            })}
                                                         </select>
                                                     </td>
                                                     <td className="px-6 py-4">
@@ -292,14 +309,9 @@ const NuevaCompra = ({ isOpen, onClose }) => {
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center justify-end">
-                                                            <input
-                                                                type="number"
-                                                                value={detalle.precio_unitario}
-                                                                onChange={(e) => handlePrecioChange(index, e.target.value)}
-                                                                min="0"
-                                                                step="0.01"
-                                                                className="w-32 px-4 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent text-right"
-                                                            />
+                                                            <div className="w-32 px-4 py-2 bg-interactive-component border border-border rounded-lg text-right cursor-not-allowed text-accessibility-text">
+                                                                {formatCurrency(detalle.precio_unitario)}
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-right text-sm font-medium text-accessibility-text">

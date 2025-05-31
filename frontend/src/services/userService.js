@@ -87,7 +87,7 @@ export const userService = {
   // Obtener perfil del usuario actual
   getProfile: async () => {
     try {
-      const response = await axiosInstance.get(`${API_URL}/usuarios/me`);
+      const response = await axiosInstance.get(`${API_URL}/me`);
       return response.data.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al obtener el perfil');
@@ -97,7 +97,7 @@ export const userService = {
   // Actualizar perfil del usuario
   updateProfile: async (userData) => {
     try {
-      const response = await axiosInstance.put(`${API_URL}/usuarios/me`, userData);
+      const response = await axiosInstance.put(`${API_URL}/config/perfil`, userData);
       return response.data.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al actualizar el perfil');
@@ -107,8 +107,11 @@ export const userService = {
   // Actualizar contraseña
   updatePassword: async (passwordData) => {
     try {
-      const response = await axiosInstance.put(`${API_URL}/usuarios/me/password`, passwordData);
-      return response.data.data;
+      const response = await axiosInstance.put(`${API_URL}/config/password`, {
+        current_password: passwordData.current_password,
+        new_password: passwordData.password
+      });
+      return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error al actualizar la contraseña');
     }
