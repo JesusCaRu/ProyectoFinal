@@ -1,0 +1,360 @@
+@startuml StockFlow
+
+' Clases principales del modelo
+class Producto {
+    - id: int
+    - nombre: string
+    - sku: string
+    - descripcion: string
+    - categoria_id: int
+    - marca_id: int
+    - stock_minimo: int
+    + categoria()
+    + marca()
+    + sedes()
+    + transferencias()
+    + compraDetalles()
+    + ventaDetalles()
+    + movimientos()
+    + actualizarStock()
+}
+
+class Categoria {
+    - id: int
+    - nombre: string
+    - descripcion: string
+    + productos()
+}
+
+class Marca {
+    - id: int
+    - nombre: string
+    - descripcion: string
+    + productos()
+}
+
+class Sede {
+    - id: int
+    - nombre: string
+    - direccion: string
+    - telefono: string
+    - email: string
+    - estado: string
+    + productos()
+    + usuarios()
+    + transferenciasOrigen()
+    + transferenciasDestino()
+    + ventas()
+    + compras()
+}
+
+class Usuario {
+    - id: int
+    - nombre: string
+    - email: string
+    - password: string
+    - telefono: string
+    - rol_id: int
+    - sede_id: int
+    - activo: boolean
+    + rol()
+    + sede()
+    + auditorias()
+    + compras()
+    + ventas()
+    + movimientos()
+}
+
+class Role {
+    - id: int
+    - nombre: string
+    + usuarios()
+}
+
+class Compra {
+    - id: int
+    - proveedor_id: int
+    - usuario_id: int
+    - sede_id: int
+    - total: decimal
+    - estado: string
+    + proveedor()
+    + usuario()
+    + sede()
+    + detalles()
+    + puedeCambiarEstado()
+    + generarFactura()
+}
+
+class CompraDetalle {
+    - id: int
+    - compra_id: int
+    - producto_id: int
+    - cantidad: int
+    - precio_unitario: decimal
+    + compra()
+    + producto()
+    + getSubtotal()
+}
+
+class Venta {
+    - id: int
+    - usuario_id: int
+    - sede_id: int
+    - total: decimal
+    + usuario()
+    + detalles()
+    + sede()
+    + generarFactura()
+    + actualizarTotal()
+}
+
+class VentaDetalle {
+    - id: int
+    - venta_id: int
+    - producto_id: int
+    - cantidad: int
+    - precio_unitario: decimal
+    + venta()
+    + producto()
+    + getSubtotal()
+}
+
+class Proveedor {
+    - id: int
+    - nombre: string
+    - contacto: string
+    - email: string
+    - telefono: string
+    - direccion: string
+    + compras()
+}
+
+class Transferencia {
+    - id: int
+    - producto_id: int
+    - cantidad: int
+    - sede_origen_id: int
+    - sede_destino_id: int
+    - estado: string
+    - fecha: datetime
+    - usuario_id: int
+    + producto()
+    + sedeOrigen()
+    + sedeDestino()
+    + usuario()
+    + procesarTransferencia()
+}
+
+class Movimiento {
+    - id: int
+    - producto_id: int
+    - tipo: string
+    - cantidad: int
+    - descripcion: string
+    - usuario_id: int
+    - fecha: datetime
+    - sede_id: int
+    + producto()
+    + usuario()
+    + sede()
+    + registrarMovimiento()
+}
+
+class Auditoria {
+    - id: int
+    - log_name: string
+    - description: string
+    - subject_type: string
+    - subject_id: int
+    - causer_id: int
+    - properties: json
+    + causer()
+}
+
+' Controladores principales
+class UsuarioController {
+    + index()
+    + store()
+    + show()
+    + update()
+    + destroy()
+    + login()
+    + logout()
+    + me()
+}
+
+class ProductoController {
+    + index()
+    + store()
+    + show()
+    + update()
+    + destroy()
+    + getProductsBySede()
+    + getLowStockProducts()
+}
+
+class VentaController {
+    + index()
+    + store()
+    + show()
+    + update()
+    + destroy()
+    + getByDateRange()
+    + getResumen()
+}
+
+class CompraController {
+    + index()
+    + store()
+    + show()
+    + update()
+    + destroy()
+    + cambiarEstado()
+    + getByDateRange()
+}
+
+class TransferenciaController {
+    + index()
+    + store()
+    + show()
+    + update()
+    + destroy()
+    + cambiarEstado()
+}
+
+class CategoriaController {
+    + index()
+    + store()
+    + show()
+    + update()
+    + destroy()
+}
+
+class MovimientoController {
+    + index()
+    + store()
+    + show()
+    + getByProducto()
+    + getResumen()
+}
+
+' Helpers y servicios
+class ActivityHelper {
+    + log()
+    + logLogin()
+    + logLogout()
+    + logTransferencia()
+    + logStock()
+}
+
+class NotificationHelper {
+    + sendLowStockNotification()
+    + sendTransferNotification()
+    + sendMessage()
+}
+
+' Notificaciones
+class StockNotification {
+    - producto
+    - sede
+    - cantidad
+    + via()
+    + toMail()
+    + toArray()
+    + toBroadcast()
+}
+
+class TransferNotification {
+    - transferencia
+    - action
+    + via()
+    + toMail()
+    + toArray()
+    + toBroadcast()
+}
+
+class MessageNotification {
+    - message
+    - sender
+    - sede_id
+    + via()
+    + toMail()
+    + toArray()
+    + toBroadcast()
+}
+
+' Relaciones entre modelos
+Producto --> Categoria : pertenece a
+Producto --> Marca : pertenece a
+Producto "1" -- "0..*" CompraDetalle : tiene
+Producto "1" -- "0..*" VentaDetalle : tiene
+Producto "1" -- "0..*" Transferencia : tiene
+Producto "1" -- "0..*" Movimiento : tiene
+Producto "0..*" -- "0..*" Sede : está en
+
+Categoria "1" -- "0..*" Producto : contiene
+
+Marca "1" -- "0..*" Producto : contiene
+
+Usuario --> Role : tiene rol
+Usuario --> Sede : pertenece a
+Usuario "1" -- "0..*" Compra : realiza
+Usuario "1" -- "0..*" Venta : realiza
+Usuario "1" -- "0..*" Transferencia : realiza
+Usuario "1" -- "0..*" Movimiento : realiza
+Usuario "1" -- "0..*" Auditoria : genera
+
+Role "1" -- "0..*" Usuario : asignado a
+
+Sede "1" -- "0..*" Usuario : tiene
+Sede "1" -- "0..*" Compra : registra
+Sede "1" -- "0..*" Venta : registra
+Sede "1" -- "0..*" Transferencia : origen de
+Sede "1" -- "0..*" Transferencia : destino de
+Sede "1" -- "0..*" Movimiento : contiene
+
+Compra "1" -- "0..*" CompraDetalle : contiene
+Compra --> Proveedor : realizada a
+Compra --> Usuario : realizada por
+Compra --> Sede : realizada en
+
+CompraDetalle --> Compra : pertenece a
+CompraDetalle --> Producto : contiene
+
+Venta "1" -- "0..*" VentaDetalle : contiene
+Venta --> Usuario : realizada por
+Venta --> Sede : realizada en
+
+VentaDetalle --> Venta : pertenece a
+VentaDetalle --> Producto : contiene
+
+Proveedor "1" -- "0..*" Compra : provee
+
+Transferencia --> Producto : involucra
+Transferencia --> Sede : origen
+Transferencia --> Sede : destino
+Transferencia --> Usuario : realizada por
+
+Movimiento --> Producto : afecta a
+Movimiento --> Usuario : realizado por
+Movimiento --> Sede : realizado en
+
+Auditoria --> Usuario : causada por
+
+' Relaciones con controladores
+ProductoController -- Producto : gestiona
+CategoriaController -- Categoria : gestiona
+VentaController -- Venta : gestiona
+CompraController -- Compra : gestiona
+TransferenciaController -- Transferencia : gestiona
+MovimientoController -- Movimiento : gestiona
+UsuarioController -- Usuario : gestiona
+
+' Relaciones con helpers
+ActivityHelper -- Auditoria : registra
+NotificationHelper -- StockNotification : envía
+NotificationHelper -- TransferNotification : envía
+NotificationHelper -- MessageNotification : envía
+
+@enduml 
