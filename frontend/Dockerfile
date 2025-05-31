@@ -18,7 +18,7 @@ RUN npm run build
 FROM nginx:stable-alpine
 
 # Copia los archivos construidos al directorio que NGINX sirve
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /dist /usr/share/nginx/html
 
 # Expone el puerto por defecto
 EXPOSE 80
