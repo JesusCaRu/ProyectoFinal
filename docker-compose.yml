@@ -21,7 +21,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend.dockerfile
+      dockerfile: backend/Dockerfile
     container_name: laravel_app
     volumes:
       - ./backend:/var/www
@@ -53,7 +53,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: frontend.dockerfile
+      dockerfile: frontend/Dockerfile
     container_name: react_app
     ports:
       - "3000:80"
