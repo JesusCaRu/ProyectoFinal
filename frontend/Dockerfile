@@ -1,11 +1,14 @@
-# Etapa única: solo para servir archivos estáticos ya construidos
-FROM nginx:stable-alpine
+# Etapa de producción con Nginx
+FROM nginx:alpine
 
-# Copia el contenido de dist/ (ya generado) al directorio que sirve NGINX
-COPY dist/ /usr/share/nginx/html
+# Copiar archivos de construcción desde la etapa anterior
+COPY --from=builder /dist /usr/share/nginx/html
 
-# Expone el puerto 80
+# Copiar configuración personalizada de Nginx (opcional)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Exponer el puerto 80
 EXPOSE 80
 
-# Comando por defecto para iniciar NGINX
+# Comando para iniciar Nginx
 CMD ["nginx", "-g", "daemon off;"]
