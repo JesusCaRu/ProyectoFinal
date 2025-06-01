@@ -104,7 +104,7 @@ const AppRoutes = () => {
               } />
               <Route path="configuracion" element={
                 <RequireRol>
-                  <RoleProtectedRoute allowedRoles={['Administrador']}>
+                  <RoleProtectedRoute allowedRoles={['Administrador', 'Vendedor', 'Almacenista']}>
                     <Configuracion />
                   </RoleProtectedRoute>
                 </RequireRol>

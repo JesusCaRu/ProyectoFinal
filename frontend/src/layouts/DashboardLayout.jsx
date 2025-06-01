@@ -113,6 +113,7 @@ const DashboardLayout = ({ children }) => {
           items: [
             { name: 'Reportes', path: '/dashboard/reportes', icon: BarChart2 },
             { name: 'Facturas', path: '/dashboard/facturas', icon: FileText },
+            { name: 'Configuración', path: '/dashboard/configuracion', icon: Settings },
           ],
         },
       ],
@@ -123,6 +124,7 @@ const DashboardLayout = ({ children }) => {
             { name: 'Inventario', path: '/dashboard/inventario', icon: Package },
             { name: 'Sedes', path: '/dashboard/sedes', icon: Building2 },
             { name: 'Historial', path: '/dashboard/historial', icon: FileText },
+            { name: 'Configuración', path: '/dashboard/configuracion', icon: Settings },
           ],
         },
       ],
