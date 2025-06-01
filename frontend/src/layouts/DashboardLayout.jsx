@@ -151,10 +151,11 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-bg font-satoshi">
-      {/* Mobile menu button */}
+      {/* Mobile menu button - repositioned to bottom right */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-bg-secondary border border-border text-accessibility-text hover:bg-interactive-component transition-colors"
+        className="lg:hidden fixed bottom-6 right-6 z-50 w-14 h-14 flex items-center justify-center rounded-full bg-solid-color text-white hover:bg-solid-color-hover transition-colors shadow-lg"
+        aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
       >
         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -201,6 +202,17 @@ const DashboardLayout = ({ children }) => {
                 className="h-8 w-auto mx-auto"
               />
             </Link>
+          )}
+          
+          {/* Mobile close button inside sidebar */}
+          {isMobileMenuOpen && (
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="lg:hidden text-text-tertiary hover:text-accessibility-text"
+              aria-label="Cerrar menú"
+            >
+              <X size={20} />
+            </button>
           )}
         </div>
 
@@ -286,20 +298,20 @@ const DashboardLayout = ({ children }) => {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Optional top header bar */}
-        <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-bg-secondary">
-          <h2 className="text-lg font-medium text-accessibility-text">
+        {/* Top header bar - adjusted for mobile */}
+        <header className="h-16 border-b border-border flex items-center justify-between px-4 sm:px-6 bg-bg-secondary">
+          <h2 className="text-base sm:text-lg font-medium text-accessibility-text truncate">
             {navigation
               .flatMap(section => section.items)
               .find(item => location.pathname === item.path)?.name || 'Dashboard'}
           </h2>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setIsMessageModalOpen(true)}
-              className="p-2 rounded-full bg-interactive-component text-accessibility-text hover:bg-interactive-component-secondary transition-colors border border-border"
+              className="p-1.5 sm:p-2 rounded-full bg-interactive-component text-accessibility-text hover:bg-interactive-component-secondary transition-colors border border-border"
               title="Enviar mensaje"
             >
-              <MessageSquare className="h-6 w-6" />
+              <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
             <div className='mr-12'>
               <NotificationBell />
@@ -308,8 +320,8 @@ const DashboardLayout = ({ children }) => {
         </header>
         
         {/* Scrollable content area */}
-        <main className="flex-1 overflow-y-auto p-6 bg-bg">
-          <div className="w-full mx-auto">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-bg">
+          <div className="w-full mx-auto pb-16 lg:pb-0"> {/* Added bottom padding for mobile to avoid menu button overlap */}
             {children}
           </div>
         </main>

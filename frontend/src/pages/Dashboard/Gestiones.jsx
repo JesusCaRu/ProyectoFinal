@@ -533,17 +533,17 @@ const Gestiones = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Settings className="h-8 w-8 text-solid-color" />
-          <h1 className="text-2xl font-bold text-accessibility-text">Gestión del Sistema</h1>
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <Settings className="h-6 w-6 sm:h-8 sm:w-8 text-solid-color" />
+          <h1 className="text-xl sm:text-2xl font-bold text-accessibility-text">Gestión del Sistema</h1>
         </div>
       </div>
 
       {/* Pestañas */}
-      <div className="border-b border-border">
-        <nav className="-mb-px flex space-x-8">
+      <div className="border-b border-border overflow-x-auto">
+        <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -552,9 +552,9 @@ const Gestiones = () => {
                 activeTab === tab.id
                   ? 'border-solid-color text-solid-color'
                   : 'border-transparent text-text-tertiary hover:text-accessibility-text hover:border-border'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center space-x-2`}
+              } whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors duration-200 flex items-center space-x-1 sm:space-x-2`}
             >
-              <tab.icon className="h-5 w-5" />
+              <tab.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               <span>{tab.name}</span>
             </button>
           ))}
@@ -562,20 +562,20 @@ const Gestiones = () => {
       </div>
 
       {/* Contenido de las pestañas */}
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         {tabs.map((tab) => (
           <div
             key={tab.id}
             className={activeTab === tab.id ? 'block' : 'hidden'}
           >
             <div className="bg-bg rounded-xl shadow-md border border-border overflow-hidden">
-              <div className="p-4 border-b border-border flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-accessibility-text">
+              <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between">
+                <h2 className="text-base sm:text-lg font-semibold text-accessibility-text">
                   {tab.name}
                 </h2>
                 <button
                   onClick={() => handleAdd(tab.id)}
-                  className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-1 sm:space-x-2 transition-colors duration-200 text-xs sm:text-sm"
                 >
                   <span>Agregar {tab.name.slice(0, -1)}</span>
                 </button>
@@ -588,12 +588,12 @@ const Gestiones = () => {
                       {tab.columns.map((column, index) => (
                         <th
                           key={index}
-                          className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider"
+                          className="px-3 sm:px-6 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-text-tertiary uppercase tracking-wider"
                         >
                           {column.header}
                         </th>
                       ))}
-                      <th className="px-6 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-2xs sm:text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         Acciones
                       </th>
                     </tr>
@@ -607,13 +607,13 @@ const Gestiones = () => {
                       />
                     ) : tab.error ? (
                       <tr>
-                        <td colSpan={tab.columns.length + 1} className="px-6 py-4 text-center text-error">
+                        <td colSpan={tab.columns.length + 1} className="px-3 sm:px-6 py-3 sm:py-4 text-center text-error text-xs sm:text-sm">
                           Error: {tab.error}
                         </td>
                       </tr>
                     ) : tab.data?.length === 0 ? (
                       <tr>
-                        <td colSpan={tab.columns.length + 1} className="px-6 py-4 text-center text-text-tertiary">
+                        <td colSpan={tab.columns.length + 1} className="px-3 sm:px-6 py-3 sm:py-4 text-center text-text-tertiary text-xs sm:text-sm">
                           No hay datos disponibles
                         </td>
                       </tr>
@@ -621,25 +621,25 @@ const Gestiones = () => {
                       tab.data?.map((item) => (
                         <tr key={item.id} className="hover:bg-interactive-component/50">
                           {tab.columns.map((column, index) => (
-                            <td key={index} className="px-6 py-4 whitespace-nowrap text-sm text-accessibility-text">
+                            <td key={index} className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-accessibility-text">
                               {column.render ? column.render(item[column.accessor], item) : item[column.accessor]}
                             </td>
                           ))}
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div className="flex items-center justify-end space-x-3">
+                          <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end space-x-2">
                               <button
                                 onClick={() => handleEdit(tab.id, item)}
-                                className="p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
+                                className="p-1 sm:p-2 text-info hover:text-info-hover rounded-lg transition-colors duration-200"
                                 title="Editar"
                               >
-                                <Edit className="h-5 w-5" />
+                                <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                               </button>
                               <button
                                 onClick={() => handleDelete(tab.id, item)}
-                                className="p-2 text-error hover:text-error-hover rounded-lg transition-colors duration-200"
+                                className="p-1 sm:p-2 text-error hover:text-error-hover rounded-lg transition-colors duration-200"
                                 title="Eliminar"
                               >
-                                <Trash2 className="h-5 w-5" />
+                                <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                               </button>
                             </div>
                           </td>
@@ -661,11 +661,11 @@ const Gestiones = () => {
         title={`${selectedItem ? 'Editar' : 'Agregar'} ${modalType.slice(0, -1)}`}
         size="lg"
       >
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {getFormFields().map((field) => (
               <div key={field.name} className={field.type === 'textarea' ? 'col-span-2' : ''}>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-text-secondary mb-1">
                   {field.label} {field.required && <span className="text-error">*</span>}
                 </label>
                 
@@ -675,7 +675,7 @@ const Gestiones = () => {
                     value={formData[field.name] || ''}
                     onChange={handleInputChange}
                     required={field.required}
-                    className="w-full px-3 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
                   >
                     <option value="">Seleccionar...</option>
                     {field.options.map(option => (
@@ -691,7 +691,7 @@ const Gestiones = () => {
                     onChange={handleInputChange}
                     required={field.required}
                     rows={3}
-                    className="w-full px-3 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
                   />
                 ) : field.type === 'checkbox' ? (
                   <div className="flex items-center">
@@ -700,9 +700,9 @@ const Gestiones = () => {
                       name={field.name}
                       checked={!!formData[field.name]}
                       onChange={handleInputChange}
-                      className="h-4 w-4 text-solid-color focus:ring-solid-color border-border rounded"
+                      className="h-3 w-3 sm:h-4 sm:w-4 text-solid-color focus:ring-solid-color border-border rounded"
                     />
-                    <span className="ml-2 text-sm text-text-secondary">
+                    <span className="ml-2 text-xs sm:text-sm text-text-secondary">
                       {field.checkboxLabel || `¿${field.label}?`}
                     </span>
                   </div>
@@ -716,7 +716,7 @@ const Gestiones = () => {
                     step={field.step}
                     min={field.min}
                     max={field.max}
-                    className="w-full px-3 py-2 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent"
                   />
                 )}
               </div>
@@ -725,22 +725,22 @@ const Gestiones = () => {
           
           {/* Gestión de stock y precios por sede para productos */}
           {modalType === 'productos' && sedes.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-medium text-accessibility-text mb-4">Stock y Precios por Sede</h3>
+            <div className="mt-4 sm:mt-6">
+              <h3 className="text-base sm:text-lg font-medium text-accessibility-text mb-3 sm:mb-4">Stock y Precios por Sede</h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-border">
                   <thead className="bg-bg-secondary">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         Sede
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         Stock
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         Precio Compra (€)
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-2xs sm:text-xs font-medium text-text-tertiary uppercase tracking-wider">
                         Precio Venta (€)
                       </th>
                     </tr>
@@ -750,36 +750,36 @@ const Gestiones = () => {
                       const sede = sedes.find(s => s.id === sedeItem.sede_id);
                       return (
                         <tr key={sedeItem.sede_id}>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className="font-medium text-accessibility-text">{sede?.nombre || 'Sede desconocida'}</span>
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                            <span className="font-medium text-xs sm:text-sm text-accessibility-text">{sede?.nombre || 'Sede desconocida'}</span>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                             <input
                               type="number"
                               min="0"
                               value={sedeItem.stock || 0}
                               onChange={(e) => handleSedeDataChange(sedeItem.sede_id, 'stock', parseInt(e.target.value) || 0)}
-                              className="w-24 px-2 py-1 bg-bg border border-border rounded focus:outline-none focus:ring-1 focus:ring-solid-color"
+                              className="w-16 sm:w-24 px-1 sm:px-2 py-1 text-xs sm:text-sm bg-bg border border-border rounded focus:outline-none focus:ring-1 focus:ring-solid-color"
                             />
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                             <input
                               type="number"
                               min="0"
                               step="0.01"
                               value={sedeItem.precio_compra || 0}
                               onChange={(e) => handleSedeDataChange(sedeItem.sede_id, 'precio_compra', parseFloat(e.target.value) || 0)}
-                              className="w-24 px-2 py-1 bg-bg border border-border rounded focus:outline-none focus:ring-1 focus:ring-solid-color"
+                              className="w-16 sm:w-24 px-1 sm:px-2 py-1 text-xs sm:text-sm bg-bg border border-border rounded focus:outline-none focus:ring-1 focus:ring-solid-color"
                             />
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                             <input
                               type="number"
                               min="0"
                               step="0.01"
                               value={sedeItem.precio_venta || 0}
                               onChange={(e) => handleSedeDataChange(sedeItem.sede_id, 'precio_venta', parseFloat(e.target.value) || 0)}
-                              className="w-24 px-2 py-1 bg-bg border border-border rounded focus:outline-none focus:ring-1 focus:ring-solid-color"
+                              className="w-16 sm:w-24 px-1 sm:px-2 py-1 text-xs sm:text-sm bg-bg border border-border rounded focus:outline-none focus:ring-1 focus:ring-solid-color"
                             />
                           </td>
                         </tr>
@@ -791,19 +791,19 @@ const Gestiones = () => {
             </div>
           )}
           
-          <div className="flex justify-end space-x-3 mt-6">
+          <div className="flex justify-end space-x-2 sm:space-x-3 mt-4 sm:mt-6">
             <button
               type="button"
               onClick={() => setModalOpen(false)}
               disabled={isSubmitting}
-              className="px-4 py-2 text-text-tertiary hover:text-accessibility-text disabled:opacity-50"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-text-tertiary hover:text-accessibility-text disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg disabled:opacity-50 flex items-center space-x-1"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-solid-color hover:bg-solid-color-hover text-white rounded-lg disabled:opacity-50 flex items-center space-x-1"
             >
               {isSubmitting ? (
                 <LoadingIndicator variant="button" text={selectedItem ? 'Guardando...' : 'Agregando...'} />
@@ -822,28 +822,28 @@ const Gestiones = () => {
         title="Confirmar eliminación"
         size="md"
       >
-        <div className="p-4">
-          <div className="flex items-center space-x-3 text-error mb-4">
-            <AlertTriangle className="h-6 w-6" />
-            <p className="text-lg font-medium">
+        <div className="p-3 sm:p-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 text-error mb-3 sm:mb-4">
+            <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6" />
+            <p className="text-base sm:text-lg font-medium">
               ¿Estás seguro de que deseas eliminar este elemento?
             </p>
           </div>
-          <p className="text-text-tertiary mb-6">
+          <p className="text-xs sm:text-sm text-text-tertiary mb-4 sm:mb-6">
             Esta acción no se puede deshacer. Se eliminará permanentemente el elemento seleccionado.
           </p>
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end space-x-2 sm:space-x-3">
             <button
               onClick={() => setDeleteModalOpen(false)}
               disabled={isSubmitting}
-              className="px-4 py-2 text-text-tertiary hover:text-accessibility-text disabled:opacity-50"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-text-tertiary hover:text-accessibility-text disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               onClick={handleConfirmDelete}
               disabled={isSubmitting}
-              className="px-4 py-2 bg-error hover:bg-error-hover text-white rounded-lg disabled:opacity-50 flex items-center space-x-1"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-error hover:bg-error-hover text-white rounded-lg disabled:opacity-50 flex items-center space-x-1"
             >
               {isSubmitting ? (
                 <LoadingIndicator variant="button" text="Eliminando..." />

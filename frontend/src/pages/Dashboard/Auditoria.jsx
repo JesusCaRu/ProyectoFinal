@@ -99,25 +99,25 @@ const Auditoria = () => {
     const getAccionIcon = (accion, logName, properties) => {
         // Iconos específicos por tipo de log
         if (logName === 'autenticacion') {
-            if (accion.toLowerCase().includes('iniciado')) return <LogIn className="h-4 w-4" />;
-            if (accion.toLowerCase().includes('cerrado')) return <LogOut className="h-4 w-4" />;
-            return <User className="h-4 w-4" />;
+            if (accion.toLowerCase().includes('iniciado')) return <LogIn className="h-3 w-3 sm:h-4 sm:w-4" />;
+            if (accion.toLowerCase().includes('cerrado')) return <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />;
+            return <User className="h-3 w-3 sm:h-4 sm:w-4" />;
         }
         
-        if (logName === 'ventas') return <ShoppingCart className="h-4 w-4" />;
-        if (logName === 'compras') return <Package className="h-4 w-4" />;
-        if (logName === 'transferencias') return <ArrowRightLeft className="h-4 w-4" />;
-        if (logName === 'inventario') return <Clipboard className="h-4 w-4" />;
-        if (logName === 'sistema') return <AlertCircle className="h-4 w-4" />;
+        if (logName === 'ventas') return <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />;
+        if (logName === 'compras') return <Package className="h-3 w-3 sm:h-4 sm:w-4" />;
+        if (logName === 'transferencias') return <ArrowRightLeft className="h-3 w-3 sm:h-4 sm:w-4" />;
+        if (logName === 'inventario') return <Clipboard className="h-3 w-3 sm:h-4 sm:w-4" />;
+        if (logName === 'sistema') return <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />;
         
         // Iconos por tipo de tabla
         const tabla = properties?.subject_type?.split('\\').pop() || '';
-        if (tabla.toLowerCase().includes('usuario')) return <User className="h-4 w-4" />;
-        if (tabla.toLowerCase().includes('sede')) return <Building2 className="h-4 w-4" />;
-        if (tabla.toLowerCase().includes('producto')) return <Package className="h-4 w-4" />;
-        if (tabla.toLowerCase().includes('mensaje')) return <MessageSquare className="h-4 w-4" />;
+        if (tabla.toLowerCase().includes('usuario')) return <User className="h-3 w-3 sm:h-4 sm:w-4" />;
+        if (tabla.toLowerCase().includes('sede')) return <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />;
+        if (tabla.toLowerCase().includes('producto')) return <Package className="h-3 w-3 sm:h-4 sm:w-4" />;
+        if (tabla.toLowerCase().includes('mensaje')) return <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />;
         
-        return <FileText className="h-4 w-4" />;
+        return <FileText className="h-3 w-3 sm:h-4 sm:w-4" />;
     };
 
     const formatDetalles = (properties) => {
@@ -204,8 +204,8 @@ const Auditoria = () => {
 
     if (error) {
         return (
-            <div className="p-6">
-                <div className="bg-error/10 border border-error text-error px-4 py-3 rounded-lg">
+            <div className="p-3 sm:p-6">
+                <div className="bg-error/10 border border-error text-error px-3 py-2 sm:px-4 sm:py-3 rounded-lg text-sm sm:text-base">
                     Error: {error}
                 </div>
             </div>
@@ -213,22 +213,22 @@ const Auditoria = () => {
     }
 
     return (
-        <div className="p-6">
-            <div className="mb-6">
-                <h1 className="text-2xl font-semibold text-accessibility-text mb-4">Registro de Auditoría</h1>
+        <div className="p-3 sm:p-6">
+            <div className="mb-4 sm:mb-6">
+                <h1 className="text-xl sm:text-2xl font-semibold text-accessibility-text mb-3 sm:mb-4">Registro de Auditoría</h1>
                 
                 {/* Filtros */}
-                <div className="bg-bg-secondary p-4 rounded-lg shadow-md border border-border mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-bg-secondary p-3 sm:p-4 rounded-lg shadow-md border border-border mb-4 sm:mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-text-tertiary mb-1">
+                            <label className="block text-xs sm:text-sm font-medium text-text-tertiary mb-1">
                                 Tipo
                             </label>
                             <select
                                 name="log_name"
                                 value={filtros.log_name}
                                 onChange={handleFiltroChange}
-                                className="w-full rounded-lg border border-border bg-bg-secondary text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                                className="w-full text-xs sm:text-sm rounded-lg border border-border bg-bg-secondary text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent py-1.5 sm:py-2"
                             >
                                 <option value="">Todos</option>
                                 <option value="autenticacion">Autenticación</option>
@@ -241,14 +241,14 @@ const Auditoria = () => {
                         </div>
                         
                         <div>
-                            <label className="block text-sm font-medium text-text-tertiary mb-1">
+                            <label className="block text-xs sm:text-sm font-medium text-text-tertiary mb-1">
                                 Tabla
                             </label>
                             <select
                                 name="tabla"
                                 value={filtros.tabla}
                                 onChange={handleFiltroChange}
-                                className="w-full rounded-lg border border-border bg-bg-secondary text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                                className="w-full text-xs sm:text-sm rounded-lg border border-border bg-bg-secondary text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent py-1.5 sm:py-2"
                             >
                                 <option value="">Todas</option>
                                 {Array.isArray(tablas) && tablas.map(tabla => (
@@ -258,7 +258,7 @@ const Auditoria = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-text-tertiary mb-1">
+                            <label className="block text-xs sm:text-sm font-medium text-text-tertiary mb-1">
                                 Fecha Inicio
                             </label>
                             <input
@@ -266,12 +266,12 @@ const Auditoria = () => {
                                 name="fecha_inicio"
                                 value={filtros.fecha_inicio}
                                 onChange={handleFiltroChange}
-                                className="w-full rounded-lg border border-border bg-bg-secondary text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                                className="w-full text-xs sm:text-sm rounded-lg border border-border bg-bg-secondary text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent py-1.5 sm:py-2"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-text-tertiary mb-1">
+                            <label className="block text-xs sm:text-sm font-medium text-text-tertiary mb-1">
                                 Fecha Fin
                             </label>
                             <input
@@ -279,31 +279,31 @@ const Auditoria = () => {
                                 name="fecha_fin"
                                 value={filtros.fecha_fin}
                                 onChange={handleFiltroChange}
-                                className="w-full rounded-lg border border-border bg-bg-secondary text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent"
+                                className="w-full text-xs sm:text-sm rounded-lg border border-border bg-bg-secondary text-accessibility-text focus:ring-2 focus:ring-solid-color focus:border-transparent py-1.5 sm:py-2"
                             />
                         </div>
                     </div>
                 </div>
 
-                {/* Tabla de Registros */}
-                <div className="bg-bg-secondary rounded-lg shadow-md border border-border overflow-hidden">
+                {/* Tabla de Registros para pantallas grandes */}
+                <div className="hidden sm:block bg-bg-secondary rounded-lg shadow-md border border-border overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-border">
                             <thead className="bg-interactive-component">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                                    <th className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                                         Fecha
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                                    <th className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                                         Usuario
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                                    <th className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                                         Tipo
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                                    <th className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                                         Acción
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
+                                    <th className="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">
                                         Detalles
                                     </th>
                                 </tr>
@@ -317,23 +317,23 @@ const Auditoria = () => {
                                     />
                                 ) : !Array.isArray(registros) || registros.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-4 text-center text-text-tertiary">
+                                        <td colSpan={5} className="px-3 py-2 sm:px-6 sm:py-4 text-center text-text-tertiary">
                                             No hay registros de auditoría
                                         </td>
                                     </tr>
                                 ) : (
                                     registros.map((registro) => (
                                         <tr key={registro.id} className="hover:bg-interactive-component/50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-accessibility-text">
+                                            <td className="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-accessibility-text">
                                                 {format(new Date(registro.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-accessibility-text">
+                                            <td className="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-accessibility-text">
                                                 {registro.usuario?.nombre || 'Sistema'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-accessibility-text">
+                                            <td className="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-accessibility-text">
                                                 {formatLogName(registro.log_name)}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <td className="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                                                 <div className="flex items-center space-x-2">
                                                     <span className={`p-1 rounded-full ${getAccionColor(registro.accion, registro.log_name)} bg-opacity-20`}>
                                                         {getAccionIcon(registro.accion, registro.log_name, registro.properties)}
@@ -343,7 +343,7 @@ const Auditoria = () => {
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-accessibility-text">
+                                            <td className="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-accessibility-text">
                                                 <button
                                                     onClick={() => setDetallesModal({
                                                         isOpen: true,
@@ -352,7 +352,7 @@ const Auditoria = () => {
                                                     className="text-primary hover:text-primary-dark transition-colors"
                                                     title="Ver detalles"
                                                 >
-                                                    <Eye className="w-5 h-5" />
+                                                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -361,6 +361,61 @@ const Auditoria = () => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                {/* Vista de tarjetas para móviles */}
+                <div className="sm:hidden space-y-3">
+                    {isLoading ? (
+                        <div className="flex justify-center py-8">
+                            <LoadingIndicator text="Cargando registros de auditoría..." />
+                        </div>
+                    ) : !Array.isArray(registros) || registros.length === 0 ? (
+                        <div className="text-center py-8 text-text-tertiary text-sm">
+                            No hay registros de auditoría
+                        </div>
+                    ) : (
+                        registros.map((registro) => (
+                            <div 
+                                key={registro.id} 
+                                className="bg-bg-secondary rounded-lg border border-border p-3"
+                            >
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`p-1 rounded-full ${getAccionColor(registro.accion, registro.log_name)} bg-opacity-20`}>
+                                            {getAccionIcon(registro.accion, registro.log_name, registro.properties)}
+                                        </span>
+                                        <span className={`text-xs font-medium ${getAccionColor(registro.accion, registro.log_name)}`}>
+                                            {formatAccion(registro.accion)}
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => setDetallesModal({
+                                            isOpen: true,
+                                            data: registro
+                                        })}
+                                        className="text-primary hover:text-primary-dark transition-colors p-1"
+                                        title="Ver detalles"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                                    <div className="text-text-tertiary">Fecha:</div>
+                                    <div className="text-accessibility-text">
+                                        {format(new Date(registro.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+                                    </div>
+                                    <div className="text-text-tertiary">Usuario:</div>
+                                    <div className="text-accessibility-text">
+                                        {registro.usuario?.nombre || 'Sistema'}
+                                    </div>
+                                    <div className="text-text-tertiary">Tipo:</div>
+                                    <div className="text-accessibility-text">
+                                        {formatLogName(registro.log_name)}
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
@@ -371,29 +426,29 @@ const Auditoria = () => {
                 title="Detalles de la Auditoría"
             >
                 {detallesModal.data && (
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="bg-bg-primary p-4 rounded-lg">
-                                <p className="text-sm font-medium text-text-tertiary mb-1">Fecha</p>
-                                <p className="text-sm text-accessibility-text">
+                    <div className="space-y-4 sm:space-y-6 p-2 sm:p-0">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+                            <div className="bg-bg-primary p-3 sm:p-4 rounded-lg">
+                                <p className="text-xs sm:text-sm font-medium text-text-tertiary mb-1">Fecha</p>
+                                <p className="text-xs sm:text-sm text-accessibility-text">
                                     {format(new Date(detallesModal.data.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
                                 </p>
                             </div>
-                            <div className="bg-bg-primary p-4 rounded-lg">
-                                <p className="text-sm font-medium text-text-tertiary mb-1">Usuario</p>
-                                <p className="text-sm text-accessibility-text">{detallesModal.data.usuario?.nombre || 'Sistema'}</p>
+                            <div className="bg-bg-primary p-3 sm:p-4 rounded-lg">
+                                <p className="text-xs sm:text-sm font-medium text-text-tertiary mb-1">Usuario</p>
+                                <p className="text-xs sm:text-sm text-accessibility-text">{detallesModal.data.usuario?.nombre || 'Sistema'}</p>
                             </div>
-                            <div className="bg-bg-primary p-4 rounded-lg">
-                                <p className="text-sm font-medium text-text-tertiary mb-1">Tipo</p>
-                                <p className="text-sm text-accessibility-text">{formatLogName(detallesModal.data.log_name)}</p>
+                            <div className="bg-bg-primary p-3 sm:p-4 rounded-lg">
+                                <p className="text-xs sm:text-sm font-medium text-text-tertiary mb-1">Tipo</p>
+                                <p className="text-xs sm:text-sm text-accessibility-text">{formatLogName(detallesModal.data.log_name)}</p>
                             </div>
-                            <div className="bg-bg-primary p-4 rounded-lg">
-                                <p className="text-sm font-medium text-text-tertiary mb-1">Acción</p>
+                            <div className="bg-bg-primary p-3 sm:p-4 rounded-lg">
+                                <p className="text-xs sm:text-sm font-medium text-text-tertiary mb-1">Acción</p>
                                 <div className="flex items-center space-x-2">
                                     <span className={`p-1 rounded-full ${getAccionColor(detallesModal.data.accion, detallesModal.data.log_name)} bg-opacity-20`}>
                                         {getAccionIcon(detallesModal.data.accion, detallesModal.data.log_name, detallesModal.data.properties)}
                                     </span>
-                                    <p className={`text-sm font-medium ${getAccionColor(detallesModal.data.accion, detallesModal.data.log_name)}`}>
+                                    <p className={`text-xs sm:text-sm font-medium ${getAccionColor(detallesModal.data.accion, detallesModal.data.log_name)}`}>
                                         {formatAccion(detallesModal.data.accion)}
                                     </p>
                                 </div>
@@ -402,26 +457,26 @@ const Auditoria = () => {
 
                         {detallesModal.data.properties && (
                             <div>
-                                <h4 className="text-sm font-medium text-text-tertiary mb-3">Detalles</h4>
-                                <div className="bg-bg-primary rounded-lg p-4">
-                                    <div className="space-y-4">
+                                <h4 className="text-xs sm:text-sm font-medium text-text-tertiary mb-2 sm:mb-3">Detalles</h4>
+                                <div className="bg-bg-primary rounded-lg p-3 sm:p-4">
+                                    <div className="space-y-3 sm:space-y-4">
                                         {formatDetalles(detallesModal.data.properties)?.map((cambio, index) => (
-                                            <div key={index} className="flex items-start space-x-4">
+                                            <div key={index} className="flex items-start space-x-3 sm:space-x-4">
                                                 <div className="flex-1">
-                                                    <p className="text-sm font-medium text-text-tertiary mb-2">
+                                                    <p className="text-xs sm:text-sm font-medium text-text-tertiary mb-1 sm:mb-2">
                                                         {formatCampo(cambio.campo)}
                                                     </p>
-                                                    <div className="space-y-2">
+                                                    <div className="space-y-1 sm:space-y-2">
                                                         {cambio.anterior !== undefined && (
                                                             <div className="flex items-center space-x-2">
                                                                 <span className="text-xs font-medium text-text-tertiary">Anterior:</span>
-                                                                <p className="text-sm text-error">{String(cambio.anterior)}</p>
+                                                                <p className="text-xs sm:text-sm text-error">{String(cambio.anterior)}</p>
                                                             </div>
                                                         )}
                                                         {cambio.nuevo !== undefined && (
                                                             <div className="flex items-center space-x-2">
                                                                 <span className="text-xs font-medium text-text-tertiary">Nuevo:</span>
-                                                                <p className="text-sm text-success">{String(cambio.nuevo)}</p>
+                                                                <p className="text-xs sm:text-sm text-success">{String(cambio.nuevo)}</p>
                                                             </div>
                                                         )}
                                                     </div>
@@ -430,7 +485,7 @@ const Auditoria = () => {
                                         ))}
                                         
                                         {!formatDetalles(detallesModal.data.properties) && (
-                                            <p className="text-sm text-text-tertiary">No hay detalles adicionales disponibles</p>
+                                            <p className="text-xs sm:text-sm text-text-tertiary">No hay detalles adicionales disponibles</p>
                                         )}
                                     </div>
                                 </div>

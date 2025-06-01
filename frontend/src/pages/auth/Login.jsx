@@ -49,22 +49,22 @@ const Login = () => {
   };
 
   return (
-    <div className="h-fit flex items-center justify-center py-12 px-4 sm:px-6">
+    <div className="min-h-[80vh] flex items-center justify-center py-8 px-4 sm:px-6 sm:py-12">
       <_motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md bg-bg rounded-xl shadow-lg p-8"
+        className="w-full max-w-md bg-bg rounded-xl shadow-lg p-4 sm:p-8"
       >
         <AuthHeader
           title="Bienvenido de nuevo"
           subtitle="Ingresa tus credenciales para continuar"
-          icon={<User className="h-8 w-8 text-solid-color" />}
+          icon={<User className="h-6 w-6 sm:h-8 sm:w-8 text-solid-color" />}
         />
 
         <AuthError error={error} />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <FormInput
             type="email"
             name="email"
@@ -89,20 +89,20 @@ const Login = () => {
             delay={0.2}
           />
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 id="remember-me"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-solid-color focus:ring-solid-color"
+                className="h-3 w-3 sm:h-4 sm:w-4 rounded border-border text-solid-color focus:ring-solid-color"
               />
-              <label htmlFor="remember-me" className="text-sm text-accessibility-text">
+              <label htmlFor="remember-me" className="text-accessibility-text">
                 Recordarme
               </label>
             </div>
-            <div className="text-sm">
+            <div>
               <Link
                 to="/forgot-password"
                 className="font-medium text-solid-color hover:text-solid-color-secondary transition-colors duration-200"

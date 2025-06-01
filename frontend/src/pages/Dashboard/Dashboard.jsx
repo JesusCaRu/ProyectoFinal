@@ -41,8 +41,8 @@ const Dashboard = () => {
 
     if (dashboardError) {
         return (
-            <div className="p-4">
-                <div className="bg-error/10 border border-error text-error px-4 py-3 rounded-lg">
+            <div className="p-2 sm:p-4">
+                <div className="bg-error/10 border border-error text-error px-3 py-2 sm:px-4 sm:py-3 rounded-lg">
                     Error al cargar los datos: {dashboardError}
                 </div>
             </div>
@@ -50,16 +50,16 @@ const Dashboard = () => {
     }
 
     const StatCard = ({ title, value, icon: IconComponent, trend, isLoading }) => (
-        <div className="bg-bg-secondary rounded-lg shadow-md p-6 border border-border">
+        <div className="bg-bg-secondary rounded-lg shadow-md p-3 sm:p-6 border border-border">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-text-tertiary">{title}</p>
+                    <p className="text-xs sm:text-sm font-medium text-text-tertiary">{title}</p>
                     {isLoading ? (
                         <div className="mt-2">
                             <LoadingIndicator text="" />
                         </div>
                     ) : (
-                        <p className="text-2xl font-semibold text-accessibility-text mt-2">
+                        <p className="text-xl sm:text-2xl font-semibold text-accessibility-text mt-2">
                             {(() => {
                                 if (typeof value === 'number') {
                                     // Si es un valor monetario (ventas o compras)
@@ -74,23 +74,23 @@ const Dashboard = () => {
                         </p>
                     )}
                 </div>
-                <div className="p-3 bg-interactive-component rounded-full">
-                    {IconComponent && <IconComponent className="h-6 w-6 text-solid-color" />}
+                <div className="p-2 sm:p-3 bg-interactive-component rounded-full">
+                    {IconComponent && <IconComponent className="h-5 w-5 sm:h-6 sm:w-6 text-solid-color" />}
                 </div>
             </div>
             {trend && !isLoading && (
-                <div className="mt-4 flex items-center">
+                <div className="mt-3 flex items-center">
                     {trend.tendencia === 'up' ? (
-                        <TrendingUp className="h-4 w-4 text-success" />
+                        <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-success" />
                     ) : (
-                        <TrendingDown className="h-4 w-4 text-error" />
+                        <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-error" />
                     )}
-                    <span className={`text-sm font-medium ml-1 ${
+                    <span className={`text-xs sm:text-sm font-medium ml-1 ${
                         trend.tendencia === 'up' ? 'text-success' : 'text-error'
                     }`}>
                         {Math.abs(trend.valor).toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%
                     </span>
-                    <span className="text-sm text-text-tertiary ml-1">vs mes anterior</span>
+                    <span className="text-xs sm:text-sm text-text-tertiary ml-1">vs mes anterior</span>
                 </div>
             )}
         </div>
@@ -98,8 +98,8 @@ const Dashboard = () => {
 
     const TableCard = ({ title, headers, data, isLoading }) => (
         <div className="bg-bg-secondary rounded-lg shadow-md border border-border">
-            <div className="px-6 py-4 border-b border-border">
-                <h3 className="text-lg font-medium text-accessibility-text">{title}</h3>
+            <div className="px-3 py-3 sm:px-6 sm:py-4 border-b border-border">
+                <h3 className="text-base sm:text-lg font-medium text-accessibility-text">{title}</h3>
             </div>
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-border">
@@ -108,7 +108,7 @@ const Dashboard = () => {
                             {headers.map((header, index) => (
                                 <th
                                     key={index}
-                                    className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider"
+                                    className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider"
                                 >
                                     {header}
                                 </th>
@@ -124,7 +124,7 @@ const Dashboard = () => {
                             />
                         ) : data.length === 0 ? (
                             <tr>
-                                <td colSpan={headers.length} className="px-6 py-4 text-center text-text-tertiary">
+                                <td colSpan={headers.length} className="px-2 py-3 sm:px-6 sm:py-4 text-center text-text-tertiary">
                                     No hay datos disponibles
                                 </td>
                             </tr>
@@ -132,7 +132,7 @@ const Dashboard = () => {
                             data.map((item, index) => (
                                 <tr key={index} className="hover:bg-interactive-component/50">
                                     {Object.values(item).map((value, i) => (
-                                        <td key={i} className="px-6 py-4 whitespace-nowrap text-sm text-accessibility-text">
+                                        <td key={i} className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-accessibility-text">
                                             {(() => {
                                                 if (typeof value === 'number') {
                                                     // Para valores monetarios (con decimales)
@@ -157,25 +157,25 @@ const Dashboard = () => {
     );
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
+        <div className="p-2 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
                 <div>
-                    <h1 className="text-2xl font-semibold text-accessibility-text">Dashboard</h1>
-                    <div className="flex items-center mt-1 text-sm text-text-tertiary">
-                        <Building2 className="h-4 w-4 mr-1" />
+                    <h1 className="text-xl sm:text-2xl font-semibold text-accessibility-text">Dashboard</h1>
+                    <div className="flex items-center mt-1 text-xs sm:text-sm text-text-tertiary">
+                        <Building2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                         <span>Mostrando datos para la sede: <span className="font-medium">{sedeName}</span></span>
                     </div>
                 </div>
                 <button
                     onClick={() => navigate('/dashboard/configuracion')}
-                    className="inline-flex items-center px-4 py-2 border border-border rounded-lg shadow-sm text-sm font-medium text-accessibility-text bg-bg-secondary hover:bg-interactive-component transition-colors duration-200"
+                    className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-border rounded-lg shadow-sm text-xs sm:text-sm font-medium text-accessibility-text bg-bg-secondary hover:bg-interactive-component transition-colors duration-200"
                 >
-                    <Settings className="h-5 w-5 mr-2 text-text-tertiary" />
+                    <Settings className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2 text-text-tertiary" />
                     Configuración
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6 mb-4 sm:mb-6">
                 <StatCard
                     title="Productos en Stock"
                     value={stats?.totalProductos ? Number(stats.totalProductos) : 0}
@@ -205,8 +205,8 @@ const Dashboard = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div className="space-y-4 sm:space-y-6">
                     <TableCard
                         title="Productos Más Vendidos"
                         headers={['Producto', 'Unidades', 'Total']}
@@ -258,7 +258,7 @@ const Dashboard = () => {
                         isLoading={isLoading}
                     />
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                     <TableCard
                         title="Últimas Ventas"
                         headers={['ID', 'Total', 'Usuario', 'Fecha']}

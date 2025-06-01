@@ -81,12 +81,6 @@ const DashboardAlmacenista = () => {
         .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
         .slice(0, 5);
 
-    // Para debug
-    console.log('Transferencias completas:', transferenciasArray);
-    console.log('Transferencias filtradas:', transferenciasRecientes);
-    console.log('Sede del usuario:', userSedeId);
-    console.log('Estructura de una transferencia:', transferenciasArray[0]);
-
     // Estadísticas
     const stats = {
         totalProductos: productosPorSede.length,
@@ -112,7 +106,7 @@ const DashboardAlmacenista = () => {
 
     if (isLoading) {
         return (
-            <div className="p-6">
+            <div className="p-3 sm:p-6">
                 <LoadingIndicator
                     variant="container"
                     text="Cargando datos del dashboard..."
@@ -123,9 +117,9 @@ const DashboardAlmacenista = () => {
 
     if (error) {
         return (
-            <div className="p-6">
-                <div className="bg-error/10 text-error p-4 rounded-lg">
-                    <h2 className="text-lg font-semibold mb-2">Error</h2>
+            <div className="p-3 sm:p-6">
+                <div className="bg-error/10 text-error p-3 sm:p-4 rounded-lg">
+                    <h2 className="text-base sm:text-lg font-semibold mb-2">Error</h2>
                     <p>{error}</p>
                 </div>
             </div>
@@ -136,13 +130,13 @@ const DashboardAlmacenista = () => {
     const sedeActual = sedes.find(s => s.id === userSedeId);
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
+        <div className="p-3 sm:p-6">
+            <div className="flex justify-between items-center mb-4 sm:mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-accessibility-text">Dashboard Almacenista</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-accessibility-text">Dashboard Almacenista</h1>
                     {sedeActual && (
-                        <p className="text-text-tertiary mt-1">
-                            <Building2 className="inline-block h-4 w-4 mr-1" />
+                        <p className="text-text-tertiary mt-1 text-xs sm:text-sm">
+                            <Building2 className="inline-block h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                             {sedeActual.nombre}
                         </p>
                     )}
@@ -150,19 +144,19 @@ const DashboardAlmacenista = () => {
             </div>
 
             {/* Tarjetas de estadísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-6 mb-4 sm:mb-8">
                 <_motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-bg-secondary p-6 rounded-lg shadow-md border border-border"
+                    className="bg-bg-secondary p-3 sm:p-6 rounded-lg shadow-md border border-border"
                 >
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-text-tertiary text-sm">Total Productos</p>
-                            <h3 className="text-2xl font-bold text-accessibility-text">{stats.totalProductos}</h3>
+                            <p className="text-text-tertiary text-xs sm:text-sm">Total Productos</p>
+                            <h3 className="text-lg sm:text-2xl font-bold text-accessibility-text">{stats.totalProductos}</h3>
                         </div>
-                        <div className="p-3 bg-interactive-component rounded-lg">
-                            <Package className="h-6 w-6 text-solid-color" />
+                        <div className="p-2 sm:p-3 bg-interactive-component rounded-lg">
+                            <Package className="h-4 w-4 sm:h-6 sm:w-6 text-solid-color" />
                         </div>
                     </div>
                 </_motion.div>
@@ -171,15 +165,15 @@ const DashboardAlmacenista = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-bg-secondary p-6 rounded-lg shadow-md border border-border"
+                    className="bg-bg-secondary p-3 sm:p-6 rounded-lg shadow-md border border-border"
                 >
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-text-tertiary text-sm">Stock Bajo</p>
-                            <h3 className="text-2xl font-bold text-warning">{stats.stockBajo}</h3>
+                            <p className="text-text-tertiary text-xs sm:text-sm">Stock Bajo</p>
+                            <h3 className="text-lg sm:text-2xl font-bold text-warning">{stats.stockBajo}</h3>
                         </div>
-                        <div className="p-3 bg-warning/10 rounded-lg">
-                            <AlertTriangle className="h-6 w-6 text-warning" />
+                        <div className="p-2 sm:p-3 bg-warning/10 rounded-lg">
+                            <AlertTriangle className="h-4 w-4 sm:h-6 sm:w-6 text-warning" />
                         </div>
                     </div>
                 </_motion.div>
@@ -188,15 +182,15 @@ const DashboardAlmacenista = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-bg-secondary p-6 rounded-lg shadow-md border border-border"
+                    className="bg-bg-secondary p-3 sm:p-6 rounded-lg shadow-md border border-border"
                 >
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-text-tertiary text-sm">Entradas Hoy</p>
-                            <h3 className="text-2xl font-bold text-success">{stats.entradasHoy}</h3>
+                            <p className="text-text-tertiary text-xs sm:text-sm">Entradas Hoy</p>
+                            <h3 className="text-lg sm:text-2xl font-bold text-success">{stats.entradasHoy}</h3>
                         </div>
-                        <div className="p-3 bg-success/10 rounded-lg">
-                            <ArrowDownToLine className="h-6 w-6 text-success" />
+                        <div className="p-2 sm:p-3 bg-success/10 rounded-lg">
+                            <ArrowDownToLine className="h-4 w-4 sm:h-6 sm:w-6 text-success" />
                         </div>
                     </div>
                 </_motion.div>
@@ -205,15 +199,15 @@ const DashboardAlmacenista = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="bg-bg-secondary p-6 rounded-lg shadow-md border border-border"
+                    className="bg-bg-secondary p-3 sm:p-6 rounded-lg shadow-md border border-border"
                 >
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-text-tertiary text-sm">Salidas Hoy</p>
-                            <h3 className="text-2xl font-bold text-error">{stats.salidasHoy}</h3>
+                            <p className="text-text-tertiary text-xs sm:text-sm">Salidas Hoy</p>
+                            <h3 className="text-lg sm:text-2xl font-bold text-error">{stats.salidasHoy}</h3>
                         </div>
-                        <div className="p-3 bg-error/10 rounded-lg">
-                            <ArrowUpFromLine className="h-6 w-6 text-error" />
+                        <div className="p-2 sm:p-3 bg-error/10 rounded-lg">
+                            <ArrowUpFromLine className="h-4 w-4 sm:h-6 sm:w-6 text-error" />
                         </div>
                     </div>
                 </_motion.div>
@@ -222,44 +216,44 @@ const DashboardAlmacenista = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="bg-bg-secondary p-6 rounded-lg shadow-md border border-border"
+                    className="bg-bg-secondary p-3 sm:p-6 rounded-lg shadow-md border border-border"
                 >
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-text-tertiary text-sm">Transferencias Hoy</p>
-                            <h3 className="text-2xl font-bold text-info">{stats.transferenciasHoy}</h3>
+                            <p className="text-text-tertiary text-xs sm:text-sm">Transferencias Hoy</p>
+                            <h3 className="text-lg sm:text-2xl font-bold text-info">{stats.transferenciasHoy}</h3>
                         </div>
-                        <div className="p-3 bg-info/10 rounded-lg">
-                            <Truck className="h-6 w-6 text-info" />
+                        <div className="p-2 sm:p-3 bg-info/10 rounded-lg">
+                            <Truck className="h-4 w-4 sm:h-6 sm:w-6 text-info" />
                         </div>
                     </div>
                 </_motion.div>
             </div>
 
             {/* Productos con stock bajo */}
-            <div className="mb-8">
-                <h2 className="text-xl font-semibold text-accessibility-text mb-4">Productos con Stock Bajo</h2>
+            <div className="mb-4 sm:mb-8">
+                <h2 className="text-base sm:text-xl font-semibold text-accessibility-text mb-2 sm:mb-4">Productos con Stock Bajo</h2>
                 <div className="bg-bg-secondary rounded-lg shadow-md border border-border overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-bg border-b border-border">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Producto</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">SKU</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Stock Actual</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Producto</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">SKU</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Stock Actual</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
                                 {productosStockBajo.map((product) => (
                                     <tr key={product.id} className="hover:bg-bg/50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-accessibility-text">{product.nombre}</div>
+                                        <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                            <div className="text-xs sm:text-sm font-medium text-accessibility-text">{product.nombre}</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-text-tertiary">{product.sku || 'N/A'}</div>
+                                        <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                            <div className="text-xs sm:text-sm text-text-tertiary">{product.sku || 'N/A'}</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-warning">
+                                        <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                            <div className="text-xs sm:text-sm text-warning">
                                                 {product.sedes?.find(s => s.id === userSedeId)?.stock || 0} unidades
                                             </div>
                                         </td>
@@ -273,47 +267,47 @@ const DashboardAlmacenista = () => {
 
             {/* Movimientos recientes */}
             <div>
-                <h2 className="text-xl font-semibold text-accessibility-text mb-4">Movimientos Recientes</h2>
+                <h2 className="text-base sm:text-xl font-semibold text-accessibility-text mb-2 sm:mb-4">Movimientos Recientes</h2>
                 <div className="bg-bg-secondary rounded-lg shadow-md border border-border overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-bg border-b border-border">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Fecha</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Tipo</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Producto</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Cantidad</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Fecha</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Tipo</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Producto</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Cantidad</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
                                 {movimientosRecientes.map((movimiento) => (
                                     <tr key={movimiento.id} className="hover:bg-bg/50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-text-tertiary">
+                                        <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                            <div className="text-xs sm:text-sm text-text-tertiary">
                                                 {new Date(movimiento.fecha).toLocaleDateString()}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                        <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                            <div className={`inline-flex items-center px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-xs font-medium ${
                                                 movimiento.tipo === 'entrada' 
                                                     ? 'bg-success/10 text-success'
                                                     : 'bg-error/10 text-error'
                                             }`}>
                                                 {movimiento.tipo === 'entrada' ? (
-                                                    <ArrowDownToLine className="h-4 w-4 mr-1" />
+                                                    <ArrowDownToLine className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                                                 ) : (
-                                                    <ArrowUpFromLine className="h-4 w-4 mr-1" />
+                                                    <ArrowUpFromLine className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                                                 )}
                                                 {movimiento.tipo}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-accessibility-text">
+                                        <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                            <div className="text-xs sm:text-sm font-medium text-accessibility-text">
                                                 {movimiento.producto?.nombre || 'N/A'}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-text-tertiary">
+                                        <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                            <div className="text-xs sm:text-sm text-text-tertiary">
                                                 {movimiento.cantidad} unidades
                                             </div>
                                         </td>
@@ -326,63 +320,63 @@ const DashboardAlmacenista = () => {
             </div>
 
             {/* Transferencias recientes */}
-            <div className="mt-8">
-                <h2 className="text-xl font-semibold text-accessibility-text mb-4">Transferencias Recientes</h2>
+            <div className="mt-4 sm:mt-8">
+                <h2 className="text-base sm:text-xl font-semibold text-accessibility-text mb-2 sm:mb-4">Transferencias Recientes</h2>
                 <div className="bg-bg-secondary rounded-lg shadow-md border border-border overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-bg border-b border-border">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Fecha</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Tipo</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Producto</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Cantidad</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Origen</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Destino</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Estado</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Fecha</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Tipo</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Producto</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Cantidad</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Origen</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Destino</th>
+                                    <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Estado</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
                                 {transferenciasRecientes.length > 0 ? (
                                     transferenciasRecientes.map((transferencia) => (
                                         <tr key={transferencia.id} className="hover:bg-bg/50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-text-tertiary">
+                                            <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                                <div className="text-xs sm:text-sm text-text-tertiary">
                                                     {new Date(transferencia.fecha).toLocaleDateString()}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                            <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                                <div className={`inline-flex items-center px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-xs font-medium ${
                                                     transferencia.sede_destino_id === userSedeId
                                                         ? 'bg-success/10 text-success'
                                                         : 'bg-warning/10 text-warning'
                                                 }`}>
-                                                    <Truck className="h-4 w-4 mr-1" />
+                                                    <Truck className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                                                     {transferencia.sede_destino_id === userSedeId ? 'Entrante' : 'Saliente'}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-accessibility-text">
+                                            <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                                <div className="text-xs sm:text-sm font-medium text-accessibility-text">
                                                     {transferencia.producto?.nombre || 'N/A'}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-text-tertiary">
+                                            <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                                <div className="text-xs sm:text-sm text-text-tertiary">
                                                     {transferencia.cantidad} unidades
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-text-tertiary">
+                                            <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                                <div className="text-xs sm:text-sm text-text-tertiary">
                                                     {sedes.find(s => s.id === transferencia.sede_origen_id)?.nombre || 'N/A'}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-text-tertiary">
+                                            <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                                <div className="text-xs sm:text-sm text-text-tertiary">
                                                     {sedes.find(s => s.id === transferencia.sede_destino_id)?.nombre || 'N/A'}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                            <td className="px-2 py-2 sm:px-6 sm:py-4 whitespace-nowrap">
+                                                <div className={`inline-flex items-center px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-xs font-medium ${
                                                     transferencia.estado === 'recibido' 
                                                         ? 'bg-success/10 text-success'
                                                         : transferencia.estado === 'enviado'
@@ -396,7 +390,7 @@ const DashboardAlmacenista = () => {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="7" className="px-6 py-4 text-center text-text-tertiary">
+                                        <td colSpan="7" className="px-2 py-3 sm:px-6 sm:py-4 text-center text-text-tertiary text-xs sm:text-sm">
                                             No hay transferencias recientes
                                         </td>
                                     </tr>

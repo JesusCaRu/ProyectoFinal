@@ -155,7 +155,7 @@ const Configuracion = () => {
   const sections = [
     {
       title: 'Perfil',
-      icon: <User className="h-5 w-5 text-solid-color" />,
+      icon: <User className="h-4 w-4 sm:h-5 sm:w-5 text-solid-color" />,
       items: [
         {
           label: 'Nombre',
@@ -178,7 +178,7 @@ const Configuracion = () => {
     },
     {
       title: 'Seguridad',
-      icon: <Lock className="h-5 w-5 text-solid-color" />,
+      icon: <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-solid-color" />,
       items: [
         {
           label: 'Contraseña Actual',
@@ -227,22 +227,22 @@ const Configuracion = () => {
   const helpArticles = [
     {
       title: 'Primeros pasos con StockFlow',
-      icon: <BookOpen className="h-5 w-5" />,
+      icon: <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />,
       description: 'Aprende lo básico para comenzar a utilizar la plataforma de manera efectiva.'
     },
     {
       title: 'Gestión de inventario',
-      icon: <Database className="h-5 w-5" />,
+      icon: <Database className="h-4 w-4 sm:h-5 sm:w-5" />,
       description: 'Cómo realizar un seguimiento eficiente de tus productos y existencias.'
     },
     {
       title: 'Transferencias entre sedes',
-      icon: <FileText className="h-5 w-5" />,
+      icon: <FileText className="h-4 w-4 sm:h-5 sm:w-5" />,
       description: 'Guía para gestionar movimientos de inventario entre diferentes ubicaciones.'
     },
     {
       title: 'Gestión de compras y ventas',
-      icon: <Star className="h-5 w-5" />,
+      icon: <Star className="h-4 w-4 sm:h-5 sm:w-5" />,
       description: 'Procedimientos para registrar y dar seguimiento a transacciones comerciales.'
     }
   ];
@@ -250,39 +250,39 @@ const Configuracion = () => {
   const quickLinks = [
     {
       title: 'Contactar Soporte',
-      icon: <Mail className="h-5 w-5" />,
+      icon: <Mail className="h-4 w-4 sm:h-5 sm:w-5" />,
       description: 'Envía un correo a nuestro equipo de soporte para resolver dudas.'
     },
     {
       title: 'Ayuda telefónica',
-      icon: <Phone className="h-5 w-5" />,
+      icon: <Phone className="h-4 w-4 sm:h-5 sm:w-5" />,
       description: 'Llama a nuestro centro de atención al cliente: 01-800-123-4567'
     },
     {
       title: 'Tutoriales en video',
-      icon: <Monitor className="h-5 w-5" />,
+      icon: <Monitor className="h-4 w-4 sm:h-5 sm:w-5" />,
       description: 'Visualiza guías paso a paso para sacar el máximo provecho.'
     },
     {
       title: 'Actualizaciones',
-      icon: <Download className="h-5 w-5" />,
+      icon: <Download className="h-4 w-4 sm:h-5 sm:w-5" />,
       description: 'Revisa las novedades y mejoras más recientes del sistema.'
     }
   ];
 
   return (
-    <div className="h-screen overflow-auto p-6">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
-          <div className="p-3 bg-solid-color/10 rounded-full">
-            <Settings className="h-7 w-7 text-solid-color" />
+    <div className="h-full overflow-auto p-3 sm:p-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-8">
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="p-2 sm:p-3 bg-solid-color/10 rounded-full">
+            <Settings className="h-5 w-5 sm:h-7 sm:w-7 text-solid-color" />
           </div>
-          <h1 className="text-2xl font-bold text-accessibility-text">Configuración</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-accessibility-text">Configuración</h1>
         </div>
       </div>
 
       {error && (
-        <div className="mb-8 bg-error/10 border border-error text-error px-4 py-3 rounded-lg">
+        <div className="mb-4 sm:mb-8 bg-error/10 border border-error text-error px-3 py-2 sm:px-4 sm:py-3 rounded-lg text-sm">
           {error}
         </div>
       )}
@@ -292,57 +292,57 @@ const Configuracion = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
-          className="mb-8 bg-green-100 border border-green-600 text-green-700 px-4 py-3 rounded-lg flex items-center"
+          className="mb-4 sm:mb-8 bg-green-100 border border-green-600 text-green-700 px-3 py-2 sm:px-4 sm:py-3 rounded-lg flex items-center text-sm"
         >
-          <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+          <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600" />
           <span>{success}</span>
         </_motion.div>
       )}
 
-      <div className="grid grid-cols-12 gap-6 min-h-[calc(100vh-10rem)]">
-        {/* Sección principal - 2/3 del ancho */}
-        <div className="col-span-12 xl:col-span-8 space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
+        {/* Sección principal */}
+        <div className="space-y-4 sm:space-y-6">
           {/* Tarjetas de configuración */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {sections.map((section, index) => (
               <_motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="bg-bg rounded-xl shadow-md p-6 border border-border hover:border-solid-color/40 transition-colors"
+                className="bg-bg rounded-xl shadow-md p-4 sm:p-6 border border-border hover:border-solid-color/40 transition-colors"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-solid-color/10 rounded-lg">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className="p-1.5 sm:p-2 bg-solid-color/10 rounded-lg">
                       {section.icon}
                     </div>
-                    <h2 className="text-lg font-semibold text-accessibility-text">
+                    <h2 className="text-base sm:text-lg font-semibold text-accessibility-text">
                       {section.title}
                     </h2>
                   </div>
                   <button
                     onClick={section.onSubmit}
                     disabled={isLoading}
-                    className="px-4 py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200 disabled:opacity-50"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-solid-color hover:bg-solid-color-hover text-white rounded-lg flex items-center space-x-2 transition-colors duration-200 disabled:opacity-50"
                   >
                     {isLoading ? (
                       <>
-                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        <span>Guardando...</span>
+                        <div className="h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1 sm:mr-2"></div>
+                        <span className="text-sm">Guardando...</span>
                       </>
                     ) : (
                       <>
-                        <Save className="h-4 w-4" />
-                        <span>Guardar</span>
+                        <Save className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="text-sm">Guardar</span>
                       </>
                     )}
                   </button>
                 </div>
-                <div className="space-y-5">
+                <div className="space-y-3 sm:space-y-5">
                   {section.items.map((item, itemIndex) => (
-                    <div key={itemIndex} className="space-y-2">
-                      <label className="text-sm font-medium text-text-tertiary flex items-center">
+                    <div key={itemIndex} className="space-y-1 sm:space-y-2">
+                      <label className="text-xs sm:text-sm font-medium text-text-tertiary flex items-center">
                         {item.label}
                         {item.required && <span className="text-error ml-1">*</span>}
                       </label>
@@ -351,7 +351,7 @@ const Configuracion = () => {
                         value={item.value}
                         onChange={item.onChange}
                         placeholder={item.placeholder}
-                        className="w-full px-4 py-2.5 bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent transition-all"
+                        className="w-full px-3 py-2 text-sm bg-bg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-solid-color focus:border-transparent transition-all"
                       />
                     </div>
                   ))}
@@ -360,67 +360,64 @@ const Configuracion = () => {
             ))}
           </div>
           
-          {/* Sección de ayuda y soporte */}
-          <_motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="bg-bg rounded-xl shadow-md p-6 border border-border hover:border-solid-color/40 transition-colors"
-          >
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-solid-color/10 rounded-lg">
-                <HelpCircle className="h-5 w-5 text-solid-color" />
-              </div>
-              <h2 className="text-lg font-semibold text-accessibility-text">
-                Centro de Ayuda
-              </h2>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {helpArticles.map((article, index) => (
-                <div 
-                  key={index}
-                  className="p-4 border border-border rounded-lg hover:bg-bg-secondary transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="p-2 bg-solid-color/10 rounded-lg text-solid-color shrink-0">
-                      {article.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-accessibility-text mb-1">{article.title}</h3>
-                      <p className="text-sm text-text-tertiary">{article.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </_motion.div>
-        </div>
-        
-        {/* Sidebar - 1/3 del ancho */}
-        <div className="col-span-12 xl:col-span-4 space-y-6">
           {/* Panel de información del sistema */}
           <_motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.4 }}
-            className="bg-bg rounded-xl shadow-md p-6 border border-border hover:border-solid-color/40 transition-colors"
+            className="bg-bg rounded-xl shadow-md p-4 sm:p-6 border border-border hover:border-solid-color/40 transition-colors"
           >
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-solid-color/10 rounded-lg">
-                <Database className="h-5 w-5 text-solid-color" />
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
+              <div className="p-1.5 sm:p-2 bg-solid-color/10 rounded-lg">
+                <Database className="h-4 w-4 sm:h-5 sm:w-5 text-solid-color" />
               </div>
-              <h2 className="text-lg font-semibold text-accessibility-text">
+              <h2 className="text-base sm:text-lg font-semibold text-accessibility-text">
                 Información del Sistema
               </h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {systemInfo.map((info, index) => (
-                <div key={index} className="flex justify-between py-2 border-b border-border last:border-0">
-                  <span className="text-sm text-text-tertiary">{info.label}</span>
-                  <span className="text-sm font-medium text-accessibility-text">
+                <div key={index} className="flex justify-between py-1.5 sm:py-2 border-b border-border last:border-0">
+                  <span className="text-xs sm:text-sm text-text-tertiary">{info.label}</span>
+                  <span className="text-xs sm:text-sm font-medium text-accessibility-text">
                     {info.value}
                   </span>
+                </div>
+              ))}
+            </div>
+          </_motion.div>
+          
+          {/* Sección de ayuda y soporte */}
+          <_motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className="bg-bg rounded-xl shadow-md p-4 sm:p-6 border border-border hover:border-solid-color/40 transition-colors"
+          >
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
+              <div className="p-1.5 sm:p-2 bg-solid-color/10 rounded-lg">
+                <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-solid-color" />
+              </div>
+              <h2 className="text-base sm:text-lg font-semibold text-accessibility-text">
+                Centro de Ayuda
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {helpArticles.map((article, index) => (
+                <div 
+                  key={index}
+                  className="p-3 sm:p-4 border border-border rounded-lg hover:bg-bg-secondary transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <div className="p-1.5 sm:p-2 bg-solid-color/10 rounded-lg text-solid-color shrink-0">
+                      {article.icon}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-accessibility-text text-xs sm:text-sm mb-1">{article.title}</h3>
+                      <p className="text-xs text-text-tertiary">{article.description}</p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -431,13 +428,13 @@ const Configuracion = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.5 }}
-            className="bg-bg rounded-xl shadow-md p-6 border border-border hover:border-solid-color/40 transition-colors"
+            className="bg-bg rounded-xl shadow-md p-4 sm:p-6 border border-border hover:border-solid-color/40 transition-colors"
           >
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-solid-color/10 rounded-lg">
-                <Coffee className="h-5 w-5 text-solid-color" />
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
+              <div className="p-1.5 sm:p-2 bg-solid-color/10 rounded-lg">
+                <Coffee className="h-4 w-4 sm:h-5 sm:w-5 text-solid-color" />
               </div>
-              <h2 className="text-lg font-semibold text-accessibility-text">
+              <h2 className="text-base sm:text-lg font-semibold text-accessibility-text">
                 Enlaces Rápidos
               </h2>
             </div>
@@ -445,14 +442,14 @@ const Configuracion = () => {
               {quickLinks.map((link, index) => (
                 <div 
                   key={index} 
-                  className="p-3 border border-border rounded-lg hover:bg-bg-secondary transition-colors cursor-pointer"
+                  className="p-2 sm:p-3 border border-border rounded-lg hover:bg-bg-secondary transition-colors cursor-pointer"
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className="p-1.5 bg-solid-color/10 rounded-lg text-solid-color shrink-0">
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <div className="p-1 sm:p-1.5 bg-solid-color/10 rounded-lg text-solid-color shrink-0">
                       {link.icon}
                     </div>
                     <div>
-                      <h3 className="font-medium text-accessibility-text text-sm">{link.title}</h3>
+                      <h3 className="font-medium text-accessibility-text text-xs sm:text-sm">{link.title}</h3>
                       <p className="text-xs text-text-tertiary mt-0.5">{link.description}</p>
                     </div>
                   </div>
@@ -461,9 +458,9 @@ const Configuracion = () => {
               
               <button
                 onClick={handleLogout}
-                className="w-full mt-3 px-4 py-3 bg-error/10 hover:bg-error/20 text-error rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200"
+                className="w-full mt-3 px-4 py-2 sm:py-3 bg-error/10 hover:bg-error/20 text-error rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200 text-sm"
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span>Cerrar Sesión</span>
               </button>
             </div>
