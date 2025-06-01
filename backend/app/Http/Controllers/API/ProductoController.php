@@ -13,7 +13,8 @@ use App\Helpers\NotificationHelper;
 class ProductoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Muestra un listado de todos los productos.
+     * Incluye sus categorías, marcas y datos de stock por sede.
      */
     public function index()
     {
@@ -25,7 +26,8 @@ class ProductoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Almacena un nuevo producto en la base de datos.
+     * También registra su stock inicial en la sede especificada.
      */
     public function store(Request $request)
     {
@@ -50,7 +52,7 @@ class ProductoController extends Controller
         try {
             DB::beginTransaction();
 
-            // Create the product
+            // Crear el producto
             $producto = Producto::create([
                 'nombre' => $request->nombre,
                 'descripcion' => $request->descripcion,
@@ -61,7 +63,7 @@ class ProductoController extends Controller
                 'stock_minimo' => $request->stock_minimo
             ]);
 
-            // Create the product-sede relationship
+            // Crear la relación producto-sede con su stock inicial
             $producto->sedes()->attach($request->sede_id, [
                 'stock' => $request->stock,
                 'precio_compra' => $request->precio_compra,
@@ -84,7 +86,8 @@ class ProductoController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Muestra la información detallada de un producto específico.
+     * Incluye sus relaciones con categoría, marca y sedes.
      */
     public function show(Producto $producto)
     {
@@ -94,7 +97,8 @@ class ProductoController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza la información de un producto existente.
+     * Permite modificar tanto datos básicos como stock y precios por sede.
      */
     public function update(Request $request, Producto $producto)
     {
@@ -119,7 +123,7 @@ class ProductoController extends Controller
         try {
             DB::beginTransaction();
 
-            // Update the product
+            // Actualizar el producto
             $producto->update([
                 'nombre' => $request->nombre,
                 'descripcion' => $request->descripcion,
@@ -130,7 +134,8 @@ class ProductoController extends Controller
                 'stock_minimo' => $request->stock_minimo
             ]);
 
-            // Update the product-sede relationship
+            // Actualizar la relación producto-sede
+            // syncWithoutDetaching mantiene otras relaciones existentes con otras sedes
             $producto->sedes()->syncWithoutDetaching([
                 $request->sede_id => [
                     'stock' => $request->stock,
@@ -139,7 +144,7 @@ class ProductoController extends Controller
                 ]
             ]);
 
-            // Check if stock is below minimum and send notification if needed
+            // Verificar si el stock está por debajo del mínimo y enviar notificación si es necesario
             if ($request->stock <= $producto->stock_minimo) {
                 $sede = Sede::find($request->sede_id);
                 NotificationHelper::sendLowStockNotification($producto, $sede, $request->stock);
@@ -161,14 +166,15 @@ class ProductoController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina un producto de la base de datos.
+     * También elimina todas sus relaciones con sedes (cascade delete).
      */
     public function destroy(Producto $producto)
     {
         try {
             DB::beginTransaction();
 
-            // Delete the product (this will cascade delete the producto_sede records)
+            // Eliminar el producto (esto eliminará en cascada los registros producto_sede)
             $producto->delete();
 
             DB::commit();
@@ -185,7 +191,8 @@ class ProductoController extends Controller
     }
 
     /**
-     * Get products by sede
+     * Obtiene todos los productos disponibles en una sede específica.
+     * Incluye información de stock y precios para esa sede particular.
      */
     public function getProductsBySede($sedeId)
     {
@@ -201,7 +208,8 @@ class ProductoController extends Controller
     }
 
     /**
-     * Get low stock products
+     * Obtiene todos los productos con stock por debajo del mínimo establecido.
+     * Permite filtrar por sede específica mediante el parámetro query 'sede_id'.
      */
     public function getLowStockProducts(Request $request)
     {

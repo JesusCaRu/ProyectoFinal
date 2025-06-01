@@ -101,7 +101,7 @@ const AuthLayout = () => {
             {['Robótica', 'Inventario', 'Control'].map((feature, index) => (
               <_motion.span
                 key={index}
-                className="px-3 py-1.5 bg-solid-color bg-opacity-20 rounded-full text-sm font-medium backdrop-blur-sm text-accessibility-text-secondary"
+                className="px-3 py-1.5 bg-solid-color bg-opacity-20 rounded-full text-sm font-medium backdrop-blur-sm text-white"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >

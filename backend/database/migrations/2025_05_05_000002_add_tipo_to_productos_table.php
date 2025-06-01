@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('productos', function (Blueprint $table) {
-            // Añadir campo tipo_producto después de sku si no existe
+            // Añadir campo tipo_producto después de nombre si no existe
             if (!Schema::hasColumn('productos', 'tipo_producto')) {
-                $table->string('tipo_producto', 10)->after('sku')->nullable();
+                $table->string('tipo_producto', 10)->after('nombre')->nullable();
             }
         });
     }
