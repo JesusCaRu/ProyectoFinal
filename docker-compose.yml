@@ -41,7 +41,7 @@ services:
     container_name: nginx_server
     volumes:
       - ./backend:/var/www
-      - /backend/nginx-laravel.conf:/etc/nginx/conf.d/default.conf
+      - ./backend/nginx-laravel.conf:/etc/nginx/conf.d/default.conf
     ports:
       - "9000:80"
     depends_on:
