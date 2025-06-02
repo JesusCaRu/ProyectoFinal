@@ -8,7 +8,6 @@ import LoadingScreen from './components/LoadingScreen';
 import './styles/globals.css';
 import { useAuthStore } from './store/authStore';
 import { setupEchoOnLogin, disconnectEcho, reconnectEcho } from './services/echoService';
-import Auditoria from './pages/dashboard/Auditoria';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
