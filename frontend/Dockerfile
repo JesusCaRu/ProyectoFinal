@@ -6,16 +6,11 @@ WORKDIR /app
 # Copiar archivos de dependencias
 COPY frontend/package*.json ./
 
-# Instalar dependencias con --legacy-peer-deps para evitar problemas de compatibilidad
+# Instalar dependencias
 RUN npm install
 
 # Copiar el resto de archivos del frontend
 COPY frontend/ .
-
-# Verificar la estructura de archivos antes de compilar
-RUN ls -la src/pages/dashboard && \
-    echo "Verificando rutas de importación..." && \
-    find src -type f -name "*.jsx" -o -name "*.js" | xargs grep -l "import.*from.*pages/dashboard"
 
 # Construir la aplicación
 RUN npm run build
