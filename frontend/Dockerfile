@@ -3,17 +3,24 @@ FROM node:18-alpine AS build
 # Directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de dependencias
-COPY frontend/package*.json ./
+# Copiar todo el contenido del frontend
+COPY frontend/ ./
 
-# Instalar dependencias
-RUN npm install
+# Verificar la estructura de archivos
+RUN echo "Contenido del directorio actual:" && \
+    ls -la && \
+    echo "Estructura de directorios:" && \
+    find . -type d | sort && \
+    echo "Verificando rutas de importación:" && \
+    cat ./src/routes/routes.jsx | grep "import.*from.*pages/dashboard"
 
-# Copiar el resto de archivos del frontend
-COPY frontend/ .
+# Limpiar caché de npm y reinstalar dependencias
+RUN npm cache clean --force && \
+    rm -rf node_modules && \
+    npm ci
 
 # Construir la aplicación
-RUN npm run build
+RUN npm run build || (echo "Error en la compilación" && exit 1)
 
 # Etapa de producción con Nginx
 FROM nginx:alpine
