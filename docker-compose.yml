@@ -56,13 +56,14 @@ services:
     restart: unless-stopped
     volumes:
       - ./backend:/var/www
-      - ./backend/nginx-laravel.conf:/etc/nginx/conf.d/default.conf
     ports:
       - "${BACKEND_PORT:-9000}:80"
     depends_on:
       - backend
     networks:
       - app_network
+    command: >
+      sh -c "cp /var/www/nginx-laravel.conf /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
 
   # Frontend React
   frontend:
