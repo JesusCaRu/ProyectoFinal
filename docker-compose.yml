@@ -23,7 +23,7 @@ services:
     build: ./backend
     container_name: laravel_app
     ports:
-      - "9000:80"
+      - "8080:80"
     volumes:
       - ./backend:/var/www/html
     environment:
