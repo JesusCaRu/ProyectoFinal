@@ -65,9 +65,6 @@ services:
       - backend
     networks:
       - app_network
-    # Comando para verificar la configuración
-    command: >
-      sh -c "nginx -t && nginx -g 'daemon off;'"
 
   # Frontend React
   frontend:
