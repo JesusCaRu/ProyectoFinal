@@ -11,7 +11,6 @@ import {
     Truck,
     RefreshCw
 } from 'lucide-react';
-import { formatDate } from '../../utils/formatters';
 import LoadingIndicator from '../../components/LoadingIndicator';
 
 const HistorialMovimientos = () => {
