@@ -49,11 +49,25 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Copiar el resto de archivos de Laravel
 COPY backend/ .
 
+# Crear archivo .env si no existe
+RUN if [ ! -f ".env" ]; then \
+    echo "APP_NAME=StockFlow" > .env && \
+    echo "APP_ENV=production" >> .env && \
+    echo "APP_DEBUG=true" >> .env && \
+    echo "APP_URL=http://92.112.194.87:9000" >> .env && \
+    echo "DB_CONNECTION=mysql" >> .env && \
+    echo "DB_HOST=database" >> .env && \
+    echo "DB_PORT=3306" >> .env && \
+    echo "DB_DATABASE=stockflow" >> .env && \
+    echo "DB_USERNAME=admin" >> .env && \
+    echo "DB_PASSWORD=admin" >> .env && \
+    echo "LOG_CHANNEL=stack" >> .env && \
+    echo "LOG_LEVEL=debug" >> .env && \
+    echo "FRONTEND_URL=http://92.112.194.87:3000" >> .env; \
+    fi
+
 # Generar key de la aplicación si no existe y optimizar la configuración
-RUN php artisan key:generate --force && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+RUN php artisan key:generate --force
 
 # Ejecutar scripts post-install
 RUN composer dump-autoload --optimize
