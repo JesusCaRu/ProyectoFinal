@@ -31,12 +31,12 @@ services:
     container_name: laravel_app
     restart: unless-stopped
     volumes:
-      - ./backend/storage:/var/www/storage
+      - ./backend:/var/www
     environment:
       - APP_ENV=${APP_ENV:-production}
-      - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_DEBUG=${APP_DEBUG:-true}
       - APP_KEY=${APP_KEY:-}
-      - APP_URL=${APP_URL:-http://localhost}
+      - APP_URL=${APP_URL:-http://localhost:9000}
       - DB_CONNECTION=mysql
       - DB_HOST=database
       - DB_PORT=3306
@@ -44,6 +44,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_PASSWORD=${DB_PASSWORD:-admin}
       - LOG_CHANNEL=stack
+      - LOG_LEVEL=debug
     depends_on:
       - database
     networks:
@@ -64,6 +65,9 @@ services:
       - backend
     networks:
       - app_network
+    # Comando para verificar la configuración
+    command: >
+      sh -c "nginx -t && nginx -g 'daemon off;'"
 
   # Frontend React
   frontend:
@@ -75,7 +79,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
-      - backend
+      - webserver
     networks:
       - app_network
     environment:

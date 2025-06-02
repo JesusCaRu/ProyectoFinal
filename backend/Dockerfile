@@ -26,6 +26,14 @@ RUN { \
     echo 'opcache.enable_cli=1'; \
 } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
+# Configurar PHP para mostrar errores en desarrollo
+RUN { \
+    echo 'display_errors=On'; \
+    echo 'display_startup_errors=On'; \
+    echo 'error_reporting=E_ALL'; \
+    echo 'log_errors=On'; \
+} > /usr/local/etc/php/conf.d/error-logging.ini
+
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -41,8 +49,11 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Copiar el resto de archivos de Laravel
 COPY backend/ .
 
-# Generar key de la aplicación si no existe
-RUN php artisan key:generate --force
+# Generar key de la aplicación si no existe y optimizar la configuración
+RUN php artisan key:generate --force && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
 
 # Ejecutar scripts post-install
 RUN composer dump-autoload --optimize
@@ -59,8 +70,11 @@ RUN mkdir -p /var/www/storage/logs \
     && mkdir -p /var/www/storage/framework/cache \
     && chown -R www-data:www-data /var/www/storage
 
-# Configurar PHP para producción
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+# Configurar PHP para desarrollo en lugar de producción
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+
+# Verificar que PHP-FPM puede encontrar los archivos
+RUN ls -la /var/www/public
 
 EXPOSE 9000
 

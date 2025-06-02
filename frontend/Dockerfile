@@ -26,6 +26,9 @@ FROM nginx:alpine
 # Copiar archivos de construcción desde la etapa anterior
 COPY --from=build /app/dist /usr/share/nginx/html
 
+# Verificar el contenido del directorio HTML
+RUN ls -la /usr/share/nginx/html
+
 # Copiar configuración personalizada de Nginx
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
