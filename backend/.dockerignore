@@ -1,0 +1,10 @@
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+node_modules
+public/storage   # Excluir el enlace simbólico problemático
+storage   # Excluir archivos sensibles
+*.log
+.idea
