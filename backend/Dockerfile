@@ -14,7 +14,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar extensiones PHP
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip opcache
+
+# Configurar opcache para producción
+RUN { \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=4000'; \
+    echo 'opcache.revalidate_freq=2'; \
+    echo 'opcache.fast_shutdown=1'; \
+    echo 'opcache.enable_cli=1'; \
+} > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -31,6 +41,9 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Copiar el resto de archivos de Laravel
 COPY backend/ .
 
+# Generar key de la aplicación si no existe
+RUN php artisan key:generate --force
+
 # Ejecutar scripts post-install
 RUN composer dump-autoload --optimize
 
@@ -43,7 +56,11 @@ RUN chown -R www-data:www-data /var/www \
 RUN mkdir -p /var/www/storage/logs \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
-    && mkdir -p /var/www/storage/framework/cache
+    && mkdir -p /var/www/storage/framework/cache \
+    && chown -R www-data:www-data /var/www/storage
+
+# Configurar PHP para producción
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 EXPOSE 9000
 
