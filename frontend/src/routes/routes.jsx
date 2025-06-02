@@ -3,27 +3,29 @@ import AuthLayout from '../layouts/AuthLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
-import Dashboard from '../pages/dashboard/Dashboard';
-import VendedorDashboard from '../pages/dashboard/VendedorDashboard';
-import DashboardAlmacenista from '../pages/dashboard/DashboardAlmacenista';
-import Inventario from '../pages/dashboard/Inventario';
-import Ventas from '../pages/dashboard/Ventas';
-import Compras from '../pages/dashboard/Compras';
-import Reportes from '../pages/dashboard/Reportes';
-import Facturas from '../pages/dashboard/Facturas';
-import Usuarios from '../pages/dashboard/Usuarios';
-import Configuracion from '../pages/dashboard/Configuracion';
-import Gestiones from '../pages/dashboard/Gestiones';
-import Sedes from '../pages/dashboard/Sedes';
+
+// Importaciones con rutas absolutas para evitar problemas de resolución
+import Dashboard from '/src/pages/dashboard/Dashboard';
+import VendedorDashboard from '/src/pages/dashboard/VendedorDashboard';
+import DashboardAlmacenista from '/src/pages/dashboard/DashboardAlmacenista';
+import Inventario from '/src/pages/dashboard/Inventario';
+import Ventas from '/src/pages/dashboard/Ventas';
+import Compras from '/src/pages/dashboard/Compras';
+import Reportes from '/src/pages/dashboard/Reportes';
+import Facturas from '/src/pages/dashboard/Facturas';
+import Usuarios from '/src/pages/dashboard/Usuarios';
+import Configuracion from '/src/pages/dashboard/Configuracion';
+import Gestiones from '/src/pages/dashboard/Gestiones';
+import Sedes from '/src/pages/dashboard/Sedes';
 import ProtectedRoute from '../components/ProtectedRoute';
 import RoleProtectedRoute from '../components/RoleProtectedRoute';
-import Auditoria from '../pages/dashboard/Auditoria';
-import CatalogoProductos from '../pages/dashboard/CatalogoProductos';
-import HistorialVentas from '../pages/dashboard/HistorialVentas';
+import Auditoria from '/src/pages/dashboard/Auditoria';
+import CatalogoProductos from '/src/pages/dashboard/CatalogoProductos';
+import HistorialVentas from '/src/pages/dashboard/HistorialVentas';
 import { useAuthStore } from '../store/authStore';
-import HistorialMovimientos from '../pages/dashboard/HistorialMovimientos';
-import NotificationsPage from '../pages/dashboard/NotificationsPage';
-import VerificacionPendiente from '../pages/dashboard/VerificacionPendiente';
+import HistorialMovimientos from '/src/pages/dashboard/HistorialMovimientos';
+import NotificationsPage from '/src/pages/dashboard/NotificationsPage';
+import VerificacionPendiente from '/src/pages/dashboard/VerificacionPendiente';
 
 const DashboardRouter = () => {
   const { user } = useAuthStore();

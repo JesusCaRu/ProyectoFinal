@@ -10,9 +10,7 @@ COPY frontend/ ./
 RUN echo "Contenido del directorio actual:" && \
     ls -la && \
     echo "Estructura de directorios:" && \
-    find . -type d | sort && \
-    echo "Verificando rutas de importación:" && \
-    cat ./src/routes/routes.jsx | grep "import.*from.*pages/dashboard"
+    find . -type d | sort
 
 # Limpiar caché de npm y reinstalar dependencias
 RUN npm cache clean --force && \
