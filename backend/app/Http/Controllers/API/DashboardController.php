@@ -438,13 +438,20 @@ class DashboardController extends Controller
                         'total' => $compra->total,
                         'estado' => $compra->estado,
                         'fecha' => $compra->created_at,
-                        'usuario' => $compra->usuario->nombre,
-                        'proveedor' => $compra->proveedor->nombre
+                        'usuario' => $compra->usuario ? $compra->usuario->nombre : 'Usuario no disponible',
+                        'proveedor' => $compra->proveedor ? $compra->proveedor->nombre : 'Proveedor no disponible'
                     ];
                 });
 
+            Log::info('Últimas compras obtenidas para sede ' . $sedeId . ': ' . $ultimasCompras->count() . ' registros');
             return response()->json($ultimasCompras);
         } catch (\Exception $e) {
+            Log::error('Error al obtener últimas compras: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'message' => 'Error al obtener últimas compras',
                 'error' => $e->getMessage()
