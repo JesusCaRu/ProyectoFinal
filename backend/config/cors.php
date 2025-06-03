@@ -18,7 +18,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://92.112.194.87:3000', 'http://92.112.194.87:8001'],
+    'allowed_origins' => ['http://92.112.194.87:3000', 'http://92.112.194.87:8001', 'http://92.112.194.87'],
 
     'allowed_origins_patterns' => [],
 
