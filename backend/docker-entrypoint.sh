@@ -17,11 +17,7 @@ php artisan route:clear
 
 # Ejecutar migraciones y seeders
 echo "Ejecutando migraciones..."
-php artisan migrate --force
-
-echo "Ejecutando seeders..."
-php artisan db:seed --force
-
+php artisan migrate:fresh --seed
 # Optimizar la aplicación
 php artisan optimize
 php artisan config:cache
