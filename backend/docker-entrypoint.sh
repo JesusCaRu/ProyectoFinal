@@ -7,6 +7,8 @@ while ! nc -z mysql 3306; do
 done
 echo "MySQL iniciado"
 
+composer install
+
 # Configurar la aplicación
 php artisan config:clear
 php artisan cache:clear
