@@ -398,12 +398,18 @@ class DashboardController extends Controller
                         'id' => $venta->id,
                         'total' => $venta->total,
                         'fecha' => $venta->created_at,
-                        'usuario' => $venta->usuario->nombre
+                        'usuario' => $venta->usuario ? $venta->usuario->nombre : 'Usuario no disponible'
                     ];
                 });
 
             return response()->json($ultimasVentas);
         } catch (\Exception $e) {
+            Log::error('Error al obtener últimas ventas: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'message' => 'Error al obtener últimas ventas',
                 'error' => $e->getMessage()
