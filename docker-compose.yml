@@ -1,57 +1,142 @@
-version: '3.8'
-
 services:
   mysql:
-    image: mysql:8.0
-    container_name: stockflow_db
+    image: 'mysql:8.0'
+    container_name: mysql-z84k8soocsc08swg88c4gk4k-000744857345
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: stockflow
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
       MYSQL_ROOT_HOST: '%'
+      COOLIFY_BRANCH: '"despliegue"'
+      COOLIFY_RESOURCE_UUID: z84k8soocsc08swg88c4gk4k
+      COOLIFY_CONTAINER_NAME: mysql-z84k8soocsc08swg88c4gk4k-000744857345
     volumes:
-      - mysql_data:/var/lib/mysql
+      - 'z84k8soocsc08swg88c4gk4k_mysql-data:/var/lib/mysql'
     networks:
-      - app-network
+      app-network: null
+      z84k8soocsc08swg88c4gk4k: null
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - '-h'
+        - localhost
       timeout: 20s
       retries: 10
-
+    restart: unless-stopped
+    labels:
+      - coolify.managed=true
+      - coolify.version=4.0.0-beta.418
+      - coolify.applicationId=10
+      - coolify.type=application
+      - coolify.name=mysql-z84k8soocsc08swg88c4gk4k-000744857345
+      - coolify.resourceName=jesus-ca-ru-proyecto-finaldespliegue-e4koccc4gocowg88s8w8owow
+      - coolify.projectName=proyecto
+      - coolify.serviceName=jesus-ca-ru-proyecto-finaldespliegue-e4koccc4gocowg88s8w8owow
+      - coolify.environmentName=production
+      - coolify.pullRequestId=0
   backend:
     build: ./backend
-    container_name: laravel_app
+    container_name: backend-z84k8soocsc08swg88c4gk4k-000744865370
     ports:
-      - "8000:80"
+      - '8001:80'
     volumes:
-      - ./backend:/var/www/html
+      - '/data/coolify/applications/z84k8soocsc08swg88c4gk4k/backend:/var/www/html'
     environment:
       DB_HOST: mysql
       DB_DATABASE: stockflow
       DB_USERNAME: admin
       DB_PASSWORD: admin
       APP_ENV: production
-      APP_KEY: base64:cyJvOKMPS0GaSsRicwRtt1t3tJv4k1BJ+p4ZVo6tmCc= # Generar con: php artisan key:geerate --shnow
+      APP_KEY: 'base64:cyJvOKMPS0GaSsRicwRtt1t3tJv4k1BJ+p4ZVo6tmCc='
+      COOLIFY_BRANCH: '"despliegue"'
+      COOLIFY_RESOURCE_UUID: z84k8soocsc08swg88c4gk4k
+      COOLIFY_CONTAINER_NAME: backend-z84k8soocsc08swg88c4gk4k-000744865370
+      COOLIFY_URL: 'http://92.112.194.87/api'
+      COOLIFY_FQDN: 92.112.194.87/api
     depends_on:
       mysql:
         condition: service_healthy
     networks:
-      - app-network
-
+      app-network: null
+      z84k8soocsc08swg88c4gk4k: null
+    restart: unless-stopped
+    labels:
+      - coolify.managed=true
+      - coolify.version=4.0.0-beta.418
+      - coolify.applicationId=10
+      - coolify.type=application
+      - coolify.name=backend-z84k8soocsc08swg88c4gk4k-000744865370
+      - coolify.resourceName=jesus-ca-ru-proyecto-finaldespliegue-e4koccc4gocowg88s8w8owow
+      - coolify.projectName=proyecto
+      - coolify.serviceName=jesus-ca-ru-proyecto-finaldespliegue-e4koccc4gocowg88s8w8owow
+      - coolify.environmentName=production
+      - coolify.pullRequestId=0
+      - traefik.enable=true
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.middlewares.http-0-z84k8soocsc08swg88c4gk4k-backend-stripprefix.stripprefix.prefixes=/api
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.routers.http-0-z84k8soocsc08swg88c4gk4k-backend.entryPoints=http
+      - 'traefik.http.routers.http-0-z84k8soocsc08swg88c4gk4k-backend.middlewares=http-0-z84k8soocsc08swg88c4gk4k-backend-stripprefix,gzip'
+      - 'traefik.http.routers.http-0-z84k8soocsc08swg88c4gk4k-backend.rule=Host(`92.112.194.87`) && PathPrefix(`/api`)'
+      - 'caddy_0.encode=zstd gzip'
+      - 'caddy_0.handle_path.0_reverse_proxy={{upstreams}}'
+      - 'caddy_0.handle_path=/api*'
+      - caddy_0.header=-Server
+      - 'caddy_0.try_files={path} /index.html /index.php'
+      - 'caddy_0=http://92.112.194.87'
+      - caddy_ingress_network=z84k8soocsc08swg88c4gk4k
   frontend:
     build: ./frontend
-    container_name: react_app
+    container_name: frontend-z84k8soocsc08swg88c4gk4k-000744869261
     ports:
-      - "3000:80"
+      - '3000:80'
     depends_on:
       - backend
     networks:
-      - app-network
-
+      app-network: null
+      z84k8soocsc08swg88c4gk4k: null
+    restart: unless-stopped
+    labels:
+      - coolify.managed=true
+      - coolify.version=4.0.0-beta.418
+      - coolify.applicationId=10
+      - coolify.type=application
+      - coolify.name=frontend-z84k8soocsc08swg88c4gk4k-000744869261
+      - coolify.resourceName=jesus-ca-ru-proyecto-finaldespliegue-e4koccc4gocowg88s8w8owow
+      - coolify.projectName=proyecto
+      - coolify.serviceName=jesus-ca-ru-proyecto-finaldespliegue-e4koccc4gocowg88s8w8owow
+      - coolify.environmentName=production
+      - coolify.pullRequestId=0
+      - traefik.enable=true
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.routers.http-0-z84k8soocsc08swg88c4gk4k-frontend.entryPoints=http
+      - traefik.http.routers.http-0-z84k8soocsc08swg88c4gk4k-frontend.middlewares=gzip
+      - 'traefik.http.routers.http-0-z84k8soocsc08swg88c4gk4k-frontend.rule=Host(`92.112.194.87`) && PathPrefix(`/`)'
+      - 'caddy_0.encode=zstd gzip'
+      - 'caddy_0.handle_path.0_reverse_proxy={{upstreams}}'
+      - 'caddy_0.handle_path=/*'
+      - caddy_0.header=-Server
+      - 'caddy_0.try_files={path} /index.html /index.php'
+      - 'caddy_0=http://92.112.194.87'
+      - caddy_ingress_network=z84k8soocsc08swg88c4gk4k
+    environment:
+      COOLIFY_BRANCH: '"despliegue"'
+      COOLIFY_RESOURCE_UUID: z84k8soocsc08swg88c4gk4k
+      COOLIFY_CONTAINER_NAME: frontend-z84k8soocsc08swg88c4gk4k-000744869261
+      COOLIFY_URL: 'http://92.112.194.87'
+      COOLIFY_FQDN: 92.112.194.87
 volumes:
-  mysql_data:
-
+  z84k8soocsc08swg88c4gk4k_mysql-data:
+    name: z84k8soocsc08swg88c4gk4k_mysql-data
 networks:
   app-network:
     driver: bridge
+  z84k8soocsc08swg88c4gk4k:
+    name: z84k8soocsc08swg88c4gk4k
+    external: true
+configs: {  }
+secrets: {  }
