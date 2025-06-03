@@ -19,6 +19,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'http://92.112.194.87:8001',
         'http://92.112.194.87:3000',
         'http://localhost:3000',
         'http://127.0.0.1:3000'
