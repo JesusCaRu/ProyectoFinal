@@ -122,9 +122,9 @@ docker-compose exec backend php artisan migrate --seed
 docker-compose exec frontend npm install
 
 # Acceder a la aplicación
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8000
-# PHPMyAdmin: http://localhost:8080
+# Frontend: http://92.112.194.87:3000
+# Backend API: http://92.112.194.87:8000
+# PHPMyAdmin: http://92.112.194.87:8080
 ```
 
 ### Instalación Manual

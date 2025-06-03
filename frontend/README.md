@@ -104,7 +104,7 @@ npm install
 3. Configurar variables de entorno
 Crear un archivo `.env` en la raíz del proyecto:
 ```env
-VITE_API_URL=http://localhost:8000/api
+VITE_API_URL=http://92.112.194.87:8000/api
 ```
 
 4. Iniciar el servidor de desarrollo
